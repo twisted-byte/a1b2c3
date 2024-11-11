@@ -10,27 +10,6 @@ encode_url() {
     echo -n "$1" | jq -sRr @uri
 }
 
-# Function to decode URL (ASCII decode)
-decode_url() {
-    # Decode percent-encoded string
-    echo -n "$1" | jq -sRr @uri | sed 's/%/\\x/g' | xargs -0 printf "%b"
-}
-
-# Function to clear the file and add the new entries
-update_game_list() {
-    local letter="$1"
-    local file="$DEST_DIR/${letter}.txt"
-    
-    # Clear the existing file before adding new entries
-    > "$file"
-
-    # Add new entries to the file
-    while IFS= read -r file_name; do
-        # Write the original file name to the file (without encoding)
-        echo "$file_name" >> "$file"
-    done
-}
-
 # Function to display the game list and allow selection
 select_games() {
     local letter="$1"
@@ -44,10 +23,9 @@ select_games() {
     # Read the list of games from the file and prepare the dialog input
     local game_list=()
     while IFS= read -r file_name; do
-        # Decode the file name for display, store the original encoded one for the download
-        decoded_name=$(decode_url "$file_name")
-        encoded_name=$(encode_url "$decoded_name")
-        game_list+=("$decoded_name" "$encoded_name" off)
+        # Display the decoded file name but store the original encoded one for the download
+        encoded_name=$(encode_url "$file_name")
+        game_list+=("$file_name" "$encoded_name" off)
     done < "$file"
     
     # Use dialog to show the list of games for the selected letter
