@@ -18,7 +18,7 @@ select_games() {
     # Read the list of games from the file and prepare the dialog input
     local game_list=()
     while IFS="|" read -r decoded_name game_url; do
-        # Store the decoded name and URL in the list for dialog
+        # Store the decoded name and URL in the list for dialog, using quotes to preserve spaces
         game_list+=("$decoded_name" "$game_url" off)
     done < "$file"
     
@@ -43,15 +43,18 @@ download_game() {
     local game_url
     
     # Log the decoded name to help debug
-    echo "Looking up URL for: $decoded_name" >> "$LOG_FILE"
+    echo "Looking up URL for: '$decoded_name'" >> "$LOG_FILE"
+    
+    # Ensure that the decoded name is quoted to preserve spaces
+    decoded_name=$(echo "$decoded_name" | sed 's/"//g')  # Remove quotes if any
     
     # Find the full URL using the decoded name in AllGames.txt
     game_url=$(grep -F "^$decoded_name|" "$DEST_DIR/AllGames.txt" | cut -d '|' -f 2)
     
     # Log the result of the URL search
     if [ -z "$game_url" ]; then
-        echo "Error: Could not find download URL for $decoded_name." >> "$LOG_FILE"
-        dialog --msgbox "Error: Could not find download URL for $decoded_name." 5 40
+        echo "Error: Could not find download URL for '$decoded_name'." >> "$LOG_FILE"
+        dialog --msgbox "Error: Could not find download URL for '$decoded_name'." 5 40
         return
     else
         echo "Found URL: $game_url" >> "$LOG_FILE"
@@ -66,7 +69,7 @@ download_game() {
     wget "$game_url" -P "$DOWNLOAD_DIR"
     
     # Notify user after download is complete
-    dialog --msgbox "Downloaded $decoded_name successfully." 5 40
+    dialog --msgbox "Downloaded '$decoded_name' successfully." 5 40
 }
 
 # Function to show the letter selection menu
@@ -104,4 +107,3 @@ while true; do
 done
 
 echo "Goodbye!"
- 
