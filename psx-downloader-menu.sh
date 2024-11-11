@@ -43,7 +43,6 @@ select_games() {
     # Loop over the selected games and download them
     IFS=$'\n'  # Set the internal field separator to newline to preserve spaces in game names
     for game in $selected_games; do
-        # Ensure the full name is passed as one argument to the download_game function
         download_game "$game"
     done
 }
@@ -76,12 +75,24 @@ download_game() {
         return
     fi
 
-    # Download the game using wget
-    echo "Downloading from: $game_url..."
-    wget "$game_url" -P "$DOWNLOAD_DIR"
+    # Display the download progress in a dialog infobox
+    (
+        wget "$game_url" -P "$DOWNLOAD_DIR" 2>&1 | while read -r line; do
+            echo "$line" | grep -oP '([0-9]+)%' | sed 's/%//' | \
+            while read -r percent; do
+                echo $percent  # Outputs progress percentage for dialog gauge
+            done
+        done
+    ) | dialog --title "Downloading $decoded_name_cleaned" --gauge "Downloading..." 10 70 0
 
-    # Notify user after download is complete
-    dialog --msgbox "Downloaded '$decoded_name_cleaned' successfully." 5 40
+    # Check if the download was successful
+    if [[ $? -eq 0 ]]; then
+        log_debug "Downloaded '$decoded_name_cleaned' successfully."
+        dialog --msgbox "Downloaded '$decoded_name_cleaned' successfully." 5 40
+    else
+        log_debug "Error downloading '$decoded_name_cleaned'."
+        dialog --msgbox "Error downloading '$decoded_name_cleaned'." 5 40
+    fi
 }
 
 # Function to show the letter selection menu
