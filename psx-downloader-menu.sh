@@ -1,122 +1,111 @@
 #!/bin/bash
 
-# Path to the error log file
-ERROR_LOG="/userdata/system/game-downloader/error_log.txt"
+# File that contains the list of .chd links
+LINKS_FILE="/userdata/system/game-downloader/psx-links.txt"
+DEST_DIR="/userdata/roms/psx"
 
-# Function to log errors to the error log file
-log_error() {
-    local message="$1"
-    echo "$(date "+%Y-%m-%d %H:%M:%S") - ERROR: $message" >> "$ERROR_LOG"
-}
+# Create the destination directory if it doesn't exist
+mkdir -p "$DEST_DIR"
 
-# Function to show the "Loading games list" message
-show_loading_message() {
-    # Display the loading message while games are loading
-    dialog --title "Loading" --msgbox "Loading games list, please wait..." 6 40 &
-}
-
-# Function to load the PSX games list
-load_psx_games() {
-    # Show loading message
-    show_loading_message
-
-    # Check if the psx-links.txt file exists and is readable
-    if [ ! -f "/userdata/system/game-downloader/psx-links.txt" ]; then
-        log_error "psx-links.txt not found at /userdata/system/game-downloader/."
-        dialog --msgbox "psx-links.txt not found!" 6 40
-        exit 1
-    fi
-
-    # Read the game list from the text file
-    mapfile -t games < /userdata/system/game-downloader/psx-links.txt
-
-    # Check if the games list is empty
-    if [ ${#games[@]} -eq 0 ]; then
-        log_error "No games found in psx-links.txt."
-        dialog --msgbox "No games found in psx-links.txt!" 6 40
-        exit 1
-    fi
-
-    # Log the contents of psx-links.txt for debugging
-    echo "psx-links.txt contents:" >> "$ERROR_LOG"
-    cat /userdata/system/game-downloader/psx-links.txt >> "$ERROR_LOG"
-
-    # Once the games are loaded, close the loading message dialog
-    kill $!  # Kill the background dialog process (the loading message)
-}
-
-# Function to show the PSX game download menu
-show_psx_menu() {
-    # Create a menu list for the dialog menu
-    local menu=()
-    local idx=1
-
-    # Process the game list into a format suitable for dialog
-    for game in "${games[@]}"; do
-        # Split the line into the game name and link
-        game_name=$(echo "$game" | cut -d ' ' -f 1)
-        game_link=$(echo "$game" | cut -d ' ' -f 2-)
-
-        # Ensure we have a valid game name and link
-        if [ -n "$game_name" ] && [ -n "$game_link" ]; then
-            menu+=("$idx" "$game_name")
-            ((idx++))
-        else
-            log_error "Invalid line in psx-links.txt: $game"
-        fi
+# Function to extract clean, decoded game titles from file names
+extract_game_titles() {
+    local files=("$@")
+    declare -A title_to_file_map=()
+    for file in "${files[@]}"; do
+        # Strip the .chd extension
+        title=$(basename "$file" .chd)
+        
+        # Decode any URL-encoded characters
+        title=$(echo "$title" | sed 's/%\([0-9A-Fa-f][0-9A-Fa-f]\)/\\x\1/g' | xargs -0 printf "%b")
+        
+        # Remove any content inside parentheses, including the parentheses
+        title=$(echo "$title" | sed 's/([^)]*)//g')
+        
+        # Map the cleaned title to the file
+        title_to_file_map["$title"]="$file"
     done
 
-    # Show the menu using dialog
-    choice=$(dialog --clear --title "PSX Downloader" \
-    --menu "Select a PSX game to download:" 15 50 10 "${menu[@]}" \
-    2>&1 >/dev/tty)
-
-    # If Cancel is pressed, exit back to the GameDownloader.sh menu
-    if [ $? -ne 0 ]; then
-        return 1
-    fi
-
-    # If a valid game is selected, start the download
-    if [[ -n "$choice" ]]; then
-        game_link=$(echo "${games[$choice-1]}" | cut -d ' ' -f 2-)
-        download_psx_game "$game_link"
-    fi
+    # Sort the titles alphabetically while maintaining the full title per line
+    sorted_titles=$(for title in "${!title_to_file_map[@]}"; do echo "$title"; done | sort)
+    
+    # Return the sorted titles
+    echo "$sorted_titles"
 }
 
-# Function to download the selected PSX game
-download_psx_game() {
-    local game_link="$1"
-    local file_name=$(basename "$game_link")
-    local destination="/userdata/roms/psx/$file_name"
+# Function to download files with a progress bar displayed using dialog
+download_with_progress() {
+    local files=("$@")
+    local total_files=${#files[@]}
+    local current_file=1
+    local tempfile=$(mktemp)
 
-    # Check if the game already exists
-    if [ -f "$destination" ]; then
-        log_error "Game $file_name already exists in the PSX folder."
-        dialog --msgbox "Game $file_name already exists in the PSX folder." 6 40
-        return
-    fi
-
-    # Show a download confirmation
-    dialog --yesno "Do you want to download $file_name?" 6 40
-    if [ $? -eq 0 ]; then
-        # Start downloading the file using curl
-        curl -L "$game_link" -o "$destination"
-
-        if [ $? -eq 0 ]; then
-            dialog --msgbox "$file_name has been successfully downloaded." 6 40
-        else
-            log_error "Error downloading $file_name from $game_link."
-            dialog --msgbox "Error downloading $file_name." 6 40
+    for file in "${files[@]}"; do
+        local filename=$(basename "$file")
+        local dest_file="$DEST_DIR/$filename"
+        
+        # Check if the file already exists and skip if so
+        if [[ -f "$dest_file" ]]; then
+            echo "File '$filename' already exists, skipping..." >> "$tempfile"
+            dialog --title "Skipping $filename" --infobox "File already exists, skipping: $filename" 7 50
+            sleep 1  # Short pause for the message to be visible
+            continue
         fi
+
+        # Display the progress bar with filename
+        dialog --title "Downloading $filename" --gauge "Downloading file $current_file of $total_files:\n$filename" 10 70 0
+
+        # Download file and update progress in real time
+        curl -L "$file" -o "$dest_file" --progress-bar | while read -r line; do
+            if [[ "$line" =~ ([0-9]+)% ]]; then
+                percent=${BASH_REMATCH[1]}
+                echo "$percent" | dialog --title "Downloading $filename" --gauge "Downloading file $current_file of $total_files:\n$filename" 10 70
+            fi
+        done
+
+        current_file=$((current_file + 1))
+    done
+
+    rm -f "$tempfile"
+}
+
+# Function to refresh the game list with cancellation option
+refresh_game_list() {
+    dialog --title "Refresh Game List" --yesno "Would you like to refresh the game list?" 7 50
+    if [ $? -eq 0 ]; then
+        dialog --msgbox "Refreshing game list..." 6 40
+        curl http://127.0.0.1:1234/reloadgames  # Reload the games list in Batocera
+        dialog --msgbox "Game list refreshed successfully!" 6 40
+    else
+        dialog --msgbox "Game list refresh cancelled." 6 40
     fi
 }
 
-# Main menu loop for PSX Downloader
-load_psx_games
+# Main function to display the dialog interface
+main() {
+    while true; do
+        # Read the list of links from psx-links.txt
+        files=($(cat "$LINKS_FILE"))
+        
+        # Extract game titles and map them to files, and sort them alphabetically
+        sorted_titles=$(extract_game_titles "${files[@]}")  # This will return sorted titles
 
-while true; do
-    show_psx_menu
-    if [ $? -ne 0 ]; then
-        break  # Exit the loop and return to the GameDownloader.sh menu
-    fi
-done
+        # Prepare array for dialog command, using game titles for display
+        dialog_items=()
+        while IFS= read -r title; do
+            dialog_items+=("$title" "" OFF)  # Use game title only, hide file name
+        done <<< "$sorted_titles"
+
+        # Show dialog checklist to select files
+        cmd=(dialog --separate-output --checklist "Select games to download" 22 76 16)
+        selections=$("${cmd[@]}" "${dialog_items[@]}" 2>&1 >/dev/tty)
+
+        # Check if Cancel was pressed
+        if [ $? -eq 1 ]; then
+            dialog --msgbox "Download cancelled." 6 30
+            refresh_game_list  # Refresh game list before exiting
+            exit
+        fi
+
+        # If no files are selected, show a message and return to the menu
+        if [ -z "$selections" ]; then
+            dialog --msgbox "No files selected. Returning t
