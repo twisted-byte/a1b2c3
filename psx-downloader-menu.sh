@@ -19,6 +19,7 @@ select_games() {
     while IFS= read -r game; do
         # Strip the base URL to show only the file name (get everything after the last '/')
         local file_name=$(basename "$game")
+        # Add the file name to the dialog checklist list, but store the full URL for download
         game_list+=("$file_name" "$game")
     done < "$file"
     
@@ -79,7 +80,7 @@ while true; do
         # Ask the user whether they want to select another letter or exit
         dialog --title "Continue?" --yesno "Would you like to select another letter?" 7 50
         if [ $? -eq 1 ]; then
-            break  # Exit if the user chooses "No" (Exit)
+            break  # Exit if the user chooses "No"
         fi
     else
         break  # Exit if no selection is made
