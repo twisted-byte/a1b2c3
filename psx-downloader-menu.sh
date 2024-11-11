@@ -3,25 +3,27 @@
 BASE_URL="https://myrient.erista.me/files/Internet%20Archive/chadmaster/chd_psx_eur/CHD-PSX-EUR/"
 DEST_DIR="/userdata/system/game-downloader/psxlinks"
 DOWNLOAD_DIR="/userdata/roms/psx"  # Update this to your desired download directory
-LOG_FILE="/userdata/system/game-downloader/debug_log.txt"  # Log file for debugging
+ALLGAMES_FILE="$DEST_DIR/AllGames.txt"  # File containing the full list of games with URLs
+
+# Ensure the download directory exists
+mkdir -p "$DOWNLOAD_DIR"
 
 # Function to display the game list and allow selection
 select_games() {
     local letter="$1"
     local file="$DEST_DIR/${letter}.txt"
-    
+
     if [[ ! -f "$file" ]]; then
         dialog --msgbox "No games found for letter '$letter'." 5 40
         return
     fi
-    
+
     # Read the list of games from the file and prepare the dialog input
     local game_list=()
-    while IFS="|" read -r decoded_name game_url; do
-        # Store the decoded name and URL in the list for dialog, using quotes to preserve spaces
-        game_list+=("$decoded_name" "$game_url" off)
+    while IFS="|" read -r decoded_name encoded_url; do
+        game_list+=("$decoded_name" "$encoded_url" off)
     done < "$file"
-    
+
     # Use dialog to show the list of games for the selected letter
     selected_games=$(dialog --title "Select Games" --checklist "Choose games to download" 15 50 8 \
         "${game_list[@]}" 3>&1 1>&2 2>&3)
@@ -30,7 +32,7 @@ select_games() {
     if [ -z "$selected_games" ]; then
         return
     fi
-    
+
     # Loop over the selected games and download them
     for game in $selected_games; do
         download_game "$game"
@@ -40,34 +42,20 @@ select_games() {
 # Function to download the selected game
 download_game() {
     local decoded_name="$1"
-    local game_url
-    
-    # Log the decoded name to help debug
-    echo "Looking up URL for: '$decoded_name'" >> "$LOG_FILE"
-    
-    # Ensure that the decoded name is quoted to preserve spaces
-    decoded_name=$(echo "$decoded_name" | sed 's/"//g')  # Remove quotes if any
     
     # Find the full URL using the decoded name in AllGames.txt
-    game_url=$(grep -F "^$decoded_name|" "$DEST_DIR/AllGames.txt" | cut -d '|' -f 2)
-    
-    # Log the result of the URL search
+    game_url=$(grep -F "^$decoded_name|" "$ALLGAMES_FILE" | cut -d '|' -f 2)
+
     if [ -z "$game_url" ]; then
-        echo "Error: Could not find download URL for '$decoded_name'." >> "$LOG_FILE"
         dialog --msgbox "Error: Could not find download URL for '$decoded_name'." 5 40
         return
-    else
-        echo "Found URL: $game_url" >> "$LOG_FILE"
     fi
     
     echo "Downloading from: $game_url..."
-    
-    # Ensure the download directory exists
-    mkdir -p "$DOWNLOAD_DIR"
-    
-    # Download the game using wget (you can switch to curl if preferred)
+
+    # Download the game using wget
     wget "$game_url" -P "$DOWNLOAD_DIR"
-    
+
     # Notify user after download is complete
     dialog --msgbox "Downloaded '$decoded_name' successfully." 5 40
 }
