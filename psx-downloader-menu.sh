@@ -41,9 +41,9 @@ select_games() {
     fi
 
     # Loop over the selected games and download them
-    # Since dialog returns selected items in a space-separated string, we need to handle each full game name properly
     IFS=$'\n'  # Set the internal field separator to newline to preserve spaces in game names
     for game in $selected_games; do
+        # Ensure the full name is passed as one argument to the download_game function
         download_game "$game"
     done
 }
@@ -51,18 +51,18 @@ select_games() {
 # Function to download the selected game
 download_game() {
     local decoded_name="$1"
-    
+
     log_debug "Searching for game '$decoded_name' in AllGames.txt..."
-    
+
     # Find the full URL using the decoded name in AllGames.txt
-    game_url=$(grep -F "^$decoded_name|" "$ALLGAMES_FILE" | cut -d '|' -f 2)
+    game_url=$(grep -F "\"$decoded_name\"" "$ALLGAMES_FILE" | cut -d '|' -f 2)
 
     if [ -z "$game_url" ]; then
         log_debug "Error: Could not find download URL for '$decoded_name'."
         dialog --msgbox "Error: Could not find download URL for '$decoded_name'." 5 40
         return
     fi
-    
+
     log_debug "Found download URL for '$decoded_name': $game_url"
 
     # Download the game using wget
