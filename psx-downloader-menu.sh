@@ -41,13 +41,12 @@ select_games() {
     fi
 
     # Process each selected game individually
-    # Instead of using IFS, we will handle the list directly by reading each line of the selected games
-    # The selected games will be passed as a newline-separated string
-    while IFS= read -r game; do
-        # Clean the game name from any quotes or unwanted characters
-        game=$(echo "$game" | sed 's/^"//;s/"$//')
+    # The selected games are returned as a newline-separated string
+    IFS=$'\n'  # Set IFS to newline to separate each selected game
+    for game in $selected_games; do
+        game=$(echo "$game" | sed 's/^"//;s/"$//')  # Clean the game name
         download_game "$game"
-    done <<< "$selected_games"
+    done
 }
 
 # Function to download the selected game
