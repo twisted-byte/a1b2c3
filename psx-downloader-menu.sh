@@ -14,14 +14,16 @@ select_games() {
         return
     fi
     
-    # Read the list of games from the file
-    local game_list=$(cat "$file")
+    # Read the list of games from the file and prepare the dialog input
+    local game_list=()
+    while IFS= read -r game; do
+        # Format: "game_name" "game_name"
+        game_list+=("$game" "$game")
+    done < "$file"
     
     # Use dialog to show the list of games for the selected letter
     selected_games=$(dialog --title "Select Games" --checklist "Choose games to download" 15 50 8 \
-        $(echo "$game_list" | while read -r line; do
-            echo "$line" "off"
-        done) 3>&1 1>&2 2>&3)
+        "${game_list[@]}" 3>&1 1>&2 2>&3)
 
     # If no games are selected, exit
     if [ -z "$selected_games" ]; then
