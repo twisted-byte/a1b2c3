@@ -44,8 +44,11 @@ download_game() {
     # Debug: Check what name is being searched for
     echo "Looking for: $decoded_name"  # Debug line to check the decoded name
     
-    # Look for the decoded name and extract the corresponding full URL from AllGames.txt
-    game_url=$(grep "^$(echo $decoded_name | xargs)" "$DEST_DIR/AllGames.txt" | cut -d '|' -f 2)
+    # Ensure the decoded name is trimmed of any leading/trailing spaces
+    decoded_name=$(echo "$decoded_name" | xargs)
+    
+    # Look for the exact decoded name and extract the corresponding full URL from AllGames.txt
+    game_url=$(grep -w "^$decoded_name" "$DEST_DIR/AllGames.txt" | cut -d '|' -f 2)
     
     # Debug: Show the game URL we're trying to download
     echo "Found URL: $game_url"  # Debug line to see the URL being used
