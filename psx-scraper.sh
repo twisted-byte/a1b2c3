@@ -11,9 +11,6 @@ decode_url() {
     echo -e "$(echo "$1" | sed 's/%/\\x/g' | xargs -0 printf "%b")"
 }
 
-# Initialize empty arrays for each file
-declare -A game_lists
-
 # Scrape the game list and save the decoded file names (not full URLs)
 curl -s "$BASE_URL" | grep -oP 'href="([^"]+\.chd)"' | sed -E 's/href="(.*)"/\1/' | while read -r game_url; do
     # Decode the game name from the URL
@@ -29,18 +26,16 @@ curl -s "$BASE_URL" | grep -oP 'href="([^"]+\.chd)"' | sed -E 's/href="(.*)"/\1/
         letter="#"
     fi
 
-    # Append the file name to the appropriate letter array
-    game_lists["$letter"]+="$file_name"$'\n'
+    # Append the decoded file names to the appropriate letter-based text file
+    echo "$file_name" >> "$DEST_DIR/$letter.txt"  # Using '>>' to append the file
 done
 
-# Now overwrite the files with the list of game names for each letter
-for letter in "${!game_lists[@]}"; do
-    echo -n "${game_lists[$letter]}" > "$DEST_DIR/$letter.txt"  # Overwrite with the entire list of names
-done
-
-# Add all decoded games to "All Games.txt" (overwrite to avoid appending)
-for game in "${game_lists[@]}"; do
-    echo -n "$game" > "$DEST_DIR/All Games.txt"  # Overwrite the All Games.txt file with the list
+# Add all decoded games to "All Games.txt" (appending to avoid overwriting the entire file)
+curl -s "$BASE_URL" | grep -oP 'href="([^"]+\.chd)"' | sed -E 's/href="(.*)"/\1/' | while read -r game_url; do
+    # Decode the game name from the URL
+    decoded_name=$(decode_url "$game_url")
+    file_name=$(basename "$decoded_name")
+    echo "$file_name" >> "$DEST_DIR/All Games.txt"  # Using '>>' to append the file
 done
 
 echo "Scraping complete!"
