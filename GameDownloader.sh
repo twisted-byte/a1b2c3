@@ -1,69 +1,41 @@
 #!/bin/bash
 
+# Ensure clear display
 clear
-dialog --msgbox "Welcome to the Game Downloader" 10 50
-clear
 
-# Function to display animated title with colors
-animate_title() {
-    local text="GAME DOWNLOADER"
-    local delay=0.03
-    local length=${#text}
+# Welcome message
+echo "Welcome to the Game Downloader. This test is updated"
+sleep 2
 
-    echo -ne "\e[1;36m"  # Set color to cyan
-    for (( i=0; i<length; i++ )); do
-        echo -n "${text:i:1}"
-        sleep $delay
-    done
-    echo -e "\e[0m"  # Reset color
-}
-
-# Function to display animated border
-animate_border() {
-    local char="#"
-    local width=50
-
-    for (( i=0; i<width; i++ )); do
-        echo -n "$char"
-        sleep 0.02
-    done
-    echo
-}
-
-# Main script execution
-clear
-animate_border
-animate_title
-animate_border
-
-# Set paths for downloader scripts
-PSX_DOWNLOADER="/userdata/system/game-downloader/psx-downloader-menu.sh"
-DC_DOWNLOADER="/userdata/system/game-downloader/dc-downloader-menu.sh"
-
-# Check if both scripts exist
-if [ ! -f "$PSX_DOWNLOADER" ] || [ ! -f "$DC_DOWNLOADER" ]; then
-    dialog --msgbox "One or both downloader scripts not found. Exiting." 10 50
+# Check if dialog is installed
+if ! command -v dialog &> /dev/null; then
+    echo "Error: dialog is not installed. Please install it and try again."
     exit 1
 fi
 
-# Show dialog menu
-choice=$(dialog --clear --title "Select Game Downloader" \
---menu "Choose a downloader:" 15 50 2 \
-1 "PSX Downloader" \
-2 "Dreamcast Downloader" \
-3>&1 1>&2 2>&3)
+# Main dialog menu
+dialog --clear --backtitle "Game Downloader" \
+       --title "Select a System" \
+       --menu "Choose an option:" 15 50 4 \
+       1 "PSX Downloader" \
+       2 "Dreamcast Downloader" 2>/tmp/game-downloader-choice
 
-# Execute chosen script
+# Read user choice
+choice=$(< /tmp/game-downloader-choice)
+rm /tmp/game-downloader-choice
+
+# Act based on choice
 case $choice in
     1)
-        bash "$PSX_DOWNLOADER"
+        /userdata/system/game-downloader/psx-downloader-menu.sh
         ;;
     2)
-        bash "$DC_DOWNLOADER"
+        /userdata/system/game-downloader/dc-downloader-menu.sh
         ;;
     *)
-        dialog --msgbox "No valid option selected. Exiting." 10 50
+        echo "No valid option selected."
         ;;
 esac
 
+# Clear screen on exit
 clear
