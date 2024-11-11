@@ -40,10 +40,10 @@ select_games() {
         return
     fi
 
-    # Loop over the selected games and handle each as an individual search and download
-    IFS=$'\n'  # Set the internal field separator to newline to preserve spaces in game names
-    for game in $selected_games; do
-        # Remove any quotes surrounding the game name
+    # Process each selected game individually by splitting on whitespace and newlines
+    IFS=' ' read -ra selected_games_array <<< "$selected_games"
+    for game in "${selected_games_array[@]}"; do
+        # Remove surrounding double quotes from each game name
         game=$(echo "$game" | sed 's/^"//;s/"$//')
         download_game "$game"
     done
