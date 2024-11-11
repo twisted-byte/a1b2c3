@@ -2,7 +2,7 @@
 
 # URL of the directory containing the .chd files
 BASE_URL="https://myrient.erista.me/files/Internet%20Archive/chadmaster/chd_psx_eur/CHD-PSX-EUR/"
-DEST_DIR="/userdata/system/game-downloader/psx-links"
+DEST_DIR="/userdata/system/game-downloader"
 
 # Function to fetch and filter .chd file list
 fetch_chd_list() {
@@ -39,12 +39,21 @@ extract_game_titles() {
 
 # Function to write games into categorized files (based on first letter)
 write_filtered_files() {
+    # Check if the destination directory exists, create if not
+    if [ ! -d "$DEST_DIR" ]; then
+        mkdir -p "$DEST_DIR"
+        echo "Created directory: $DEST_DIR"
+    fi
+
     local all_file="$DEST_DIR/psx-links-all.txt"
     > "$all_file"  # Clear the all file
 
-    # Create a file for each letter A-Z
+    # Create a file for each letter A-Z, check if it exists
     for letter in {a..z}; do
         local file="$DEST_DIR/psx-links-$letter.txt"
+
+        # Create file if it doesn't exist and clear it if it does
+        touch "$file"
         > "$file"  # Clear the specific letter file
 
         # Filter titles starting with the current letter and write to file
