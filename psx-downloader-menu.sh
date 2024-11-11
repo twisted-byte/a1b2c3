@@ -3,7 +3,7 @@
 LINKS_FILE="/userdata/system/game-downloader/psx-links.txt"
 DESTINATION_FOLDER="/userdata/roms/psx"
 
-# Function to show Dreamcast game download options
+# Function to show PSX game download options
 show_dc_menu() {
     # Check if the links file exists and is not empty
     if [ ! -s "$LINKS_FILE" ]; then
