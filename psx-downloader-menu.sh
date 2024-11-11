@@ -6,8 +6,9 @@ DOWNLOAD_DIR="/userdata/roms/psx"  # Update this to your desired download direct
 
 # Function to encode URL (ASCII encode)
 encode_url() {
-    # Encode the URL to % format (percent-encoding)
-    echo -n "$1" | jq -sRr @uri
+    # Use Bash to manually encode the URL (replace characters with percent encoding)
+    local url="$1"
+    echo -n "$url" | sed 's/[^a-zA-Z0-9_-]/\\&/g' | jq -sRr @uri
 }
 
 # Function to display the game list and allow selection
