@@ -40,11 +40,9 @@ select_games() {
         return
     fi
 
-    # Set IFS to newline to handle each selected game separately as a full string
-    IFS=$'\n'
+    # Loop over the selected games and download them
+    IFS=$'\n'  # Set the internal field separator to newline to preserve spaces in game names
     for game in $selected_games; do
-        # Remove any leading/trailing quotes from the game name
-        game=$(echo "$game" | sed 's/^"//;s/"$//')
         download_game "$game"
     done
 }
@@ -53,49 +51,68 @@ select_games() {
 download_game() {
     local decoded_name="$1"
     
-    log_debug "Searching for game '$decoded_name' in AllGames.txt..."
-    
+    # Remove any quotes and escape characters from the decoded name
+    decoded_name_cleaned=$(echo "$decoded_name" | sed 's/[\"\\]//g')
+
+    log_debug "Searching for game '$decoded_name_cleaned' in AllGames.txt..."
+
     # Find the full URL using the decoded name in AllGames.txt
-    game_url=$(grep -F "^$decoded_name|" "$ALLGAMES_FILE" | cut -d '|' -f 2)
+    game_url=$(grep -F "$decoded_name_cleaned" "$ALLGAMES_FILE" | cut -d '|' -f 2)
 
     if [ -z "$game_url" ]; then
-        log_debug "Error: Could not find download URL for '$decoded_name'."
-        dialog --msgbox "Error: Could not find download URL for '$decoded_name'." 5 40
+        log_debug "Error: Could not find download URL for '$decoded_name_cleaned'."
+        dialog --msgbox "Error: Could not find download URL for '$decoded_name_cleaned'." 5 40
         return
     fi
-    
-    log_debug "Found download URL for '$decoded_name': $game_url"
+
+    log_debug "Found download URL for '$decoded_name_cleaned': $game_url"
 
     # Check if the file already exists
-    local game_file="${DOWNLOAD_DIR}/$(basename "$game_url")"
-    if [[ -f "$game_file" ]]; then
-        dialog --msgbox "'$decoded_name' already exists in the download directory." 5 40
-        log_debug "'$decoded_name' already exists at $game_file. Skipping download."
+    file_path="$DOWNLOAD_DIR/$(basename "$decoded_name_cleaned")"
+    if [[ -f "$file_path" ]]; then
+        log_debug "File already exists: '$file_path'. Skipping download."
+        dialog --msgbox "'$decoded_name_cleaned' already exists. Skipping download." 5 40
         return
     fi
 
-    # Download the game using wget and show the progress in dialog
-    dialog --infobox "Downloading '$decoded_name' from: $game_url..." 5 50
-    wget -q --show-progress "$game_url" -P "$DOWNLOAD_DIR" 2>&1 | dialog --progressbox "Downloading $decoded_name" 20 60
+    # Display the download progress in a dialog infobox
+    (
+        wget "$game_url" -P "$DOWNLOAD_DIR" 2>&1 | while read -r line; do
+            echo "$line" | grep -oP '([0-9]+)%' | sed 's/%//' | \
+            while read -r percent; do
+                echo $percent  # Outputs progress percentage for dialog gauge
+            done
+        done
+    ) | dialog --title "Downloading $decoded_name_cleaned" --gauge "Downloading..." 10 70 0
 
-    # Notify user after download is complete
-    dialog --msgbox "Downloaded '$decoded_name' successfully." 5 40
+    # Check if the download was successful
+    if [[ $? -eq 0 ]]; then
+        log_debug "Downloaded '$decoded_name_cleaned' successfully."
+        dialog --msgbox "Downloaded '$decoded_name_cleaned' successfully." 5 40
+    else
+        log_debug "Error downloading '$decoded_name_cleaned'."
+        dialog --msgbox "Error downloading '$decoded_name_cleaned'." 5 40
+    fi
 }
 
 # Function to show the letter selection menu
 select_letter() {
-    # Get the list of available letters (a-z and # for numbers)
+    # Get the list of available letters and format as options for dialog
     letter_list=$(ls "$DEST_DIR" | grep -oP '^[a-zA-Z#]' | sort | uniq)
+
+    # Prepare menu options for dialog
+    menu_options=()
+    while read -r letter; do
+        menu_options+=("$letter" "$letter")  # Repeat each letter to avoid pairing issue
+    done <<< "$letter_list"
 
     # Use dialog to allow the user to select a letter
     selected_letter=$(dialog --title "Select a Letter" --menu "Choose a letter" 15 50 8 \
-        $(echo "$letter_list" | while read -r letter; do
-            echo "$letter" "$letter"
-        done) 3>&1 1>&2 2>&3)
+        "${menu_options[@]}" 3>&1 1>&2 2>&3)
 
     # If no letter is selected, exit
     if [ -z "$selected_letter" ]; then
-        return
+        return 1  # Return non-zero exit code if no selection is made
     fi
 
     # Call the function to select games for the chosen letter
