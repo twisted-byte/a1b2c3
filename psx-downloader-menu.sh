@@ -41,6 +41,8 @@ select_games() {
     fi
 
     # Loop over the selected games and download them
+    # Since dialog returns selected items in a space-separated string, we need to handle each full game name properly
+    IFS=$'\n'  # Set the internal field separator to newline to preserve spaces in game names
     for game in $selected_games; do
         download_game "$game"
     done
