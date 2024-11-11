@@ -14,8 +14,11 @@ curl -s "$BASE_URL" | grep -oP 'href="([^"]+\.chd)"' | sed -E 's/href="(.*)"/\1/
     # Get the first character of the file name
     first_char="${file_name:0:1}"
     
-    # Ensure letter files are capitalized
-    if [[ "$first_char" =~ [a-z] ]]; then
+    # Always append to AllGames.txt
+    echo "$file_name" >> "$DEST_DIR/AllGames.txt"
+    
+    # Ensure letter files are capitalized and save them to the appropriate letter-based file
+    if [[ "$first_char" =~ [a-zA-Z] ]]; then
         first_char=$(echo "$first_char" | tr 'a-z' 'A-Z')  # Capitalize if it's a letter
         # Save to the capitalized letter-based text file (e.g., A.txt, B.txt)
         echo "$file_name" >> "$DEST_DIR/${first_char}.txt"
