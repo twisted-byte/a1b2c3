@@ -5,16 +5,22 @@ spin="|/-\\"
 i=0
 echo -n "Updating..."
 
-while :; do
-    # Print the current spinner character
-    echo -n "${spin:i++%${#spin}:1}"
-    sleep 0.1
-    echo -ne "\b"
-done &
+# Open an xterm window and run the script inside it
+xterm -hold -e "
+    # Start the spinner in the background
+    while :; do
+        echo -n '${spin:i++%${#spin}:1}'
+        sleep 0.1
+        echo -ne '\b'
+    done &
 
-# Run the update process
-curl -L https://bit.ly/bgamedownloader | bash
+    # Capture the process ID of the spinner
+    spinner_pid=\$!
 
-# Kill the spinner when done
-kill $!
-echo -e "\nUpdate Complete!"
+    # Run the update process
+    curl -L https://bit.ly/bgamedownloader | bash
+
+    # Kill the spinner when done
+    kill \$spinner_pid
+    echo -e '\nUpdate Complete!'
+"
