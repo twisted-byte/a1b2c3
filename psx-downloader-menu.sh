@@ -17,8 +17,9 @@ select_games() {
     # Read the list of games from the file and prepare the dialog input
     local game_list=()
     while IFS= read -r game; do
-        # Format: "game_name" "game_name"
-        game_list+=("$game" "$game")
+        # Strip the base URL to show only the file name (get everything after the last '/')
+        local file_name=$(basename "$game")
+        game_list+=("$file_name" "$game")
     done < "$file"
     
     # Use dialog to show the list of games for the selected letter
@@ -75,11 +76,13 @@ select_letter() {
 while true; do
     select_letter
     if [ $? -eq 0 ]; then
-        # Continue loop if user successfully selects and downloads games
-        dialog --msgbox "Would you like to select another letter?" 5 40
+        # Ask the user whether they want to select another letter or exit
+        dialog --title "Continue?" --yesno "Would you like to select another letter?" 7 50
+        if [ $? -eq 1 ]; then
+            break  # Exit if the user chooses "No" (Exit)
+        fi
     else
-        # Exit if no selection is made
-        break
+        break  # Exit if no selection is made
     fi
 done
 
