@@ -1,7 +1,15 @@
 #!/bin/bash
 
+# Function to display the "Loading games list" message
+show_loading_message() {
+    dialog --title "Loading" --msgbox "Loading games list, please wait..." 6 40
+}
+
 # Load the list of games into memory once when the script starts
 load_psx_games() {
+    # Show "Loading games list" message
+    show_loading_message
+    
     # Read psx-links.txt and prepare the list of games in memory
     if [ -f "/userdata/system/game-downloader/psx-links.txt" ]; then
         mapfile -t games < /userdata/system/game-downloader/psx-links.txt
