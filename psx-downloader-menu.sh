@@ -4,6 +4,12 @@ BASE_URL="https://myrient.erista.me/files/Internet%20Archive/chadmaster/chd_psx_
 DEST_DIR="/userdata/system/game-downloader/psxlinks"
 DOWNLOAD_DIR="/userdata/roms/psx"  # Update this to your desired download directory
 
+# Function to encode URL (ASCII encode)
+encode_url() {
+    # Encode the URL to % format (percent-encoding)
+    echo -n "$1" | jq -sRr @uri
+}
+
 # Function to display the game list and allow selection
 select_games() {
     local letter="$1"
@@ -17,8 +23,9 @@ select_games() {
     # Read the list of games from the file and prepare the dialog input
     local game_list=()
     while IFS= read -r file_name; do
-        # Add the file name to the dialog checklist list, the file_name will be used for display
-        game_list+=("$file_name" "$file_name" off)
+        # Display the decoded file name but store the original encoded one for the download
+        encoded_name=$(encode_url "$file_name")
+        game_list+=("$file_name" "$encoded_name" off)
     done < "$file"
     
     # Use dialog to show the list of games for the selected letter
@@ -38,8 +45,10 @@ select_games() {
 
 # Function to download the selected game
 download_game() {
-    local file_name="$1"
-    local game_url="$BASE_URL$file_name"  # Combine BASE_URL with the file name to create the full URL
+    local decoded_name="$1"
+    local encoded_name
+    encoded_name=$(encode_url "$decoded_name")  # Re-encode the name for the download link
+    local game_url="$BASE_URL$encoded_name"  # Combine BASE_URL with the encoded file name
     echo "Downloading $game_url..."
     
     # Ensure the download directory exists
@@ -49,7 +58,7 @@ download_game() {
     wget "$game_url" -P "$DOWNLOAD_DIR"
     
     # Notify user after download is complete
-    dialog --msgbox "Downloaded $file_name successfully." 5 40
+    dialog --msgbox "Downloaded $decoded_name successfully." 5 40
 }
 
 # Function to show the letter selection menu
