@@ -40,9 +40,11 @@ select_games() {
         return
     fi
 
-    # Process each selected game separately using newline as separator (since dialog outputs line-by-line selections)
-    while read -r game; do
-        # Remove surrounding quotes from the game name (if any) and handle each game individually
+    # Process each selected game individually
+    # Instead of using IFS, we will handle the list directly by reading each line of the selected games
+    # The selected games will be passed as a newline-separated string
+    while IFS= read -r game; do
+        # Clean the game name from any quotes or unwanted characters
         game=$(echo "$game" | sed 's/^"//;s/"$//')
         download_game "$game"
     done <<< "$selected_games"
