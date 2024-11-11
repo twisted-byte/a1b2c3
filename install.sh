@@ -84,5 +84,8 @@ echo "Running PSX scraper script..."
 echo "Running Dreamcast scraper script..."
 /userdata/system/game-downloader/dc-scraper.sh
 
+killall -9 emulationstation
+
+sleep 1
 # Confirm installation complete
 echo "Installation complete! You can now use the Game Downloader menu from /userdata/roms/ports/GameDownloader.sh"
