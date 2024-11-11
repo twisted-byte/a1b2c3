@@ -1,29 +1,39 @@
 #!/bin/bash
 
+# Path to the error log file
+ERROR_LOG="/userdata/system/game-downloader/error_log.txt"
+
+# Function to log errors to the error log file
+log_error() {
+    local message="$1"
+    echo "$(date "+%Y-%m-%d %H:%M:%S") - ERROR: $message" >> "$ERROR_LOG"
+}
+
 # Function to show the "Loading games list" message
 show_loading_message() {
-    # Display the loading message in the background
+    # Display the loading message while games are loading
     dialog --title "Loading" --msgbox "Loading games list, please wait..." 6 40 &
 }
 
-# Load the list of games into memory once when the script starts
+# Function to load the PSX games list
 load_psx_games() {
-    # Show the loading message in the background while the list is being loaded
+    # Show loading message
     show_loading_message
 
-    # Read psx-links.txt and prepare the list of games in memory
+    # Read the game list from the text file and prepare it for use
     if [ -f "/userdata/system/game-downloader/psx-links.txt" ]; then
         mapfile -t games < /userdata/system/game-downloader/psx-links.txt
     else
+        log_error "psx-links.txt not found."
         dialog --msgbox "psx-links.txt not found!" 6 40
         exit 1
     fi
 
-    # Once the games are loaded, kill the background loading message
-    kill $!  # Kill the background dialog process
+    # Once the games are loaded, close the loading message dialog
+    kill $!  # Kill the background dialog process (the loading message)
 }
 
-# Function to show PSX game download options
+# Function to show the PSX game download menu
 show_psx_menu() {
     # Create a menu list for the dialog menu
     local menu=()
@@ -37,7 +47,7 @@ show_psx_menu() {
         ((idx++))
     done
 
-    # Show the menu
+    # Show the menu using dialog
     choice=$(dialog --clear --title "PSX Downloader" \
     --menu "Select a PSX game to download:" 15 50 10 "${menu[@]}" \
     2>&1 >/dev/tty)
@@ -62,6 +72,7 @@ download_psx_game() {
 
     # Check if the game already exists
     if [ -f "$destination" ]; then
+        log_error "Game $file_name already exists in the PSX folder."
         dialog --msgbox "Game $file_name already exists in the PSX folder." 6 40
         return
     fi
@@ -75,6 +86,7 @@ download_psx_game() {
         if [ $? -eq 0 ]; then
             dialog --msgbox "$file_name has been successfully downloaded." 6 40
         else
+            log_error "Error downloading $file_name from $game_link."
             dialog --msgbox "Error downloading $file_name." 6 40
         fi
     fi
