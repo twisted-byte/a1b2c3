@@ -1,66 +1,56 @@
 #!/bin/bash
 
+LINKS_FILE="/userdata/system/game-downloader/dc-links.txt"
+DESTINATION_FOLDER="/userdata/roms/dreamcast"
+
 # Function to show Dreamcast game download options
 show_dc_menu() {
-    # Get the list of available games (dc-links.txt) and display them
-    local games
-    games=$(cat /userdata/system/game-downloader/dc-links.txt)
-    
-    # If the file is empty, show an error message
-    if [ -z "$games" ]; then
-        dialog --msgbox "No Dreamcast games available for download." 6 40
-        exit 0
+    # Check if the links file exists and is not empty
+    if [ ! -s "$LINKS_FILE" ]; then
+        dialog --msgbox "No Dreamcast game links found. Please run the scraper first." 6 50
+        exit 1
     fi
-    
-    # Create a menu list for the dialog menu
+
+    # Create menu options from links file
     local menu=()
     local idx=1
     while IFS= read -r line; do
         game_name=$(echo "$line" | cut -d ' ' -f 1)
-        game_link=$(echo "$line" | cut -d ' ' -f 2-)
         menu+=("$idx" "$game_name")
         ((idx++))
-    done <<< "$games"
-    
-    # Show the menu
-    choice=$(dialog --clear --title "Dreamcast Downloader" \
-    --menu "Select a Dreamcast game to download:" 15 50 10 "${menu[@]}" \
-    2>&1 >/dev/tty)
-    
-    # If a valid game is selected, start the download
+    done < "$LINKS_FILE"
+
+    # Show dialog menu for game selection
+    choice=$(dialog --clear --title "Dreamcast Game Downloader" \
+        --menu "Select a Dreamcast game to download:" 15 50 10 "${menu[@]}" \
+        3>&1 1>&2 2>&3)
+
+    # If a game is selected, download it
     if [[ -n "$choice" ]]; then
-        game_link=$(echo "$games" | sed -n "${choice}p" | cut -d ' ' -f 2-)
+        game_link=$(sed -n "${choice}p" "$LINKS_FILE" | cut -d ' ' -f 2-)
         download_dc_game "$game_link"
     fi
 }
 
-# Function to download the selected Dreamcast game
+# Function to download the selected game
 download_dc_game() {
     local game_link="$1"
     local file_name=$(basename "$game_link")
-    local destination="/userdata/roms/dreamcast/$file_name"
-    
-    # Check if the game already exists
-    if [ -f "$destination" ]; then
-        dialog --msgbox "Game $file_name already exists in the Dreamcast folder." 6 40
-        return
-    fi
-    
-    # Show a download confirmation
-    dialog --yesno "Do you want to download $file_name?" 6 40
-    if [ $? -eq 0 ]; then
-        # Start downloading the file using curl
-        curl -L "$game_link" -o "$destination"
-        
+    local destination="$DESTINATION_FOLDER/$file_name"
+
+    # Confirm download if the file doesn't exist
+    if [ ! -f "$destination" ]; then
+        dialog --yesno "Download $file_name?" 6 40
         if [ $? -eq 0 ]; then
-            dialog --msgbox "$file_name has been successfully downloaded." 6 40
-        else
-            dialog --msgbox "Error downloading $file_name." 6 40
+            mkdir -p "$DESTINATION_FOLDER"
+            curl -L "$game_link" -o "$destination" || dialog --msgbox "Download failed!" 6 40
         fi
+    else
+        dialog --msgbox "$file_name already exists." 6 40
     fi
 }
 
-# Main menu loop for Dreamcast Downloader
+# Start the Dreamcast menu loop
 while true; do
     show_dc_menu
 done
