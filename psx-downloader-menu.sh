@@ -17,9 +17,8 @@ select_games() {
     # Read the list of games from the file and prepare the dialog input
     local game_list=()
     while IFS="|" read -r decoded_name game_url; do
-        # Escape spaces in the decoded name to prevent it from being split
-        decoded_name_escaped=$(echo "$decoded_name" | sed 's/ /\\ /g')
-        game_list+=("$decoded_name_escaped" "$game_url" off)
+        # Store the decoded name and URL in the list for dialog
+        game_list+=("$decoded_name" "$game_url" off)
     done < "$file"
     
     # Use dialog to show the list of games for the selected letter
@@ -40,25 +39,19 @@ select_games() {
 # Function to download the selected game
 download_game() {
     local decoded_name="$1"
+    local game_url
     
-    # Debug: Check what name is being searched for
-    echo "Looking for: $decoded_name"  # Debug line to check the decoded name
+    # Find the full URL using the decoded name in AllGames.txt
+    # Ensure that we're using exact match and trimming whitespaces
+    game_url=$(grep -F "^$decoded_name|" "$DEST_DIR/AllGames.txt" | cut -d '|' -f 2)
     
-    # Ensure the decoded name is trimmed of any leading/trailing spaces
-    decoded_name=$(echo "$decoded_name" | xargs)
-    
-    # Look for the exact decoded name and extract the corresponding full URL from AllGames.txt
-    game_url=$(grep -w "^$decoded_name" "$DEST_DIR/AllGames.txt" | cut -d '|' -f 2)
-    
-    # Debug: Show the game URL we're trying to download
-    echo "Found URL: $game_url"  # Debug line to see the URL being used
-    
+    # If the game_url is empty, handle the error
     if [ -z "$game_url" ]; then
         dialog --msgbox "Error: Could not find download URL for $decoded_name." 5 40
         return
     fi
     
-    echo "Downloading from URL: $game_url"
+    echo "Downloading from: $game_url..."
     
     # Ensure the download directory exists
     mkdir -p "$DOWNLOAD_DIR"
