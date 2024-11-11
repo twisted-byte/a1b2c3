@@ -3,6 +3,7 @@
 BASE_URL="https://myrient.erista.me/files/Internet%20Archive/chadmaster/chd_psx_eur/CHD-PSX-EUR/"
 DEST_DIR="/userdata/system/game-downloader/psxlinks"
 DOWNLOAD_DIR="/userdata/roms/psx"  # Update this to your desired download directory
+LOG_FILE="/userdata/system/game-downloader/debug_log.txt"  # Log file for debugging
 
 # Function to display the game list and allow selection
 select_games() {
@@ -41,14 +42,19 @@ download_game() {
     local decoded_name="$1"
     local game_url
     
+    # Log the decoded name to help debug
+    echo "Looking up URL for: $decoded_name" >> "$LOG_FILE"
+    
     # Find the full URL using the decoded name in AllGames.txt
-    # Ensure that we're using exact match and trimming whitespaces
     game_url=$(grep -F "^$decoded_name|" "$DEST_DIR/AllGames.txt" | cut -d '|' -f 2)
     
-    # If the game_url is empty, handle the error
+    # Log the result of the URL search
     if [ -z "$game_url" ]; then
+        echo "Error: Could not find download URL for $decoded_name." >> "$LOG_FILE"
         dialog --msgbox "Error: Could not find download URL for $decoded_name." 5 40
         return
+    else
+        echo "Found URL: $game_url" >> "$LOG_FILE"
     fi
     
     echo "Downloading from: $game_url..."
