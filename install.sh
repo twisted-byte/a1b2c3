@@ -84,7 +84,7 @@ echo "Running PSX scraper script..."
 echo "Running Dreamcast scraper script..."
 /userdata/system/game-downloader/dc-scraper.sh
 
-killall -9 emulationstation
+ curl http://127.0.0.1:1234/reloadgames  # Reload the games list in Batocera
 
 sleep 1
 # Confirm installation complete
