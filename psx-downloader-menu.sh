@@ -16,11 +16,9 @@ select_games() {
     
     # Read the list of games from the file and prepare the dialog input
     local game_list=()
-    while IFS= read -r game; do
-        # Strip the base URL to show only the file name (get everything after the last '/')
-        local file_name=$(basename "$game")
-        # Add the file name to the dialog checklist list, but store the full URL for download
-        game_list+=("$file_name" "$game")
+    while IFS= read -r file_name; do
+        # Add the file name to the dialog checklist list, the file_name will be used for display
+        game_list+=("$file_name" "$file_name")
     done < "$file"
     
     # Use dialog to show the list of games for the selected letter
@@ -40,7 +38,8 @@ select_games() {
 
 # Function to download the selected game
 download_game() {
-    local game_url="$BASE_URL$1"
+    local file_name="$1"
+    local game_url="$BASE_URL$file_name"  # Combine BASE_URL with the file name to create the full URL
     echo "Downloading $game_url..."
     
     # Ensure the download directory exists
@@ -50,7 +49,7 @@ download_game() {
     wget "$game_url" -P "$DOWNLOAD_DIR"
     
     # Notify user after download is complete
-    dialog --msgbox "Downloaded $game_url successfully." 5 40
+    dialog --msgbox "Downloaded $file_name successfully." 5 40
 }
 
 # Function to show the letter selection menu
