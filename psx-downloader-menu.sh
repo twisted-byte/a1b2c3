@@ -51,26 +51,29 @@ select_games() {
 # Function to download the selected game
 download_game() {
     local decoded_name="$1"
+    
+    # Remove any quotes and escape characters from the decoded name
+    decoded_name_cleaned=$(echo "$decoded_name" | sed 's/[\"\\]//g')
 
-    log_debug "Searching for game '$decoded_name' in AllGames.txt..."
+    log_debug "Searching for game '$decoded_name_cleaned' in AllGames.txt..."
 
-    # Search for the decoded name exactly as it appears in AllGames.txt
-    game_url=$(grep -F "$decoded_name" "$ALLGAMES_FILE" | cut -d '|' -f 2)
+    # Search for the cleaned decoded name exactly as it appears in AllGames.txt
+    game_url=$(grep -F "$decoded_name_cleaned" "$ALLGAMES_FILE" | cut -d '|' -f 2)
 
     if [ -z "$game_url" ]; then
-        log_debug "Error: Could not find download URL for '$decoded_name'."
-        dialog --msgbox "Error: Could not find download URL for '$decoded_name'." 5 40
+        log_debug "Error: Could not find download URL for '$decoded_name_cleaned'."
+        dialog --msgbox "Error: Could not find download URL for '$decoded_name_cleaned'." 5 40
         return
     fi
 
-    log_debug "Found download URL for '$decoded_name': $game_url"
+    log_debug "Found download URL for '$decoded_name_cleaned': $game_url"
 
     # Download the game using wget
     echo "Downloading from: $game_url..."
     wget "$game_url" -P "$DOWNLOAD_DIR"
 
     # Notify user after download is complete
-    dialog --msgbox "Downloaded '$decoded_name' successfully." 5 40
+    dialog --msgbox "Downloaded '$decoded_name_cleaned' successfully." 5 40
 }
 
 # Function to show the letter selection menu
