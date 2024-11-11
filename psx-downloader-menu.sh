@@ -40,9 +40,11 @@ select_games() {
         return
     fi
 
-    # Loop over the selected games and download them
+    # Loop over the selected games and handle each as an individual search and download
     IFS=$'\n'  # Set the internal field separator to newline to preserve spaces in game names
     for game in $selected_games; do
+        # Remove any quotes surrounding the game name
+        game=$(echo "$game" | sed 's/^"//;s/"$//')
         download_game "$game"
     done
 }
