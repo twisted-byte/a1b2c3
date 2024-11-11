@@ -82,7 +82,7 @@ echo "Found ${#files[@]} .chd files"  # Debug output
 # List the files being processed
 echo "Extracting game titles:"
 for file in "${files[@]}"; do
-    echo "Processing: $file"  # Debug output
+echo "Processing: $file"  # Debug output
 done
 
 # Populate the title_to_file_map array
