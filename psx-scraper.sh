@@ -82,3 +82,14 @@ echo "Found ${#files[@]} .chd files"  # Debug output
 # List the files being processed
 echo "Extracting game titles:"
 for file in "${files[@]}"; do
+    echo "Processing: $file"  # Debug output
+done
+
+# Populate the title_to_file_map array
+declare -A title_to_file_map
+titles=$(extract_game_titles "${files[@]}")
+
+# Write the links to filtered .txt files
+write_filtered_files
+
+echo "Links have been saved to the corresponding files in $DEST_DIR."  #
