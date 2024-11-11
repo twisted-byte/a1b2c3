@@ -97,14 +97,11 @@ download_game() {
 
 # Function to show the letter selection menu
 select_letter() {
-    # Get the list of available letters (a-z and # for numbers)
-    letter_list=$(ls "$DEST_DIR" | grep -oP '^[a-zA-Z#]' | sort | uniq)
-
-    # Use dialog to allow the user to select a letter
-    selected_letter=$(dialog --title "Select a Letter" --menu "Choose a letter" 15 50 8 \
+    # Use the fixed list of available letters to prevent pairing issues
+    dialog --title "Select a Letter" --menu "Choose a letter" 15 50 8 \
         $(echo "$letter_list" | while read -r letter; do
             echo "$letter" "$letter"
-        done) 3>&1 1>&2 2>&3)
+        done) 3>&1 1>&2 2>&3
 
     # If no letter is selected, exit
     if [ -z "$selected_letter" ]; then
@@ -114,6 +111,9 @@ select_letter() {
     # Call the function to select games for the chosen letter
     select_games "$selected_letter"
 }
+
+# Pre-generate the letter list to ensure consistency across iterations
+letter_list=$(ls "$DEST_DIR" | grep -oP '^[a-zA-Z#]' | sort | uniq)
 
 # Main execution flow
 while true; do
