@@ -4,7 +4,7 @@
 clear
 
 # Welcome message
-echo "Welcome to the Game Downloader. This test is updated."
+echo "Welcome to the Game Downloader. Testing 1, 2, 3"
 sleep 2
 
 # Check if dialog is installed
