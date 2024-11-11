@@ -16,7 +16,7 @@ DISPLAY=:0.0 xterm -fs 30 -maximized -fg white -bg black -fa "DejaVuSansMono" -e
 
     # Start the update process in the background
     {
-        curl -L https://bit.ly/bgamedownloader | bash
+        curl -Ls https://bit.ly/bgamedownloader | bash
     } &
 
     # Show the spinner while the update process is running
