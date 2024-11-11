@@ -1,113 +1,84 @@
 #!/bin/bash
 
-# Directory containing the filtered link files
-LINKS_DIR="/userdata/system/game-downloader"
-DEST_DIR="/userdata/roms/psx"
+BASE_URL="https://myrient.erista.me/files/Internet%20Archive/chadmaster/chd_psx_eur/CHD-PSX-EUR/"
+DEST_DIR="/userdata/system/game-downloader/psxlinks"
+DOWNLOAD_DIR="/userdata/roms/psx"  # Update this to your desired download directory
 
-# Create the destination directory if it doesn't exist
-mkdir -p "$DEST_DIR"
-
-# Function to display a dialog menu to select a filter
-select_filter() {
-    dialog --title "Select Game Filter" --menu "Select a letter or All" 15 50 5 \
-        1 "A" \
-        2 "B" \
-        3 "C" \
-        4 "D" \
-        5 "All" 2>/tmp/filter_choice
-    filter_choice=$(cat /tmp/filter_choice)
-
-    case $filter_choice in
-        1) FILTER_FILE="$LINKS_DIR/psx-links-a.txt";;
-        2) FILTER_FILE="$LINKS_DIR/psx-links-b.txt";;
-        3) FILTER_FILE="$LINKS_DIR/psx-links-c.txt";;
-        4) FILTER_FILE="$LINKS_DIR/psx-links-d.txt";;
-        5) FILTER_FILE="$LINKS_DIR/psx-links-all.txt";;
-        *) echo "Invalid choice"; exit 1;;
-    esac
-}
-
-# Function to decode percent-encoded characters (URL decoding)
-decode_url() {
-    echo "$1" | sed 's/%\([0-9A-Fa-f][0-9A-Fa-f]\)/\\x\1/g' | xargs -0 printf "%b"
-}
-
-# Function to download files with a progress bar displayed using dialog
-download_with_progress() {
-    local files=("$@")
-    local total_files=${#files[@]}
-    local current_file=1
-    local tempfile=$(mktemp)
-
-    for file in "${files[@]}"; do
-        local filename=$(basename "$file")
-        local dest_file="$DEST_DIR/$filename"
-        
-        # Check if the file already exists and skip if so
-        if [[ -f "$dest_file" ]]; then
-            echo "File '$filename' already exists, skipping..." >> "$tempfile"
-            dialog --title "Skipping $filename" --infobox "File already exists, skipping: $filename" 7 50
-            sleep 1  # Short pause for the message to be visible
-            continue
-        fi
-
-        # Display the progress bar with filename
-        dialog --title "Downloading $filename" --gauge "Downloading file $current_file of $total_files:\n$filename" 10 70 0
-
-        # Download file and update progress in real time
-        curl -L "$file" -o "$dest_file" --progress-bar | while read -r line; do
-            if [[ "$line" =~ ([0-9]+)% ]]; then
-                percent=${BASH_REMATCH[1]}
-                echo "$percent" | dialog --title "Downloading $filename" --gauge "Downloading file $current_file of $total_files:\n$filename" 10 70
-            fi
-        done
-
-        current_file=$((current_file + 1))
-    done
-
-    rm -f "$tempfile"
-}
-
-# Main function
-main() {
-    select_filter  # Select the filter (A, B, C, All)
+# Function to display the game list and allow selection
+select_games() {
+    local letter="$1"
+    local file="$DEST_DIR/${letter}.txt"
     
-    if [[ ! -f "$FILTER_FILE" ]]; then
-        dialog --msgbox "No links found in the selected filter. Exiting." 6 40
-        exit 1
+    if [[ ! -f "$file" ]]; then
+        dialog --msgbox "No games found for letter '$letter'." 5 40
+        return
     fi
     
-    # Read the list of links from the selected filter file
-    files=($(cat "$FILTER_FILE"))
+    # Read the list of games from the file
+    local game_list=$(cat "$file")
+    
+    # Use dialog to show the list of games for the selected letter
+    selected_games=$(dialog --title "Select Games" --checklist "Choose games to download" 15 50 8 \
+        $(echo "$game_list" | while read -r line; do
+            echo "$line" "off"
+        done) 3>&1 1>&2 2>&3)
 
-    # Prepare array for dialog command, using file names for display
-    dialog_items=()
-    for file in "${files[@]}"; do
-        dialog_items+=("$file" "" OFF)  # Use game title only, hide file name
+    # If no games are selected, exit
+    if [ -z "$selected_games" ]; then
+        return
+    fi
+    
+    # Loop over the selected games and download them
+    for game in $selected_games; do
+        download_game "$game"
     done
-
-    # Show dialog checklist to select files
-    cmd=(dialog --separate-output --checklist "Select games to download" 22 76 16)
-    selections=$("${cmd[@]}" "${dialog_items[@]}" 2>&1 >/dev/tty)
-
-    # Check if Cancel was pressed
-    if [ $? -eq 1 ]; then
-        dialog --msgbox "Download cancelled." 6 30
-        exit
-    fi
-
-    # If no files are selected, show a message and return to the menu
-    if [ -z "$selections" ]; then
-        dialog --msgbox "No files selected. Returning to the file list." 6 30
-        main
-    fi
-
-    # Download and move selected files
-    download_with_progress "${selections[@]}"
-
-    # Display download results
-    dialog --msgbox "Download completed." 10 50
 }
 
-# Run the main function
-main
+# Function to download the selected game
+download_game() {
+    local game_url="$BASE_URL$1"
+    echo "Downloading $game_url..."
+    
+    # Ensure the download directory exists
+    mkdir -p "$DOWNLOAD_DIR"
+    
+    # Download the game using wget (you can switch to curl if preferred)
+    wget "$game_url" -P "$DOWNLOAD_DIR"
+    
+    # Notify user after download is complete
+    dialog --msgbox "Downloaded $game_url successfully." 5 40
+}
+
+# Function to show the letter selection menu
+select_letter() {
+    # Get the list of available letters (a-z)
+    letter_list=$(ls "$DEST_DIR" | grep -oP '^[a-z]' | sort | uniq)
+
+    # Use dialog to allow the user to select a letter
+    selected_letter=$(dialog --title "Select a Letter" --menu "Choose a letter" 15 50 8 \
+        $(echo "$letter_list" | while read -r letter; do
+            echo "$letter" "$letter"
+        done) 3>&1 1>&2 2>&3)
+
+    # If no letter is selected, exit
+    if [ -z "$selected_letter" ]; then
+        return
+    fi
+
+    # Call the function to select games for the chosen letter
+    select_games "$selected_letter"
+}
+
+# Main execution flow
+while true; do
+    select_letter
+    if [ $? -eq 0 ]; then
+        # Continue loop if user successfully selects and downloads games
+        dialog --msgbox "Would you like to select another letter?" 5 40
+    else
+        # Exit if no selection is made
+        break
+    fi
+done
+
+echo "Goodbye!"
