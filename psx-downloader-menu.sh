@@ -40,13 +40,12 @@ select_games() {
         return
     fi
 
-    # Process each selected game individually by splitting on whitespace and newlines
-    IFS=' ' read -ra selected_games_array <<< "$selected_games"
-    for game in "${selected_games_array[@]}"; do
-        # Remove surrounding double quotes from each game name
+    # Process each selected game separately using newline as separator (since dialog outputs line-by-line selections)
+    while read -r game; do
+        # Remove surrounding quotes from the game name (if any) and handle each game individually
         game=$(echo "$game" | sed 's/^"//;s/"$//')
         download_game "$game"
-    done
+    done <<< "$selected_games"
 }
 
 # Function to download the selected game
