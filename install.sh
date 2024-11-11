@@ -42,6 +42,9 @@ curl -L "https://raw.githubusercontent.com/DTJW92/game-downloader/main/dc-scrape
 curl -L "https://raw.githubusercontent.com/DTJW92/game-downloader/main/psx-downloader-menu.sh" -o /userdata/system/game-downloader/psx-downloader-menu.sh
 curl -L "https://raw.githubusercontent.com/DTJW92/game-downloader/main/dc-downloader-menu.sh" -o /userdata/system/game-downloader/dc-downloader-menu.sh
 
+# Download the Updater.sh script and rename it to GMD-Updater in the Ports folder
+curl -L "https://raw.githubusercontent.com/DTJW92/game-downloader/main/Updater.sh" -o /userdata/roms/ports/GMD-Updater.sh
+
 # Download bkeys.txt and rename it to GMD.sh.keys in the Ports folder
 curl -L "https://raw.githubusercontent.com/DTJW92/game-downloader/main/bkeys.txt" -o /userdata/roms/ports/GMD.sh.keys
 
@@ -52,6 +55,7 @@ chmod +x /userdata/system/game-downloader/psx-scraper.sh
 chmod +x /userdata/system/game-downloader/dc-scraper.sh
 chmod +x /userdata/system/game-downloader/psx-downloader-menu.sh
 chmod +x /userdata/system/game-downloader/dc-downloader-menu.sh
+chmod +x /userdata/roms/ports/GMD-Updater.sh
 
 # Run the scraper scripts for PSX and Dreamcast
 echo "Running PSX scraper..."
@@ -63,4 +67,4 @@ echo "Running Dreamcast scraper..."
 # Restart EmulationStation to show the new entry in Ports
 curl http://127.0.0.1:1234/reloadgames
 
-echo "Installation complete. You should now see 'GMD' in Ports."
+echo "Installation complete. You should now see 'GMD' and 'GMD-Updater' in Ports."
