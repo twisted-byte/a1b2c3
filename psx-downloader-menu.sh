@@ -18,7 +18,7 @@ select_games() {
     local game_list=()
     while IFS= read -r file_name; do
         # Add the file name to the dialog checklist list, the file_name will be used for display
-        game_list+=("$file_name" "$file_name")
+        game_list+=("$file_name" "$file_name" off)
     done < "$file"
     
     # Use dialog to show the list of games for the selected letter
@@ -54,8 +54,8 @@ download_game() {
 
 # Function to show the letter selection menu
 select_letter() {
-    # Get the list of available letters (a-z)
-    letter_list=$(ls "$DEST_DIR" | grep -oP '^[a-z]' | sort | uniq)
+    # Get the list of available letters (a-z and # for numbers)
+    letter_list=$(ls "$DEST_DIR" | grep -oP '^[a-zA-Z#]' | sort | uniq)
 
     # Use dialog to allow the user to select a letter
     selected_letter=$(dialog --title "Select a Letter" --menu "Choose a letter" 15 50 8 \
