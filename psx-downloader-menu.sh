@@ -4,13 +4,6 @@ BASE_URL="https://myrient.erista.me/files/Internet%20Archive/chadmaster/chd_psx_
 DEST_DIR="/userdata/system/game-downloader/psxlinks"
 DOWNLOAD_DIR="/userdata/roms/psx"  # Update this to your desired download directory
 
-# Function to encode URL (ASCII encode)
-encode_url() {
-    # Use Bash to manually encode the URL (replace characters with percent encoding)
-    local url="$1"
-    echo -n "$url" | sed 's/[^a-zA-Z0-9_-]/\\&/g' | jq -sRr @uri
-}
-
 # Function to display the game list and allow selection
 select_games() {
     local letter="$1"
@@ -23,10 +16,8 @@ select_games() {
     
     # Read the list of games from the file and prepare the dialog input
     local game_list=()
-    while IFS= read -r file_name; do
-        # Display the decoded file name but store the original encoded one for the download
-        encoded_name=$(encode_url "$file_name")
-        game_list+=("$file_name" "$encoded_name" off)
+    while IFS="|" read -r decoded_name game_url; do
+        game_list+=("$decoded_name" "$game_url" off)
     done < "$file"
     
     # Use dialog to show the list of games for the selected letter
@@ -47,9 +38,16 @@ select_games() {
 # Function to download the selected game
 download_game() {
     local decoded_name="$1"
-    local encoded_name
-    encoded_name=$(encode_url "$decoded_name")  # Re-encode the name for the download link
-    local game_url="$BASE_URL$encoded_name"  # Combine BASE_URL with the encoded file name
+    local game_url
+    
+    # Find the full URL using the decoded name
+    game_url=$(grep "^$decoded_name|" "$DEST_DIR/AllGames.txt" | cut -d '|' -f 2)
+    
+    if [ -z "$game_url" ]; then
+        dialog --msgbox "Error: Could not find download URL for $decoded_name." 5 40
+        return
+    fi
+    
     echo "Downloading $game_url..."
     
     # Ensure the download directory exists
