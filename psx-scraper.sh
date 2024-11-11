@@ -42,8 +42,9 @@ for letter in "${!game_lists[@]}"; do
 done
 
 # Add all decoded games to "All Games.txt" (overwrite to avoid appending)
+echo -n "" > "$DEST_DIR/All Games.txt"  # Clear the file first
 for game in "${game_lists[@]}"; do
-    echo -n "$game" > "$DEST_DIR/All Games.txt"  # Overwrite the All Games.txt file with the list
+    echo -n "$game" >> "$DEST_DIR/All Games.txt"  # Append all the game names
 done
 
 echo "Scraping complete!"
