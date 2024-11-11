@@ -4,9 +4,16 @@ BASE_URL="https://myrient.erista.me/files/Internet%20Archive/chadmaster/chd_psx_
 DEST_DIR="/userdata/system/game-downloader/psxlinks"
 DOWNLOAD_DIR="/userdata/roms/psx"  # Update this to your desired download directory
 ALLGAMES_FILE="$DEST_DIR/AllGames.txt"  # File containing the full list of games with URLs
+DEBUG_LOG="$DEST_DIR/debug.txt"  # Log file to capture debug information
 
-# Ensure the download directory exists
+# Ensure the download directory and log file exist
 mkdir -p "$DOWNLOAD_DIR"
+touch "$DEBUG_LOG"
+
+# Function to log debug messages
+log_debug() {
+    echo "$(date '+%Y-%m-%d %H:%M:%S') - $1" >> "$DEBUG_LOG"
+}
 
 # Function to display the game list and allow selection
 select_games() {
@@ -43,17 +50,21 @@ select_games() {
 download_game() {
     local decoded_name="$1"
     
+    log_debug "Searching for game '$decoded_name' in AllGames.txt..."
+    
     # Find the full URL using the decoded name in AllGames.txt
     game_url=$(grep -F "^$decoded_name|" "$ALLGAMES_FILE" | cut -d '|' -f 2)
 
     if [ -z "$game_url" ]; then
+        log_debug "Error: Could not find download URL for '$decoded_name'."
         dialog --msgbox "Error: Could not find download URL for '$decoded_name'." 5 40
         return
     fi
     
-    echo "Downloading from: $game_url..."
+    log_debug "Found download URL for '$decoded_name': $game_url"
 
     # Download the game using wget
+    echo "Downloading from: $game_url..."
     wget "$game_url" -P "$DOWNLOAD_DIR"
 
     # Notify user after download is complete
@@ -94,4 +105,5 @@ while true; do
     fi
 done
 
+log_debug "Goodbye!"
 echo "Goodbye!"
