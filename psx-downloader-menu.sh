@@ -10,6 +10,21 @@ encode_url() {
     echo -n "$1" | jq -sRr @uri
 }
 
+# Function to clear the file and add the new entries
+update_game_list() {
+    local letter="$1"
+    local file="$DEST_DIR/${letter}.txt"
+    
+    # Clear the existing file before adding new entries
+    > "$file"
+
+    # Add new entries to the file
+    while IFS= read -r file_name; do
+        # Write the original file name to the file (without encoding)
+        echo "$file_name" >> "$file"
+    done
+}
+
 # Function to display the game list and allow selection
 select_games() {
     local letter="$1"
