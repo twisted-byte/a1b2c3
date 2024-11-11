@@ -86,7 +86,7 @@ while true; do
     select_letter
     if [ $? -eq 0 ]; then
         # Ask the user whether they want to select another letter or exit
-        dialog --title "Continue?" --yesno "Would you like to select another letter?" 7 50
+        dialog --title "Continue?" --yesno "Would you like to select some more games?" 7 50
         if [ $? -eq 1 ]; then
             break  # Exit if the user chooses "No"
         fi
