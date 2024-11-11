@@ -43,12 +43,12 @@ extract_game_titles() {
     done
 
     # Return the title-to-file map
-    echo "${title_to_file_map[@]}"  # Return the values (file names)
+    echo "${!title_to_file_map[@]}"  # Return the keys (game titles)
 }
 
 # Function to write games into categorized files (based on first letter)
 write_filtered_files() {
-    local title_to_file_map="$1"
+    declare -A title_to_file_map="$1"
     
     # Check if the destination directory exists, create if not
     if [ ! -d "$DEST_DIR" ]; then
@@ -65,7 +65,7 @@ write_filtered_files() {
         > "$file"  # Clear the specific letter file
 
         # Filter titles starting with the current letter and write to file
-        for title in ${!title_to_file_map[@]}; do
+        for title in "${!title_to_file_map[@]}"; do
             if [[ "${title,,}" =~ ^$letter ]]; then
                 echo "${BASE_URL}${title_to_file_map[$title]}" >> "$file"
                 echo "${BASE_URL}${title_to_file_map[$title]}" >> "$all_file"  # Also add to the "all" file
@@ -77,19 +77,24 @@ write_filtered_files() {
 # Main process
 echo "Starting the process..."  # Debug output
 files=($(fetch_chd_list))
-echo "Found ${#files[@]} .chd files"  # Debug output
+echo "Found ${#files[@]} .chd files"  # Debug output (Total number of files)
 
-# List the files being processed
-echo "Extracting game titles:"
-for file in "${files[@]}"; do
-echo "Processing: $file"  # Debug output
-done
+# Instead of listing each file, we skip the loop that shows individual files
+# Uncomment the following lines if you want to see the individual files later
+#echo "Extracting game titles:"
+#for file in "${files[@]}"; do
+#  echo "Processing: $file"  # Debug output (individual files)
+#done
 
 # Populate the title_to_file_map array
 declare -A title_to_file_map
-titles=$(extract_game_titles "${files[@]}")
+files=($(fetch_chd_list))
+for file in "${files[@]}"; do
+    titles=$(extract_game_titles "$file")
+    title_to_file_map["$titles"]="$file"
+done
 
 # Write the links to filtered .txt files
-write_filtered_files
+write_filtered_files "$title_to_file_map"
 
 echo "Links have been saved to the corresponding files in $DEST_DIR."  #
