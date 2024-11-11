@@ -1,13 +1,14 @@
 #!/bin/bash
 
-# Function to display the "Loading games list" message
+# Function to show the "Loading games list" message
 show_loading_message() {
-    dialog --title "Loading" --msgbox "Loading games list, please wait..." 6 40
+    # Display the loading message in the background
+    dialog --title "Loading" --msgbox "Loading games list, please wait..." 6 40 &
 }
 
 # Load the list of games into memory once when the script starts
 load_psx_games() {
-    # Show "Loading games list" message
+    # Show "Loading games list" message asynchronously
     show_loading_message
     
     # Read psx-links.txt and prepare the list of games in memory
@@ -17,6 +18,9 @@ load_psx_games() {
         dialog --msgbox "psx-links.txt not found!" 6 40
         exit 1
     fi
+    
+    # Close the dialog once the game list is loaded
+    kill $!  # Kill the background dialog process
 }
 
 # Function to show PSX game download options
