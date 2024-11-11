@@ -39,15 +39,21 @@ select_games() {
 download_game() {
     local decoded_name="$1"
     
+    # Debug: Check what name is being searched for
+    echo "Looking for: $decoded_name"  # Debug line to check the decoded name
+    
     # Look for the decoded name and extract the corresponding full URL from AllGames.txt
-    game_url=$(grep "^$decoded_name|" "$DEST_DIR/AllGames.txt" | cut -d '|' -f 2)
+    game_url=$(grep "^$(echo $decoded_name | xargs)" "$DEST_DIR/AllGames.txt" | cut -d '|' -f 2)
+    
+    # Debug: Show the game URL we're trying to download
+    echo "Found URL: $game_url"  # Debug line to see the URL being used
     
     if [ -z "$game_url" ]; then
         dialog --msgbox "Error: Could not find download URL for $decoded_name." 5 40
         return
     fi
     
-    echo "Downloading $game_url..."
+    echo "Downloading from URL: $game_url"
     
     # Ensure the download directory exists
     mkdir -p "$DOWNLOAD_DIR"
