@@ -20,14 +20,26 @@ load_psx_games() {
     # Show loading message
     show_loading_message
 
-    # Read the game list from the text file and prepare it for use
-    if [ -f "/userdata/system/game-downloader/psx-links.txt" ]; then
-        mapfile -t games < /userdata/system/game-downloader/psx-links.txt
-    else
-        log_error "psx-links.txt not found."
+    # Check if the psx-links.txt file exists and is readable
+    if [ ! -f "/userdata/system/game-downloader/psx-links.txt" ]; then
+        log_error "psx-links.txt not found at /userdata/system/game-downloader/."
         dialog --msgbox "psx-links.txt not found!" 6 40
         exit 1
     fi
+
+    # Read the game list from the text file
+    mapfile -t games < /userdata/system/game-downloader/psx-links.txt
+
+    # Check if the games list is empty
+    if [ ${#games[@]} -eq 0 ]; then
+        log_error "No games found in psx-links.txt."
+        dialog --msgbox "No games found in psx-links.txt!" 6 40
+        exit 1
+    fi
+
+    # Log the contents of psx-links.txt for debugging
+    echo "psx-links.txt contents:" >> "$ERROR_LOG"
+    cat /userdata/system/game-downloader/psx-links.txt >> "$ERROR_LOG"
 
     # Once the games are loaded, close the loading message dialog
     kill $!  # Kill the background dialog process (the loading message)
@@ -41,10 +53,17 @@ show_psx_menu() {
 
     # Process the game list into a format suitable for dialog
     for game in "${games[@]}"; do
+        # Split the line into the game name and link
         game_name=$(echo "$game" | cut -d ' ' -f 1)
         game_link=$(echo "$game" | cut -d ' ' -f 2-)
-        menu+=("$idx" "$game_name")
-        ((idx++))
+
+        # Ensure we have a valid game name and link
+        if [ -n "$game_name" ] && [ -n "$game_link" ]; then
+            menu+=("$idx" "$game_name")
+            ((idx++))
+        else
+            log_error "Invalid line in psx-links.txt: $game"
+        fi
     done
 
     # Show the menu using dialog
