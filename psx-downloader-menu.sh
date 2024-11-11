@@ -57,7 +57,7 @@ download_game() {
 
     log_debug "Searching for game '$decoded_name_cleaned' in AllGames.txt..."
 
-    # Search for the cleaned decoded name exactly as it appears in AllGames.txt
+    # Find the full URL using the decoded name in AllGames.txt
     game_url=$(grep -F "$decoded_name_cleaned" "$ALLGAMES_FILE" | cut -d '|' -f 2)
 
     if [ -z "$game_url" ]; then
@@ -67,6 +67,14 @@ download_game() {
     fi
 
     log_debug "Found download URL for '$decoded_name_cleaned': $game_url"
+
+    # Check if the file already exists
+    file_path="$DOWNLOAD_DIR/$(basename "$decoded_name_cleaned")"
+    if [[ -f "$file_path" ]]; then
+        log_debug "File already exists: '$file_path'. Skipping download."
+        dialog --msgbox "'$decoded_name_cleaned' already exists. Skipping download." 5 40
+        return
+    fi
 
     # Download the game using wget
     echo "Downloading from: $game_url..."
