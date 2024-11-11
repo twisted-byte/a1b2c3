@@ -1,10 +1,11 @@
 #!/bin/bash
 
-LINKS_FILE="/userdata/system/game-downloader/psx-links.txt"
-DESTINATION_FOLDER="/userdata/roms/psx"
+# Define paths for PSX games
+LINKS_FILE="/userdata/system/game-downloader/psx-links.txt"  # PSX links file
+DESTINATION_FOLDER="/userdata/roms/psx"  # PSX destination folder
 
 # Function to show PSX game download options
-show_dc_menu() {
+show_psx_menu() {
     # Check if the links file exists and is not empty
     if [ ! -s "$LINKS_FILE" ]; then
         dialog --msgbox "No PSX game links found. Please run the scraper first." 6 50
@@ -15,8 +16,9 @@ show_dc_menu() {
     local menu=()
     local idx=1
     while IFS= read -r line; do
-        game_name=$(echo "$line" | cut -d ' ' -f 1)
-        menu+=("$idx" "$game_name")
+        game_name=$(echo "$line" | cut -d ' ' -f 1)   # Get the game name (before the first space)
+        game_link=$(echo "$line" | cut -d ' ' -f 2-)  # Get the full link (after the first space)
+        menu+=("$idx" "$game_name" "$game_link")  # Add game name and link to the menu
         ((idx++))
     done < "$LINKS_FILE"
 
@@ -27,13 +29,13 @@ show_dc_menu() {
 
     # If a game is selected, download it
     if [[ -n "$choice" ]]; then
-        game_link=$(sed -n "${choice}p" "$LINKS_FILE" | cut -d ' ' -f 2-)
-        download_dc_game "$game_link"
+        game_link=$(echo "${menu[$((choice*3))]}" | sed 's/ /\n/g')  # Retrieve the correct link
+        download_psx_game "$game_link"
     fi
 }
 
-# Function to download the selected game
-download_dc_game() {
+# Function to download the selected PSX game
+download_psx_game() {
     local game_link="$1"
     local file_name=$(basename "$game_link")
     local destination="$DESTINATION_FOLDER/$file_name"
@@ -50,7 +52,7 @@ download_dc_game() {
     fi
 }
 
-# Start the Dreamcast menu loop
+# Start the PSX menu loop
 while true; do
-    show_dc_menu
+    show_psx_menu
 done
