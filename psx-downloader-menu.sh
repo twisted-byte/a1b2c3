@@ -38,9 +38,8 @@ select_games() {
 # Function to download the selected game
 download_game() {
     local decoded_name="$1"
-    local game_url
     
-    # Find the full URL using the decoded name
+    # Look for the decoded name and extract the corresponding full URL from AllGames.txt
     game_url=$(grep "^$decoded_name|" "$DEST_DIR/AllGames.txt" | cut -d '|' -f 2)
     
     if [ -z "$game_url" ]; then
