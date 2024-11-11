@@ -54,8 +54,8 @@ download_game() {
 
     log_debug "Searching for game '$decoded_name' in AllGames.txt..."
 
-    # Find the full URL using the decoded name in AllGames.txt
-    game_url=$(grep -F "\"$decoded_name\"" "$ALLGAMES_FILE" | cut -d '|' -f 2)
+    # Search for the decoded name exactly as it appears in AllGames.txt
+    game_url=$(grep -F "$decoded_name" "$ALLGAMES_FILE" | cut -d '|' -f 2)
 
     if [ -z "$game_url" ]; then
         log_debug "Error: Could not find download URL for '$decoded_name'."
