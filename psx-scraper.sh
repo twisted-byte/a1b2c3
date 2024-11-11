@@ -6,6 +6,7 @@ DEST_DIR="/userdata/system/game-downloader/psxlinks"
 
 # Function to fetch and filter .chd file list
 fetch_chd_list() {
+    echo "Fetching .chd file list from $BASE_URL"  # Debug output
     curl -s "$BASE_URL" | grep -oP 'href="\K[^"]*' | grep -E "\.chd$" | sort
 }
 
@@ -42,7 +43,7 @@ write_filtered_files() {
     # Check if the destination directory exists, create if not
     if [ ! -d "$DEST_DIR" ]; then
         mkdir -p "$DEST_DIR"
-        echo "Created directory: $DEST_DIR"
+        echo "Created directory: $DEST_DIR"  # Debug output
     fi
 
     local all_file="$DEST_DIR/psx-links-all.txt"
@@ -67,10 +68,19 @@ write_filtered_files() {
 }
 
 # Main process
+echo "Starting the process..."  # Debug output
 files=($(fetch_chd_list))
+echo "Found ${#files[@]} .chd files"  # Debug output
+
+# List the files being processed
+echo "Extracting game titles:"
+for file in "${files[@]}"; do
+    echo "Processing: $file"  # Debug output
+done
+
 titles=$(extract_game_titles "${files[@]}")
 
 # Write the links to filtered .txt files
 write_filtered_files "${files[@]}"
 
-echo "Links have been saved to the corresponding files in $DEST_DIR."
+echo "Links have been saved to the corresponding files in $DEST_DIR."  # Debug output
