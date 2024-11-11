@@ -2,7 +2,7 @@
 
 # URL of the directory containing the .chd files
 BASE_URL="https://myrient.erista.me/files/Internet%20Archive/chadmaster/chd_psx_eur/CHD-PSX-EUR/"
-DEST_DIR="/userdata/system/game-downloader"
+DEST_DIR="/userdata/system/game-downloader/psxlinks"
 
 # Function to fetch and filter .chd file list
 fetch_chd_list() {
