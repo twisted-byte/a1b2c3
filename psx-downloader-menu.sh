@@ -17,7 +17,9 @@ select_games() {
     # Read the list of games from the file and prepare the dialog input
     local game_list=()
     while IFS="|" read -r decoded_name game_url; do
-        game_list+=("$decoded_name" "$game_url" off)
+        # Escape spaces in the decoded name to prevent it from being split
+        decoded_name_escaped=$(echo "$decoded_name" | sed 's/ /\\ /g')
+        game_list+=("$decoded_name_escaped" "$game_url" off)
     done < "$file"
     
     # Use dialog to show the list of games for the selected letter
