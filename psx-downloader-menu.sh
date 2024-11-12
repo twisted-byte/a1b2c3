@@ -47,7 +47,10 @@ select_games() {
     # Process each selected game and add a wget command to the temporary script
     IFS=$'\n'  # Set IFS to newline to separate each selected game
     for game in $selected_games; do
-        game=$(echo "$game" | sed 's/^"//;s/"$//')  # Clean the game name
+        # Clean the game name by removing quotes and spaces, but preserving the name as-is
+        game=$(echo "$game" | sed 's/^"//;s/"$//')
+
+        # Find the URL for the game in the AllGames.txt file
         game_url=$(grep -F "$game" "$ALLGAMES_FILE" | cut -d '|' -f 2)
         
         if [ -z "$game_url" ]; then
@@ -64,8 +67,8 @@ select_games() {
             continue
         fi
 
-        # Add wget command to the temporary script
-        echo "wget '$game_url' -P '$DOWNLOAD_DIR'" >> "$temp_script"
+        # Add wget command to the temporary script (quotes preserve spaces and special characters)
+        echo "wget \"$game_url\" -P \"$DOWNLOAD_DIR\"" >> "$temp_script"
     done
 
     # Make the temporary script executable
