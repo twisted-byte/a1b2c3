@@ -70,7 +70,7 @@ show_download_progress() {
     done
 
     # Return to GameDownloader.sh when exiting
-    bash /userdata/system/game-downloader/GameDownloader.sh
+   easc bash /userdata/system/game-downloader/GameDownloader.sh
 }
 
 # Main entry: specify download file
