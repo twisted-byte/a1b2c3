@@ -137,7 +137,7 @@ download_game() {
 # Function to show the letter selection menu
 select_letter() {
     # Get the list of available letters and format as options for dialog
-    letter_list=$(ls "$DEST_DIR" | grep -oP '^[a-zA-Z#]' | sort | uniq)
+   etter_list=$(ls "$DEST_DIR" | grep -oP '^[a-zA-Z#]' | tr '[:lower:]' '[:upper:]' | sort | uniq)
 
     # Prepare menu options for dialog
     menu_options=()
