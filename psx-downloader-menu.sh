@@ -46,7 +46,7 @@ select_games() {
     done
 }
 
-# Function to download the selected game
+# Function to download the selected game and send the link to the DownloadManager
 download_game() {
     local decoded_name="$1"
     decoded_name_cleaned=$(echo "$decoded_name" | sed 's/[\\\"`]//g' | sed 's/^[[:space:]]*//g' | sed 's/[[:space:]]*$//g')
@@ -58,28 +58,11 @@ download_game() {
         return
     fi
 
-    file_path="$DOWNLOAD_DIR/$(basename "$decoded_name_cleaned")"
-    if [[ -f "$file_path" ]]; then
-        dialog --infobox "'$decoded_name_cleaned' already exists. Skipping download." 5 40
-        sleep 2
-        return
-    fi
+    # Append the URL to the DownloadManager.txt file
+    echo "$game_url" >> "/userdata/system/game-downloader/download.txt"
 
-    (
-        wget -c "$game_url" -P "$DOWNLOAD_DIR" 2>&1 | while read -r line; do
-            echo "$line" | grep -oP '([0-9]+)%' | sed 's/%//' | while read -r percent; do
-                echo $percent
-            done
-        done
-    ) | dialog --title "Downloading $decoded_name_cleaned" --gauge "Downloading..." 10 70 0
-
-    if [[ $? -eq 0 ]]; then
-        dialog --infobox "Downloaded '$decoded_name_cleaned' successfully." 5 40
-        sleep 2
-    else
-        dialog --infobox "Error downloading '$decoded_name_cleaned'." 5 40
-        sleep 2
-    fi
+    dialog --infobox "'$decoded_name_cleaned' link added to download list." 5 40
+    sleep 2
 }
 
 # Function to show the letter selection menu
