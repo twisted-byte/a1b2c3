@@ -28,19 +28,29 @@ download_game() {
     fi
 }
 
-# Read download links from file and start concurrent downloads
+# Function to continuously check and process downloads
 start_downloads() {
     local download_file="$1"
     local folder="$2"  # Folder where the games will be downloaded
 
-    # Read URLs from the provided file
-    mapfile -t downloads < "$download_file"
+    while true; do
+        # Read URLs from the provided file
+        mapfile -t downloads < "$download_file"
 
-    # Loop through each download URL and start in background
-    for url in "${downloads[@]}"; do
-        file_name="$(basename "$url")"
-        echo "0" > "$STATUS_DIR/$file_name.status"  # Initialize progress status
-        nohup bash -c "download_game \"$url\" \"$folder\"" &>/dev/null &
+        # If no downloads are left, continue looping
+        if [ ${#downloads[@]} -gt 0 ]; then
+            for url in "${downloads[@]}"; do
+                file_name="$(basename "$url")"
+                echo "0" > "$STATUS_DIR/$file_name.status"  # Initialize progress status
+                nohup bash -c "download_game \"$url\" \"$folder\"" &>/dev/null &
+
+                # Remove the URL from the download file once started
+                sed -i "/$url/d" "$download_file"
+            done
+        fi
+
+        # Sleep for 0.1 seconds to continually check the file
+        sleep 0.1
     done
 }
 
@@ -75,7 +85,7 @@ download_file="/userdata/system/game-downloader/download.txt"
 download_folder="/userdata/roms/ps2"  # Adjust this based on the caller script
 
 # Start downloads and show progress
-start_downloads "$download_file" "$download_folder"
+start_downloads "$download_file" "$download_folder" &
 show_download_progress
 
 echo "All downloads complete!"
