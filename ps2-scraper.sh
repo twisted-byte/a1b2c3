@@ -32,14 +32,14 @@ clear_all_files
 page_content=$(curl -s "$BASE_URL")
 log_debug "Fetched page content from $BASE_URL"
 
-# Parse .zip links, decode them, and check for "(UK)" or "(Europe)" in the decoded name
+# Parse .zip links, decode them, and check for region tags and ignore "(Demo)"
 echo "$page_content" | grep -oP '(?<=href=")[^"]*\.zip' | while read -r game_url; do
     # Decode the URL and check for the region tags in decoded text
     decoded_name=$(decode_url "$game_url")
     log_debug "Decoded name: $decoded_name"
 
-    # Only process files that contain "(UK)" or "(Europe)" in the decoded name
-    if [[ "$decoded_name" =~ \(UK\) || "$decoded_name" =~ \(Europe\) ]]; then
+    # Only process files that contain "(En)" or "(Europe)" or "(Europe, Australia)" and do not contain "(Demo)"
+    if [[ ("$decoded_name" =~ \(.*[Ee][Nn].*\) || "$decoded_name" =~ \(.*Europe.*\)) && ! "$decoded_name" =~ \(.*Demo.*\) ]]; then
         log_debug "Matched region in decoded name: $decoded_name"
 
         # Format the entry with backticks around the decoded name
@@ -70,4 +70,4 @@ echo "$page_content" | grep -oP '(?<=href=")[^"]*\.zip' | while read -r game_url
 done
 
 log_debug "Scraping complete!"
-echo "Scraping complete for (UK) and (Europe) files!"
+echo "Scraping complete for files with (En), (Europe), or (Europe, Australia), and excluding (Demo) files!"
