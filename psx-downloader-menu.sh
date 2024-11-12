@@ -50,8 +50,8 @@ select_games() {
         while IFS= read -r game_item; do
             # Only download if the game item is not empty
             if [[ -n "$game_item" ]]; then
-                # Remove backslashes and quotes from the game name
-                game_item_cleaned=$(echo "$game_item" | sed 's/[\\"]//g')
+                # Remove backslashes, quotes, and backticks from the game name
+                game_item_cleaned=$(echo "$game_item" | sed 's/[\\\"` ]//g')
                 download_game "$game_item_cleaned"
             fi
         done <<< "$game_items"
