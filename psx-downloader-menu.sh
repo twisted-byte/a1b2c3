@@ -44,6 +44,8 @@ select_games() {
     temp_script="/tmp/download_games.sh"
     echo "#!/bin/bash" > "$temp_script"
 
+    log_debug "Created temporary script at $temp_script"
+
     # Process each selected game and add a wget command to the temporary script
     IFS=$'\n'  # Set IFS to newline to separate each selected game
     for game in $selected_games; do
@@ -67,6 +69,9 @@ select_games() {
             continue
         fi
 
+        # Log the game and URL being added to the temporary script
+        log_debug "Adding wget command for '$game' to temporary script"
+
         # Add wget command to the temporary script (quotes preserve spaces and special characters)
         echo "wget \"$game_url\" -P \"$DOWNLOAD_DIR\"" >> "$temp_script"
     done
@@ -74,12 +79,15 @@ select_games() {
     # Make the temporary script executable
     chmod +x "$temp_script"
 
+    log_debug "Temporary script is now executable."
+
     # Execute the temporary script
     log_debug "Executing the temporary download script..."
     "$temp_script"
 
     # Clean up by removing the temporary script
     rm "$temp_script"
+    log_debug "Temporary script removed after execution."
 }
 
 # Function to show the letter selection menu
