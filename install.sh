@@ -37,7 +37,7 @@ curl -L "https://raw.githubusercontent.com/DTJW92/game-downloader/main/GMD.sh" -
 curl -L "https://raw.githubusercontent.com/DTJW92/game-downloader/main/GameDownloader.sh" -o /userdata/system/game-downloader/GameDownloader.sh
 
 # Download download.sh and place it in the same folder as the others
-curl -L "https://raw.githubusercontent.com/DTJW92/game-downloader/main/download.sh" -o /userdata/system/game-downloader/download.sh
+curl -L "https://raw.githubusercontent.com/DTJW92/game-downloader/main/downloader.sh" -o /userdata/system/game-downloader/downloader.sh
 
 # Download the DownloadManager.sh script
 curl -L "https://raw.githubusercontent.com/DTJW92/game-downloader/main/DownloadManager.sh" -o /userdata/system/game-downloader/DownloadManager.sh
@@ -59,7 +59,7 @@ curl -L "https://raw.githubusercontent.com/DTJW92/game-downloader/main/bkeys.txt
 # Set execute permissions for all downloaded scripts
 chmod +x /userdata/roms/ports/GMD.sh
 chmod +x /userdata/system/game-downloader/GameDownloader.sh
-chmod +x /userdata/system/game-downloader/download.sh  # Added this line
+chmod +x /userdata/system/game-downloader/downloader.sh  # Added this line
 chmod +x /userdata/system/game-downloader/DownloadManager.sh  # Added this line
 chmod +x /userdata/system/game-downloader/psx-scraper.sh
 chmod +x /userdata/system/game-downloader/dc-scraper.sh
