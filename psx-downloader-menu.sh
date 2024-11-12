@@ -25,7 +25,7 @@ select_games() {
         game_list+=("$decoded_name" "" off)
     done < "$file"
 
-    selected_games=$(dialog --title "Select Games" --checklist "Choose games to download" 15 50 8 \
+    selected_games=$(dialog --title "Select Games" --checklist "Choose games to download" 25 70 10 \
         "${game_list[@]}" 3>&1 1>&2 2>&3)
 
     if [ -z "$selected_games" ]; then
@@ -91,7 +91,7 @@ select_letter() {
         menu_options+=("$letter" "$letter")
     done <<< "$letter_list"
 
-    selected_letter=$(dialog --title "Select a Letter" --menu "Choose a letter" 15 50 8 \
+    selected_letter=$(dialog --title "Select a Letter" --menu "Choose a letter" 25 70 10 \
         "${menu_options[@]}" 3>&1 1>&2 2>&3)
 
     if [ -z "$selected_letter" ]; then
