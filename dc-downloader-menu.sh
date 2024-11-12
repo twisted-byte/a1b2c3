@@ -70,10 +70,15 @@ download_game() {
         return
     fi
 
-    # Display the download progress in a dialog infobox
+    # Show the message about download size and then start the download process
+    dialog --infobox "Please note; some Dreamcast games are much larger than others, so they may take longer to download." 5 50
+    sleep 2
+
+    # Now start the actual download and show progress
     (
         wget -c "$game_url" -P "$DOWNLOAD_DIR" 2>&1 | while read -r line; do
             echo "$line" | grep -oP '([0-9]+)%' | sed 's/%//' | while read -r percent; do
+                # Update progress bar with percentage
                 echo $percent
             done
         done
