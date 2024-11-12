@@ -32,21 +32,13 @@ download_game() {
 # Read download links from file and start concurrent downloads
 start_downloads() {
     local download_file="$1"
-    local folder="$2"  # Folder where the games will be downloaded
-
-    # Read URLs from the provided file
-    mapfile -t downloads < "$download_file"
-
-    # Loop through each download URL and start in background
-    for entry in "${downloads[@]}"; do
-        decoded_name=$(echo "$entry" | cut -d '|' -f 1)  # Get the decoded name
-        url=$(echo "$entry" | cut -d '|' -f 2)           # Get the URL
-        folder=$(echo "$entry" | cut -d '|' -f 3)         # Get the download folder
-
+    
+    # Read URLs from the provided file and derive the folder dynamically
+    while IFS='|' read -r decoded_name url folder; do
         file_name="$(basename "$url")"
         echo "0" > "$STATUS_DIR/$file_name.status"  # Initialize progress status
-        nohup bash -c "download_game \"$decoded_name\" \"$url\" \"$folder\"" &>/dev/null &
-    done
+        nohup bash -c "download_game \"$decoded_name\" \"$url\" \"$folder\"" &>/dev/null &  # Background download
+    done < "$download_file"
 }
 
 # Function to display download status with Dialog
@@ -70,18 +62,19 @@ show_download_progress() {
         if $any_progress; then
             dialog --clear --title "Download Progress" --msgbox "$progress_text" 15 50
         else
+            # Show a message when no downloads are active, with a Cancel button
+            dialog --clear --title "Download Progress" --msgbox "Nothing downloading currently!" 10 50
             break
         fi
         sleep 2  # Refresh every 2 seconds
     done
 }
 
-# Main entry: specify download file and target folder
+# Main entry: specify download file
 download_file="/userdata/system/game-downloader/download.txt"
-download_folder="/userdata/roms/ps2"  # Adjust this based on the caller script
 
 # Start downloads and show progress
-start_downloads "$download_file" "$download_folder"
+start_downloads "$download_file"
 show_download_progress
 
 echo "All downloads complete!"
