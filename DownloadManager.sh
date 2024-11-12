@@ -69,8 +69,8 @@ show_download_progress() {
         sleep 2  # Refresh every 2 seconds
     done
 
-    # Return to GameDownloader.sh when exiting
-   esac bash /userdata/system/game-downloader/GameDownloader.sh
+    # Return to GameDownloader.sh after exit
+    bash /userdata/system/game-downloader/GameDownloader.sh
 }
 
 # Main entry: specify download file
