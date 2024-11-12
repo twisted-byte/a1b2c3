@@ -28,7 +28,7 @@ select_games() {
     # Read the list of games from the file and prepare the dialog input
     local game_list=()
     while IFS="|" read -r decoded_name encoded_url; do
-        game_list+=("$decoded_name" off)
+        game_list+=("$decoded_name" "" off)  # Add decoded name only, leave URL as empty string
     done < "$file"
 
     # Use dialog to show the list of games for the selected letter
@@ -48,20 +48,11 @@ select_games() {
 
         # Iterate over each game item found in the split
         while IFS= read -r game_item; do
-            # Only process non-empty game items
+            # Only download if the game item is not empty
             if [[ -n "$game_item" ]]; then
-                # Clean the game name by removing backslashes, quotes, and backticks, while preserving spaces
-                game_item_cleaned=$(echo "$game_item" | sed 's/[\\\"`]//g' | sed 's/^[[:space:]]*//g' | sed 's/[[:space:]]*$//g')  # Trim both leading and trailing spaces
-
-                # Debug: Log the cleaned game name before processing
-                log_debug "Processing game: '$game_item_cleaned'"
-
-                # Check if cleaned name is still non-empty before proceeding
-                if [[ -n "$game_item_cleaned" ]]; then
-                    download_game "$game_item_cleaned"
-                else
-                    log_debug "Skipping blank game name."
-                fi
+                # Remove backslashes, quotes, and backticks from the game name
+                game_item_cleaned=$(echo "$game_item" | sed 's/[\\\"` ]//g')
+                download_game "$game_item_cleaned"
             fi
         done <<< "$game_items"
     done
@@ -72,9 +63,9 @@ download_game() {
     local decoded_name="$1"
     
     # Clean up the game name by removing unwanted characters like backticks and quotes, but keep spaces
-    decoded_name_cleaned=$(echo "$decoded_name" | sed 's/[\\\"`]//g' | sed 's/^[[:space:]]*//g' | sed 's/[[:space:]]*$//g')  # Trim both leading and trailing spaces
+    decoded_name_cleaned=$(echo "$decoded_name" | sed 's/[\\\"`]//g')
 
-    # Debug: Log the cleaned game name before searching
+    # Log the search process for the game in AllGames.txt
     log_debug "Searching for game '$decoded_name_cleaned' in AllGames.txt..."
 
     # Find the full URL using the cleaned game name in AllGames.txt
