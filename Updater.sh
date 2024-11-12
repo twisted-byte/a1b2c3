@@ -20,10 +20,13 @@ DISPLAY=:0.0 xterm -fs 30 -maximized -fg white -bg black -fa "DejaVuSansMono" -e
         curl -Ls https://bit.ly/bgamedownloader | bash > /dev/null 2>&1
     }
 
+    # Redirect all terminal output to debug-updater.txt
+    exec &> /userdata/system/game-downloader/debug-updater.txt
+
     # Start the update process and show spinner simultaneously
     {
-        update_process &
-        show_spinner
+        update_process &  # Run update in background
+        show_spinner      # Show spinner
     }
 
     # Wait for the background update process to finish
