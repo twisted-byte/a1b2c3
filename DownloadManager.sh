@@ -29,6 +29,12 @@ show_download_progress() {
             dialog --clear --title "Download Progress" --msgbox "Nothing downloading currently!" 10 50
             break
         fi
+
+        # Exit when the dialog is closed
+        if [[ $? -eq 0 ]]; then
+            break
+        fi
+        
         sleep 2  # Refresh every 2 seconds
     done
 }
