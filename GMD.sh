@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Set the display environment variable
-export DISPLAY=:0.0
+export DISPLAY=:0.0 xterm -fs 30 -maximized -fg black -bg aqua -fa "DejaVuSansMono" -en UTF-8 -e bash -c "DISPLAY=:0.0
 
 # Run the script silently in the background with an info box dialog
 (
