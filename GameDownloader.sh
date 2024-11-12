@@ -52,3 +52,6 @@ esac
 
 # Clear screen on exit
 clear
+
+# Run the curl command to reload the games
+curl http://127.0.0.1:1234/reloadgames
