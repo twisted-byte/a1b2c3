@@ -13,17 +13,25 @@ fi
 PSX_MENU_URL="https://raw.githubusercontent.com/DTJW92/game-downloader/main/psx-downloader-menu.sh"
 PS2_MENU_URL="https://raw.githubusercontent.com/DTJW92/game-downloader/main/ps2-downloader-menu.sh"
 DC_MENU_URL="https://raw.githubusercontent.com/DTJW92/game-downloader/main/dc-downloader-menu.sh"
+UPDATER_URL="https://raw.githubusercontent.com/DTJW92/game-downloader/main/Updater.sh"
+DOWNLOAD_MANAGER_URL="https://raw.githubusercontent.com/DTJW92/game-downloader/main/DownloadManager.sh"
 
 # Define local file paths
 PSX_MENU="/userdata/system/game-downloader/psx-downloader-menu.sh"
 PS2_MENU="/userdata/system/game-downloader/ps2-downloader-menu.sh"
 DC_MENU="/userdata/system/game-downloader/dc-downloader-menu.sh"
+UPDATER="/userdata/system/game-downloader/Updater.sh"
+DOWNLOAD_MANAGER="/userdata/system/game-downloader/DownloadManager.sh"
 
-# Function to download and update a script if needed, with progress bar in dialog
+# Function to download and update a script if needed, with a simple infobox
 download_if_needed() {
     local remote_url="$1"
     local local_file="$2"
     
+    # Show a simple loading infobox
+    dialog --infobox "Downloading and updating scripts. Please wait..." 5 50
+    sleep 2  # Allow time for the infobox to display
+
     # Get the remote file's timestamp
     remote_timestamp=$(curl -sI "$remote_url" | grep -i '^Last-Modified:' | sed 's/Last-Modified: //')
     
@@ -35,38 +43,40 @@ download_if_needed() {
         fi
     fi
 
-    # If not up-to-date or file doesn't exist, download the latest version
-    (
-        wget -c --progress=dot "$remote_url" -O "$local_file" 2>&1 | \
-        awk '{print $1}' | \
-        while read -r progress; do
-            # Extract the percentage from wget progress output
-            if [[ "$progress" =~ ([0-9]+)% ]]; then
-                percent="${BASH_REMATCH[1]}"
-                echo $percent
-            fi
-        done
-    ) | dialog --title "Downloading" --gauge "Downloading file..." 10 70 0
+    # Download the latest version if the file is outdated or missing
+    wget -q -O "$local_file" "$remote_url"
 }
 
-# Download and update the PSX, PS2, and Dreamcast menu scripts if necessary
+# Show infobox and background the download tasks
 dialog --infobox "Checking for script updates..." 5 50
-download_if_needed "$PSX_MENU_URL" "$PSX_MENU"
-download_if_needed "$PS2_MENU_URL" "$PS2_MENU"
-download_if_needed "$DC_MENU_URL" "$DC_MENU"
+download_if_needed "$PSX_MENU_URL" "$PSX_MENU" &
+download_if_needed "$PS2_MENU_URL" "$PS2_MENU" &
+download_if_needed "$DC_MENU_URL" "$DC_MENU" &
+download_if_needed "$UPDATER_URL" "$UPDATER" &
+download_if_needed "$DOWNLOAD_MANAGER_URL" "$DOWNLOAD_MANAGER" &
+
+# Wait for all background downloads to complete
+wait
 
 # Ensure the scripts have the correct permissions
 chmod +x "$PSX_MENU" &> /dev/null
 chmod +x "$PS2_MENU" &> /dev/null
 chmod +x "$DC_MENU" &> /dev/null
+chmod +x "$UPDATER" &> /dev/null
+chmod +x "$DOWNLOAD_MANAGER" &> /dev/null
 
 # Main dialog menu
+# Main dialog menu with a separator
 dialog --clear --backtitle "Game Downloader" \
        --title "Select a System" \
-       --menu "Choose an option:" 15 50 5 \
+       --menu "Choose an option:" 15 50 7 \
        1 "PSX Downloader" \
        2 "PS2 Downloader" \
-       3 "Dreamcast Downloader" 2>/tmp/game-downloader-choice
+       3 "Dreamcast Downloader" \
+       -- "------" \
+       4 "Run Updater" \
+       5 "Run Download Manager" 2>/tmp/game-downloader-choice
+
 
 # Read user choice
 choice=$(< /tmp/game-downloader-choice)
@@ -83,8 +93,14 @@ case $choice in
     3)
         "$DC_MENU"
         ;;
+    4)
+        "$UPDATER"
+        ;;
+    5)
+        "$DOWNLOAD_MANAGER"
+        ;;
     *)
-        dialog --msgbox "No valid option selected." 10 50
+        dialog --msgbox "Exitting..." 10 50
         ;;
 esac
 
