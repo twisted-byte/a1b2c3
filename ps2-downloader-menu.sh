@@ -100,16 +100,7 @@ download_game() {
 
     # Unzip the file into the folder within /roms/ps2
     mkdir -p "$extracted_folder"
-    (
-        unzip -o "$zip_file" -d "$extracted_folder" 2>&1 | while read -r line; do
-            # Extract the percentage progress from the unzip output
-            if [[ "$line" =~ ([0-9]+)% ]]; then
-                percent="${BASH_REMATCH[1]}"
-                # Update progress bar with extraction percentage
-                echo $percent
-            fi
-        done
-    ) | dialog --title "Extracting $folder_name" --gauge "Extracting..." 10 70 0
+    unzip -o "$zip_file" -d "$extracted_folder"
 
     # Remove the downloaded zip file after extraction
     rm -f "$zip_file"
