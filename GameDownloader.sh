@@ -73,20 +73,20 @@ chmod +x "$UPDATER" &> /dev/null
 chmod +x "$DOWNLOAD_MANAGER" &> /dev/null
 chmod +x "$UNINSTALL_SCRIPT" &> /dev/null
 
-# Start the download manager silently in the background
-echo "Starting Download Manager..." > "$DEBUG_LOG_DIR/download_manager.log"
-nohup bash "$DOWNLOAD_MANAGER" > "$DEBUG_LOG_DIR/download_manager.log" 2>&1 &
+# Start the download.sh script silently in the background
+echo "Starting download.sh..." > "$DEBUG_LOG_DIR/download_sh.log"
+nohup bash /userdata/system/game-downloader/download.sh > "$DEBUG_LOG_DIR/download_sh.log" 2>&1 &
 
-# Check if Download Manager started
-if ! pgrep -f "$DOWNLOAD_MANAGER" > /dev/null; then
-    echo "Download Manager failed to start" >> "$DEBUG_LOG_DIR/debug_log.txt"
+# Check if download.sh started
+if ! pgrep -f "download.sh" > /dev/null; then
+    echo "download.sh failed to start" >> "$DEBUG_LOG_DIR/debug_log.txt"
 else
-    echo "Download Manager started successfully" >> "$DEBUG_LOG_DIR/debug_log.txt"
+    echo "download.sh started successfully" >> "$DEBUG_LOG_DIR/debug_log.txt"
 fi
 
 sleep 2  # Add a short sleep to prevent immediate exit
 
-# Main dialog menu with loop to keep menu active until valid choice
+# Main dialog menu with loop to keep menu active until valid choice is selected
 while true; do
     dialog --clear --backtitle "Game Downloader" \
            --title "Select a System" \
