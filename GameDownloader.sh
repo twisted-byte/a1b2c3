@@ -76,10 +76,8 @@ dialog --clear --backtitle "Game Downloader" \
        1 "PSX Downloader" \
        2 "PS2 Downloader" \
        3 "Dreamcast Downloader" \
-       -- "-----------" \
        4 "Run Updater" \
        5 "Run Download Manager" \
-       -- "-----------" \
        6 "Uninstall Game Downloader" 2>/tmp/game-downloader-choice
 
 # Read user choice
@@ -108,7 +106,7 @@ case $choice in
         "$UNINSTALL_SCRIPT"
         ;;
     *)
-        dialog --inforbox "Exiting..." 10 50
+        dialog --infobox "Exiting..." 10 50
         sleep 2
         ;;
 esac
