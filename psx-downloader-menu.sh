@@ -22,6 +22,7 @@ select_games() {
 
     if [[ ! -f "$file" ]]; then
         dialog --infobox "No games found for letter '$letter'." 5 40
+        sleep 2
         return
     fi
 
@@ -84,6 +85,7 @@ download_game() {
     if [ -z "$game_url" ]; then
         log_debug "Error: Could not find download URL for '$decoded_name_cleaned'."
         dialog --infobox "Error: Could not find download URL for '$decoded_name_cleaned'." 5 40
+        sleep 2
         return
     fi
 
@@ -94,6 +96,7 @@ download_game() {
     if [[ -f "$file_path" ]]; then
         log_debug "File already exists: '$file_path'. Skipping download."
         dialog --infobox "'$decoded_name_cleaned' already exists. Skipping download." 5 40
+        sleep 2
         return
     fi
 
@@ -111,6 +114,7 @@ download_game() {
     if [[ $? -eq 0 ]]; then
         log_debug "Downloaded '$decoded_name_cleaned' successfully."
         dialog --infobox "Downloaded '$decoded_name_cleaned' successfully." 5 40
+        sleep 2
         
         # Check file integrity if a checksum file exists
         if [[ -f "$CHECKSUM_FILE" ]]; then
@@ -121,6 +125,7 @@ download_game() {
                 if [[ "$checksum" != "$downloaded_checksum" ]]; then
                     log_debug "Error: Checksum mismatch for '$decoded_name_cleaned'."
                     dialog --infobox "Checksum mismatch for '$decoded_name_cleaned'. Download might be corrupted." 5 40
+                    sleep 2
                 else
                     log_debug "Checksum verified for '$decoded_name_cleaned'."
                 fi
@@ -131,6 +136,7 @@ download_game() {
     else
         log_debug "Error downloading '$decoded_name_cleaned'."
         dialog --infobox "Error downloading '$decoded_name_cleaned'." 5 40
+        sleep 2
     fi
 }
 
