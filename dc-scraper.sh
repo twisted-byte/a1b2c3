@@ -12,9 +12,14 @@ decode_url() {
     echo -n "$1" | sed 's/%/\\x/g' | xargs -0 printf "%b"
 }
 
-# Clear all text files before writing new data
-rm -f "$DEST_DIR"/*.txt
+# Clear all the text files before writing new data
+clear_all_files() {
+    rm -f "$DEST_DIR"/*.txt
+    echo "All game list files have been cleared."
+}
 
+# Clear all text files before starting
+clear_all_files
 # Fetch the page content
 page_content=$(curl -s "$BASE_URL")
 
