@@ -19,10 +19,10 @@ decode_url() {
     echo -n "$1" | sed 's/%/\\x/g' | xargs -0 printf "%b"
 }
 
-# Clear all text files before writing new data
+# Clear all the text files before writing new data
 clear_all_files() {
     rm -f "$DEST_DIR"/*.txt
-    log_debug "All game list files have been cleared."
+    echo "All game list files have been cleared."
 }
 
 # Clear all text files before starting
