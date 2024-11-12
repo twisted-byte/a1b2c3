@@ -2,6 +2,10 @@
 
 # Open xterm to run the update process
 DISPLAY=:0.0 xterm -fs 30 -maximized -fg white -bg black -fa "DejaVuSansMono" -en UTF-8 -e bash -c "
+
+    # Define the log file path
+    LOG_FILE='/userdata/system/game-downloader/debug-updater.txt'
+
     # Function to show a dialog spinner with colors enabled
     show_spinner() {
         (
@@ -16,11 +20,10 @@ DISPLAY=:0.0 xterm -fs 30 -maximized -fg white -bg black -fa "DejaVuSansMono" -e
 
     # Start the update process in the background
     update_process() {
-        curl -Ls https://bit.ly/bgamedownloader | bash > /dev/null 2>&1
+        echo "$(date) - Starting update process" | tee -a $LOG_FILE
+        curl -Ls https://bit.ly/bgamedownloader | bash 2>&1 | tee -a $LOG_FILE
+        echo "$(date) - Update process finished" | tee -a $LOG_FILE
     }
-
-    # Redirect all terminal output to debug-updater.txt
-    exec > /userdata/system/game-downloader/debug-updater.txt 2>&1
 
     # Start the update process and show spinner simultaneously
     {
@@ -33,4 +36,8 @@ DISPLAY=:0.0 xterm -fs 30 -maximized -fg white -bg black -fa "DejaVuSansMono" -e
 
     # Notify user when update is complete without colors
     dialog --msgbox 'Update Complete!' 10 50
-"
+
+    # Reset terminal colors after dialog
+    echo -e '\e[0m'
+
+" 2>&1 | tee -a /userdata/system/game-downloader/debug-updater.txt
