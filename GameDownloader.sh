@@ -24,6 +24,10 @@ DC_MENU="/userdata/system/game-downloader/dc-downloader-menu.sh"
 UPDATER="/userdata/system/game-downloader/Updater.sh"
 DOWNLOAD_MANAGER="/userdata/system/game-downloader/DownloadManager.sh"
 UNINSTALL_SCRIPT="/userdata/system/game-downloader/uninstall.sh"
+DEBUG_LOG_DIR="/userdata/system/game-downloader/debug"
+
+# Ensure debug log directory exists
+mkdir -p "$DEBUG_LOG_DIR"
 
 # Function to download and update a script if needed, with a simple infobox
 download_if_needed() {
@@ -70,7 +74,16 @@ chmod +x "$DOWNLOAD_MANAGER" &> /dev/null
 chmod +x "$UNINSTALL_SCRIPT" &> /dev/null
 
 # Start the download manager silently in the background
-nohup bash "$DOWNLOAD_MANAGER" &>/dev/null &
+echo "Starting Download Manager..." > "$DEBUG_LOG_DIR/download_manager.log"
+nohup bash "$DOWNLOAD_MANAGER" > "$DEBUG_LOG_DIR/download_manager.log" 2>&1 &
+
+# Check if Download Manager started
+if ! pgrep -f "$DOWNLOAD_MANAGER" > /dev/null; then
+    echo "Download Manager failed to start" >> "$DEBUG_LOG_DIR/debug_log.txt"
+else
+    echo "Download Manager started successfully" >> "$DEBUG_LOG_DIR/debug_log.txt"
+fi
+
 sleep 2  # Add a short sleep to prevent immediate exit
 
 # Main dialog menu with loop to keep menu active until valid choice
