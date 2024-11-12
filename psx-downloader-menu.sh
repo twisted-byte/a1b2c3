@@ -59,8 +59,7 @@ download_game() {
     fi
 
    # Append the decoded name, URL, and folder to the DownloadManager.txt file
-    echo "`$decoded_name_cleaned`|$game_url|$DOWNLOAD_DIR" >> "/userdata/system/game-downloader/download.txt"
-
+    echo "\`$decoded_name_cleaned\`|$game_url|$DOWNLOAD_DIR" >> "/userdata/system/game-downloader/download.txt"
     dialog --infobox "'$decoded_name_cleaned' link added to download list." 5 40
     sleep 2
 }
