@@ -12,6 +12,7 @@ download_game() {
     local file_name="$(basename "$url")"
     local output_path="$folder/$file_name"
     local status_file="$STATUS_DIR/$file_name.status"
+    local game_entry="$decoded_name|$url|$folder"
 
     # Start download and update progress
     wget -c "$url" -O "$output_path" --progress=dot 2>&1 | \
@@ -27,6 +28,12 @@ download_game() {
         unzip -o "$output_path" -d "$folder"
         rm "$output_path"  # Remove the zip file after extraction
     fi
+
+    # Remove the entry from download.txt
+    sed -i "\|$game_entry|d" "/userdata/system/game-downloader/download.txt"
+
+    # Delete the status file
+    rm -f "$status_file"
 }
 
 # Read download links from file and start concurrent downloads
