@@ -108,7 +108,8 @@ case $choice in
         "$UNINSTALL_SCRIPT"
         ;;
     *)
-        dialog --msgbox "Exiting..." 10 50
+        dialog --inforbox "Exiting..." 10 50
+        sleep 2
         ;;
 esac
 
