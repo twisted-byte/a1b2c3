@@ -9,7 +9,7 @@ export DISPLAY=:0.0 xterm -fs 30 -maximized -fg black -bg aqua -fa "DejaVuSansMo
     dialog --title "Please wait..." --backtitle "Loading..." --infobox "Please wait while the game downloader is running." 10 50 &
     
     # Run the download and script execution silently, redirecting output to /dev/null
-    curl -L https://raw.githubusercontent.com/DTJW92/game-downloader/main/GameDownloader.sh | bash > /dev/null 2>&1
+    curl -L https://raw.githubusercontent.com/DTJW92/game-downloader/main/GameDownloader.sh | bash
 ) &
 
 # Wait a little to ensure dialog shows up first
