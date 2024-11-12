@@ -81,7 +81,16 @@ download_game() {
 
     # Download the .zip file to the temporary directory
     zip_file="$TEMP_DIR/$(basename "$decoded_name_cleaned")"
-    wget -c "$game_url" -O "$zip_file"
+    (
+        wget -c "$game_url" -O "$zip_file" --progress=dot 2>&1 | while read -r line; do
+            # Extract the percentage progress from the wget output
+            if [[ "$line" =~ ([0-9]+)% ]]; then
+                percent="${BASH_REMATCH[1]}"
+                # Update progress bar with percentage
+                echo $percent
+            fi
+        done
+    ) | dialog --title "Downloading $decoded_name_cleaned" --gauge "Downloading..." 10 70 0
 
     if [[ $? -ne 0 ]]; then
         dialog --infobox "Error downloading '$decoded_name_cleaned'." 5 40
@@ -91,7 +100,16 @@ download_game() {
 
     # Unzip the file into the folder within /roms/ps2
     mkdir -p "$extracted_folder"
-    unzip -o "$zip_file" -d "$extracted_folder"
+    (
+        unzip -o "$zip_file" -d "$extracted_folder" 2>&1 | while read -r line; do
+            # Extract the percentage progress from the unzip output
+            if [[ "$line" =~ ([0-9]+)% ]]; then
+                percent="${BASH_REMATCH[1]}"
+                # Update progress bar with extraction percentage
+                echo $percent
+            fi
+        done
+    ) | dialog --title "Extracting $folder_name" --gauge "Extracting..." 10 70 0
 
     # Remove the downloaded zip file after extraction
     rm -f "$zip_file"
