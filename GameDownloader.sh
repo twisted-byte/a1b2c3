@@ -11,10 +11,12 @@ fi
 
 # Define the URLs to fetch the menu scripts from GitHub
 PSX_MENU_URL="https://raw.githubusercontent.com/DTJW92/game-downloader/main/psx-downloader-menu.sh"
+PS2_MENU_URL="https://raw.githubusercontent.com/DTJW92/game-downloader/main/ps2-downloader-menu.sh"
 DC_MENU_URL="https://raw.githubusercontent.com/DTJW92/game-downloader/main/dc-downloader-menu.sh"
 
 # Define local file paths
 PSX_MENU="/userdata/system/game-downloader/psx-downloader-menu.sh"
+PS2_MENU="/userdata/system/game-downloader/ps2-downloader-menu.sh"
 DC_MENU="/userdata/system/game-downloader/dc-downloader-menu.sh"
 
 # Function to download and update a script if needed, with progress bar in dialog
@@ -47,21 +49,24 @@ download_if_needed() {
     ) | dialog --title "Downloading" --gauge "Downloading file..." 10 70 0
 }
 
-# Download and update the PSX and Dreamcast menu scripts if necessary
+# Download and update the PSX, PS2, and Dreamcast menu scripts if necessary
 dialog --infobox "Checking for script updates..." 5 50
 download_if_needed "$PSX_MENU_URL" "$PSX_MENU"
+download_if_needed "$PS2_MENU_URL" "$PS2_MENU"
 download_if_needed "$DC_MENU_URL" "$DC_MENU"
 
 # Ensure the scripts have the correct permissions
 chmod +x "$PSX_MENU" &> /dev/null
+chmod +x "$PS2_MENU" &> /dev/null
 chmod +x "$DC_MENU" &> /dev/null
 
 # Main dialog menu
 dialog --clear --backtitle "Game Downloader" \
        --title "Select a System" \
-       --menu "Choose an option:" 15 50 4 \
+       --menu "Choose an option:" 15 50 5 \
        1 "PSX Downloader" \
-       2 "Dreamcast Downloader" 2>/tmp/game-downloader-choice
+       2 "PS2 Downloader" \
+       3 "Dreamcast Downloader" 2>/tmp/game-downloader-choice
 
 # Read user choice
 choice=$(< /tmp/game-downloader-choice)
@@ -73,6 +78,9 @@ case $choice in
         "$PSX_MENU"
         ;;
     2)
+        "$PS2_MENU"
+        ;;
+    3)
         "$DC_MENU"
         ;;
     *)
