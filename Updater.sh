@@ -16,18 +16,20 @@ DISPLAY=:0.0 xterm -fs 30 -maximized -fg white -bg black -fa "DejaVuSansMono" -e
     } &
 
     # Initialize the progress bar using dialog
-    ( 
-        for i in \$(seq 1 $total_steps); do
-            # Calculate the progress percentage
-            progress=\$((i))
+    dialog --title 'Downloading...' --gauge 'Please wait while downloading...' 10 70 0 &
 
-            # Output the progress to update the dialog gauge
-            echo \$progress
+    # Update progress bar every interval for the total duration
+    for i in \$(seq 1 $total_steps); do
+        # Calculate the progress percentage
+        progress=\$((i))
 
-            # Sleep for the calculated interval time
-            sleep $interval
-        done
-    ) | dialog --title 'Downloading...' --gauge 'Please wait while downloading...' 10 70 0
+        # Directly update the progress bar using dialog's --gauge option
+        # Using the process ID (PID) of the dialog progress bar
+        kill -USR1 \$(pgrep -f 'dialog --gauge') 2>/dev/null
+
+        # Sleep for the calculated interval time
+        sleep $interval
+    done
 
     # Wait for the background update process to finish
     wait
