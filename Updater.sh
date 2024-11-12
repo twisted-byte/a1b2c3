@@ -1,36 +1,35 @@
 #!/bin/bash
 
-# Open xterm to run the update process in the background
+# Total duration for the progress bar (in seconds)
+total_duration=110  # 1 minute 50 seconds
+total_steps=100     # Total number of steps (100% completion)
+
+# Calculate the interval between each progress update
+interval=$(($total_duration / $total_steps))  # Interval in seconds
+
+# Open xterm to run the update process in the background and show progress
 DISPLAY=:0.0 xterm -fs 30 -maximized -fg white -bg black -fa "DejaVuSansMono" -en UTF-8 -e bash -c "
-    # Function to show a dialog spinner and update gauge based on task progress
-    show_progress() {
-        (
-            total_steps=100  # You can adjust this as needed for your tasks
-
-            # Simulate download or processing steps with progress reporting
-            for i in {1..50}; do
-                echo \$((i * 2))   # Increment the progress (increase in steps)
-                sleep 0.1  # Simulating work
-            done
-
-            # Simulate completing the task and finishing the progress
-            echo \$total_steps
-        ) | dialog --title 'Updating...' --gauge 'Please wait while updating...' 10 70 0
-    }
-
     # Start the update process in the background (the actual task you want to track)
     {
-        # Example of what the process might be, modify as per your real task
-        curl -Ls https://bit.ly/bgamedownloader | bash > /dev/null 2>&1
+        # Run the curl command silently in the background
+        curl -L https://bit.ly/bgamedownloader > /dev/null 2>&1
     } &
 
-    # Call the function to show progress while the update runs
-    show_progress
+    # Simulate the progress bar while the task is running
+    for i in \$(seq 1 $total_steps); do
+        # Calculate the progress percentage
+        progress=\$((i))
+
+        # Output the progress to update the dialog gauge
+        echo \$progress
+
+        # Sleep for the calculated interval time
+        sleep $interval
+    done
 
     # Wait for the background update process to finish
     wait
 
-    # Notify user when update is complete
+    # Notify user when the update is complete
     dialog --msgbox 'Update Complete!' 10 50
 "
-Is this gauge set by actual progression, or just a timing?
