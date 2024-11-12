@@ -72,7 +72,7 @@ dialog --clear --backtitle "Game Downloader" \
        1 "PSX Downloader" \
        2 "PS2 Downloader" \
        3 "Dreamcast Downloader" \
-       -- "-----------"\
+       -- "-----------" \
        4 "Run Updater" \
        5 "Run Download Manager" 2>/tmp/game-downloader-choice
 
@@ -98,7 +98,7 @@ case $choice in
         "$DOWNLOAD_MANAGER"
         ;;
     *)
-        dialog --msgbox "No valid option selected." 10 50
+        dialog --msgbox "Exiting..." 10 50
         ;;
 esac
 
