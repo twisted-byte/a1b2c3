@@ -40,51 +40,65 @@ select_games() {
         return
     fi
 
+    # Loop over the selected games and download them one by one
     IFS=$'\n'  # Set the internal field separator to newline to preserve spaces in game names
-for game in $selected_games; do
-    # Clean the game name by removing quotes and backslashes
-    game_cleaned=$(echo "$game" | sed 's/[\"\\]//g')
-
-    log_debug "Searching for game '$game_cleaned' in AllGames.txt..."
-
-    # Find the full URL using the cleaned game name (search individually)
-    game_url=$(grep -F -m 1 "$game_cleaned" "$ALLGAMES_FILE" | cut -d '|' -f 2)
-
-        if [ -z "$game_url" ]; then
-            log_debug "Error: Could not find download URL for '$game_cleaned'."
-            dialog --msgbox "Error: Could not find download URL for '$game_cleaned'." 5 40
-            continue
-        fi
-
-        log_debug "Found download URL for '$game_cleaned': $game_url"
-
-        # Check if the file already exists
-        file_path="$DOWNLOAD_DIR/$(basename "$game_cleaned")"
-        if [[ -f "$file_path" ]]; then
-            log_debug "File already exists: '$file_path'. Skipping download."
-            dialog --msgbox "'$game_cleaned' already exists. Skipping download." 5 40
-            continue
-        fi
-
-        # Display the download progress in a dialog infobox
-        (
-            wget "$game_url" -P "$DOWNLOAD_DIR" 2>&1 | while read -r line; do
-                echo "$line" | grep -oP '([0-9]+)%' | sed 's/%//' | \
-                while read -r percent; do
-                    echo $percent  # Outputs progress percentage for dialog gauge
-                done
-            done
-        ) | dialog --title "Downloading $game_cleaned" --gauge "Downloading..." 10 70 0
-
-        # Check if the download was successful
-        if [[ $? -eq 0 ]]; then
-            log_debug "Downloaded '$game_cleaned' successfully."
-            dialog --msgbox "Downloaded '$game_cleaned' successfully." 5 40
-        else
-            log_debug "Error downloading '$game_cleaned'."
-            dialog --msgbox "Error downloading '$game_cleaned'." 5 40
-        fi
+    # Split each selection (game name) by the quotes
+    for game in $selected_games; do
+        # Process each game individually, only if it is inside quotes
+        while [[ "$game" =~ \"([^\"]+)\" ]]; do
+            game_cleaned="${BASH_REMATCH[1]}"  # Extract the content inside the quotes
+            download_game "$game_cleaned"
+            game="${game#*$game_cleaned}"  # Remove the processed game from the string
+        done
     done
+}
+
+# Function to download the selected game
+download_game() {
+    local decoded_name="$1"
+    
+    # Remove any quotes and escape characters from the decoded name
+    decoded_name_cleaned=$(echo "$decoded_name" | sed 's/[\"\\]//g')
+
+    log_debug "Searching for game '$decoded_name_cleaned' in AllGames.txt..."
+
+    # Find the full URL using the cleaned game name
+    game_url=$(grep -F "$decoded_name_cleaned" "$ALLGAMES_FILE" | cut -d '|' -f 2)
+
+    if [ -z "$game_url" ]; then
+        log_debug "Error: Could not find download URL for '$decoded_name_cleaned'."
+        dialog --msgbox "Error: Could not find download URL for '$decoded_name_cleaned'." 5 40
+        return
+    fi
+
+    log_debug "Found download URL for '$decoded_name_cleaned': $game_url"
+
+    # Check if the file already exists
+    file_path="$DOWNLOAD_DIR/$(basename "$decoded_name_cleaned")"
+    if [[ -f "$file_path" ]]; then
+        log_debug "File already exists: '$file_path'. Skipping download."
+        dialog --msgbox "'$decoded_name_cleaned' already exists. Skipping download." 5 40
+        return
+    fi
+
+    # Display the download progress in a dialog infobox
+    (
+        wget "$game_url" -P "$DOWNLOAD_DIR" 2>&1 | while read -r line; do
+            echo "$line" | grep -oP '([0-9]+)%' | sed 's/%//' | \
+            while read -r percent; do
+                echo $percent  # Outputs progress percentage for dialog gauge
+            done
+        done
+    ) | dialog --title "Downloading $decoded_name_cleaned" --gauge "Downloading..." 10 70 0
+
+    # Check if the download was successful
+    if [[ $? -eq 0 ]]; then
+        log_debug "Downloaded '$decoded_name_cleaned' successfully."
+        dialog --msgbox "Downloaded '$decoded_name_cleaned' successfully." 5 40
+    else
+        log_debug "Error downloading '$decoded_name_cleaned'."
+        dialog --msgbox "Error downloading '$decoded_name_cleaned'." 5 40
+    fi
 }
 
 # Function to show the letter selection menu
