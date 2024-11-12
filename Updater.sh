@@ -2,7 +2,10 @@
 
 # Open xterm to run the update process
 DISPLAY=:0.0 xterm -fs 30 -maximized -fg white -bg black -fa "DejaVuSansMono" -en UTF-8 -e bash -c "
-    # Function to show a dialog spinner without colors
+    # Set terminal background color to black
+    echo -e '\e[40m'
+
+    # Function to show a dialog spinner with colors enabled
     show_spinner() {
         (
             echo '0'   # Initial value (0%)
@@ -12,7 +15,6 @@ DISPLAY=:0.0 xterm -fs 30 -maximized -fg white -bg black -fa "DejaVuSansMono" -e
             done
             echo '100'   # End value (100%)
         ) | dialog --colors --title '\Zb\Z6Updating...' --gauge '\Zb\Z5Please wait while updating...' 10 70 0
-
     }
 
     # Start the update process in the background
@@ -31,4 +33,7 @@ DISPLAY=:0.0 xterm -fs 30 -maximized -fg white -bg black -fa "DejaVuSansMono" -e
 
     # Notify user when update is complete without colors
     dialog --msgbox 'Update Complete!' 10 50
+
+    # Reset terminal colors after dialog
+    echo -e '\e[0m'
 "
