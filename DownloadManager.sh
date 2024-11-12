@@ -68,9 +68,6 @@ show_download_progress() {
         fi
         sleep 2  # Refresh every 2 seconds
     done
-
-    # Return to GameDownloader.sh after exit
-    bash /userdata/system/game-downloader/GameDownloader.sh
 }
 
 # Main entry: specify download file
@@ -79,5 +76,8 @@ download_file="/userdata/system/game-downloader/download.txt"
 # Start downloads and show progress
 start_downloads "$download_file"
 show_download_progress
+
+# Return to the main menu when all downloads are complete
+exec /userdata/system/game-downloader/GameDownloader.sh
 
 echo "All downloads complete!"
