@@ -35,6 +35,4 @@ DISPLAY=:0.0 xterm -fs 30 -maximized -fg white -bg black -fa "DejaVuSansMono" -e
     # Notify user when update is complete without colors
     dialog --msgbox 'Update Complete!' 10 50
 
-    # Reset terminal colors after dialog
-    echo -e '\e[0m'
 "
