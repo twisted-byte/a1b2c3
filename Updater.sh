@@ -11,7 +11,7 @@ DISPLAY=:0.0 xterm -fs 30 -maximized -fg white -bg black -fa "DejaVuSansMono" -e
                 sleep 1.1
             done
             echo '100'   # End value (100%)
-        ) | dialog --title '\Zb\Z6Updating...' --gauge '\Z5Please wait while updating...' 10 70 0
+        ) | dialog --colors --title '\Zb\Z6Updating...' --gauge '\Z5Please wait while updating...' 10 70 0
 
     }
 
