@@ -1,10 +1,6 @@
 #!/bin/bash
-
-# Source the formatting.sh script to apply custom formatting
-source /userdata/system/game-downloader/formatting.sh
-
 # Open xterm to run the update process in the background
-DISPLAY=:0.0 xterm -fs 30 -maximized -fg "$TEXT_COLOR" -bg "$BACKGROUND_COLOR" -fa "DejaVuSansMono" -en UTF-8 -e bash -c "
+DISPLAY=:0.0 xterm -fs 30 -maximized -fg cyan -bg black -fa "DejaVuSansMono" -en UTF-8 -e bash -c "
     # Function to show a dialog spinner with progress
     show_spinner() {
         (
