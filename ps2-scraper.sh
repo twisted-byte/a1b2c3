@@ -38,8 +38,8 @@ echo "$page_content" | grep -oP '(?<=href=")[^"]*\.zip' | while read -r game_url
     decoded_name=$(decode_url "$game_url")
     log_debug "Decoded name: $decoded_name"
 
-    # Only process files that contain "(En)" or "(Europe)" or "(Europe, Australia)" and do not contain "(Demo)"
-    if [[ ("$decoded_name" =~ \(.*[Ee][Nn].*\) || "$decoded_name" =~ \(.*Europe.*\)) && ! "$decoded_name" =~ \(.*Demo.*\) ]]; then
+    # Only process files that contain both "(En)" and "(Europe)" or "(Europe, Australia)", and do not contain "(Demo)"
+    if [[ "$decoded_name" =~ \(.*[Ee][Nn].*\) && ("$decoded_name" =~ \(.*Europe.*\) || "$decoded_name" =~ \(.*Europe,\ Australia.*\)) && ! "$decoded_name" =~ \(.*Demo.*\) ]]; then
         log_debug "Matched region in decoded name: $decoded_name"
 
         # Format the entry with backticks around the decoded name
