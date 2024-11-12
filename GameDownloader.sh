@@ -35,7 +35,7 @@ download_if_needed() {
     local local_file="$2"
     
     # Show a simple loading infobox
-    dialog --infobox "Downloading and updating scripts. Please wait..." 5 50
+    dialog --infobox "Loading, please wait..." 5 50
     sleep 2  # Allow time for the infobox to display
 
     # Get the remote file's timestamp
