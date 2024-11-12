@@ -66,17 +66,15 @@ chmod +x "$UPDATER" &> /dev/null
 chmod +x "$DOWNLOAD_MANAGER" &> /dev/null
 
 # Main dialog menu
-# Main dialog menu with a separator
 dialog --clear --backtitle "Game Downloader" \
        --title "Select a System" \
        --menu "Choose an option:" 15 50 7 \
        1 "PSX Downloader" \
        2 "PS2 Downloader" \
        3 "Dreamcast Downloader" \
-       -- "------" \
+       -- "-----------"\
        4 "Run Updater" \
        5 "Run Download Manager" 2>/tmp/game-downloader-choice
-
 
 # Read user choice
 choice=$(< /tmp/game-downloader-choice)
@@ -100,7 +98,7 @@ case $choice in
         "$DOWNLOAD_MANAGER"
         ;;
     *)
-        dialog --msgbox "Exitting..." 10 50
+        dialog --msgbox "No valid option selected." 10 50
         ;;
 esac
 
