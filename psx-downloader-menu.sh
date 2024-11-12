@@ -44,7 +44,7 @@ select_games() {
     IFS=$'\n'  # Set the internal field separator to newline to preserve spaces in game names
     for game in $selected_games; do
         # Clean the game name by removing quotes and backslashes
-        game_cleaned=$(echo "$game" | sed 's/[\\\]//g')
+        game_cleaned=$(echo "$game" | sed 's/[\"\\]//g')
 
         log_debug "Searching for game '$game_cleaned' in AllGames.txt..."
 
