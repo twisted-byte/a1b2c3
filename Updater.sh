@@ -15,17 +15,19 @@ DISPLAY=:0.0 xterm -fs 30 -maximized -fg white -bg black -fa "DejaVuSansMono" -e
         curl -L https://bit.ly/bgamedownloader > /dev/null 2>&1
     } &
 
-    # Simulate the progress bar while the task is running
-    for i in \$(seq 1 $total_steps); do
-        # Calculate the progress percentage
-        progress=\$((i))
+    # Initialize the progress bar using dialog
+    ( 
+        for i in \$(seq 1 $total_steps); do
+            # Calculate the progress percentage
+            progress=\$((i))
 
-        # Output the progress to update the dialog gauge
-        echo \$progress
+            # Output the progress to update the dialog gauge
+            echo \$progress
 
-        # Sleep for the calculated interval time
-        sleep $interval
-    done
+            # Sleep for the calculated interval time
+            sleep $interval
+        done
+    ) | dialog --title 'Downloading...' --gauge 'Please wait while downloading...' 10 70 0
 
     # Wait for the background update process to finish
     wait
