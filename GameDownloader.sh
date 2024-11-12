@@ -71,47 +71,49 @@ chmod +x "$UNINSTALL_SCRIPT" &> /dev/null
 
 # Start the download manager silently in the background
 nohup bash "$DOWNLOAD_MANAGER" &>/dev/null &
+sleep 2  # Add a short sleep to prevent immediate exit
 
-# Main dialog menu
-dialog --clear --backtitle "Game Downloader" \
-       --title "Select a System" \
-       --menu "Choose an option:" 15 50 8 \
-       1 "PSX Downloader" \
-       2 "PS2 Downloader" \
-       3 "Dreamcast Downloader" \
-       4 "Run Updater" \
-       5 "Run Download Manager" \
-       6 "Uninstall Game Downloader" 2>/tmp/game-downloader-choice
+# Main dialog menu with loop to keep menu active until valid choice
+while true; do
+    dialog --clear --backtitle "Game Downloader" \
+           --title "Select a System" \
+           --menu "Choose an option:" 15 50 8 \
+           1 "PSX Downloader" \
+           2 "PS2 Downloader" \
+           3 "Dreamcast Downloader" \
+           4 "Run Updater" \
+           5 "Run Download Manager" \
+           6 "Uninstall Game Downloader" 2>/tmp/game-downloader-choice
 
-# Read user choice
-choice=$(< /tmp/game-downloader-choice)
-rm /tmp/game-downloader-choice
+    choice=$(< /tmp/game-downloader-choice)
+    rm /tmp/game-downloader-choice
 
-# Act based on choice
-case $choice in
-    1)
-        "$PSX_MENU"
-        ;;
-    2)
-        "$PS2_MENU"
-        ;;
-    3)
-        "$DC_MENU"
-        ;;
-    4)
-        "$UPDATER"
-        ;;
-    5)
-        "$DOWNLOAD_MANAGER"  # Only show the download manager when selected
-        ;;
-    6)
-        "$UNINSTALL_SCRIPT"
-        ;;
-    *)
-        dialog --infobox "Exiting..." 10 50
-        sleep 2
-        ;;
-esac
+    case $choice in
+        1)
+            "$PSX_MENU"
+            ;;
+        2)
+            "$PS2_MENU"
+            ;;
+        3)
+            "$DC_MENU"
+            ;;
+        4)
+            "$UPDATER"
+            ;;
+        5)
+            "$DOWNLOAD_MANAGER"  # Only show the download manager when selected
+            ;;
+        6)
+            "$UNINSTALL_SCRIPT"
+            ;;
+        *)
+            dialog --infobox "Exiting..." 10 50
+            sleep 2
+            break  # Exit loop when no valid choice is selected
+            ;;
+    esac
+done
 
 # Clear screen on exit
 clear
