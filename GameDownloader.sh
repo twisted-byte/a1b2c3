@@ -3,13 +3,12 @@
 # Ensure clear display
 clear
 
-# Welcome message
-echo "Welcome to the Game Downloader. Updated"
-sleep 2
+# Suppress standard output and error messages
+exec > /dev/null 2>&1
 
 # Check if dialog is installed
 if ! command -v dialog &> /dev/null; then
-    echo "Error: dialog is not installed. Please install it and try again."
+    dialog --msgbox "Error: dialog is not installed. Please install it and try again." 10 50
     exit 1
 fi
 
@@ -22,13 +21,12 @@ PSX_MENU="/userdata/system/game-downloader/psx-downloader-menu.sh"
 DC_MENU="/userdata/system/game-downloader/dc-downloader-menu.sh"
 
 # Download the PSX and Dreamcast downloader menu scripts from GitHub
-echo "Downloading PSX and Dreamcast downloader menus from GitHub..."
-curl -L "$PSX_MENU_URL" -o "$PSX_MENU"
-curl -L "$DC_MENU_URL" -o "$DC_MENU"
+curl -L "$PSX_MENU_URL" -o "$PSX_MENU" &> /dev/null
+curl -L "$DC_MENU_URL" -o "$DC_MENU" &> /dev/null
 
 # Ensure the scripts have the correct permissions
-chmod +x "$PSX_MENU"
-chmod +x "$DC_MENU"
+chmod +x "$PSX_MENU" &> /dev/null
+chmod +x "$DC_MENU" &> /dev/null
 
 # Main dialog menu
 dialog --clear --backtitle "Game Downloader" \
@@ -50,12 +48,12 @@ case $choice in
         "$DC_MENU"
         ;;
     *)
-        echo "No valid option selected."
+        dialog --msgbox "No valid option selected." 10 50
         ;;
 esac
 
 # Clear screen on exit
 clear
 
-# Run the curl command to reload the games
-curl http://127.0.0.1:1234/reloadgames
+# Run the curl command to reload the games (output suppressed)
+curl http://127.0.0.1:1234/reloadgames &> /dev/null
