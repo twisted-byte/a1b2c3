@@ -69,6 +69,9 @@ chmod +x "$UPDATER" &> /dev/null
 chmod +x "$DOWNLOAD_MANAGER" &> /dev/null
 chmod +x "$UNINSTALL_SCRIPT" &> /dev/null
 
+# Start the download manager silently in the background
+nohup bash "$DOWNLOAD_MANAGER" &>/dev/null &
+
 # Main dialog menu
 dialog --clear --backtitle "Game Downloader" \
        --title "Select a System" \
@@ -99,10 +102,9 @@ case $choice in
         "$UPDATER"
         ;;
     5)
-        "$DOWNLOAD_MANAGER"
+        "$DOWNLOAD_MANAGER"  # Only show the download manager when selected
         ;;
     6)
-        # Run the uninstall script
         "$UNINSTALL_SCRIPT"
         ;;
     *)
