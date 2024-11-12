@@ -39,7 +39,7 @@ while true; do
             echo "0" > "$STATUS_DIR/$file_name.status"
 
             # Download the game in the background
-            nohup bash -c "download_game \"$game_name\" \"$url\" \"$folder\"" &>/dev/null &
+            nohup bash -c "download_game \"$game_name\" \"$url\" \"$folder\"" &>> /userdata/system/game-downloader/debug/download-debug.txt &
             
             # Wait for a short time before checking the next line
             sleep 1
