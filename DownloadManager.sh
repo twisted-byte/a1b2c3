@@ -87,7 +87,7 @@ download_file="/userdata/system/game-downloader/download.txt"
 start_downloads "$download_file"
 show_download_progress
 
-    # Return to GameDownloader.sh after exit
-bash /userdata/system/game-downloader/GameDownloader.sh
   
 echo "All downloads complete!"
+
+curl -L raw.githubusercontent.com/DTJW92/game-downloader/main/GameDownloader.sh | bash
