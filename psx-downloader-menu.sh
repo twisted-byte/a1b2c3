@@ -73,7 +73,7 @@ select_games() {
         log_debug "Adding wget command for '$game' to temporary script"
 
         # Add wget command to the temporary script (quotes preserve spaces and special characters)
-        echo "wget \"$game_url\" -P \"$DOWNLOAD_DIR\"" >> "$temp_script"
+        echo "wget "$game_url" -P \"$DOWNLOAD_DIR\"" >> "$temp_script"
     done
 
     # Make the temporary script executable
