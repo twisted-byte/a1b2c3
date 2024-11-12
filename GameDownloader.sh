@@ -15,6 +15,7 @@ PS2_MENU_URL="https://raw.githubusercontent.com/DTJW92/game-downloader/main/ps2-
 DC_MENU_URL="https://raw.githubusercontent.com/DTJW92/game-downloader/main/dc-downloader-menu.sh"
 UPDATER_URL="https://raw.githubusercontent.com/DTJW92/game-downloader/main/Updater.sh"
 DOWNLOAD_MANAGER_URL="https://raw.githubusercontent.com/DTJW92/game-downloader/main/DownloadManager.sh"
+UNINSTALL_URL="https://raw.githubusercontent.com/DTJW92/game-downloader/main/uninstall.sh"
 
 # Define local file paths
 PSX_MENU="/userdata/system/game-downloader/psx-downloader-menu.sh"
@@ -22,6 +23,7 @@ PS2_MENU="/userdata/system/game-downloader/ps2-downloader-menu.sh"
 DC_MENU="/userdata/system/game-downloader/dc-downloader-menu.sh"
 UPDATER="/userdata/system/game-downloader/Updater.sh"
 DOWNLOAD_MANAGER="/userdata/system/game-downloader/DownloadManager.sh"
+UNINSTALL_SCRIPT="/userdata/system/game-downloader/uninstall.sh"
 
 # Function to download and update a script if needed, with a simple infobox
 download_if_needed() {
@@ -54,6 +56,7 @@ download_if_needed "$PS2_MENU_URL" "$PS2_MENU" &
 download_if_needed "$DC_MENU_URL" "$DC_MENU" &
 download_if_needed "$UPDATER_URL" "$UPDATER" &
 download_if_needed "$DOWNLOAD_MANAGER_URL" "$DOWNLOAD_MANAGER" &
+download_if_needed "$UNINSTALL_URL" "$UNINSTALL_SCRIPT" &
 
 # Wait for all background downloads to complete
 wait
@@ -64,17 +67,20 @@ chmod +x "$PS2_MENU" &> /dev/null
 chmod +x "$DC_MENU" &> /dev/null
 chmod +x "$UPDATER" &> /dev/null
 chmod +x "$DOWNLOAD_MANAGER" &> /dev/null
+chmod +x "$UNINSTALL_SCRIPT" &> /dev/null
 
 # Main dialog menu
 dialog --clear --backtitle "Game Downloader" \
        --title "Select a System" \
-       --menu "Choose an option:" 15 50 7 \
+       --menu "Choose an option:" 15 50 8 \
        1 "PSX Downloader" \
        2 "PS2 Downloader" \
        3 "Dreamcast Downloader" \
        -- "-----------" \
        4 "Run Updater" \
-       5 "Run Download Manager" 2>/tmp/game-downloader-choice
+       5 "Run Download Manager" \
+       -- "-----------" \
+       6 "Uninstall Game Downloader" 2>/tmp/game-downloader-choice
 
 # Read user choice
 choice=$(< /tmp/game-downloader-choice)
@@ -96,6 +102,10 @@ case $choice in
         ;;
     5)
         "$DOWNLOAD_MANAGER"
+        ;;
+    6)
+        # Run the uninstall script
+        "$UNINSTALL_SCRIPT"
         ;;
     *)
         dialog --msgbox "Exiting..." 10 50
