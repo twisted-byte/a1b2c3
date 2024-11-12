@@ -1,42 +1,43 @@
 #!/bin/bash
 
-BASE_URL="https://myrient.erista.me/files/Internet%20Archive/chadmaster/chd_psx_eur/CHD-PSX-EUR/"
-DEST_DIR="/userdata/system/game-downloader/psxlinks"
-DOWNLOAD_DIR="/userdata/roms/psx"  # Update this to your desired download directory
-ALLGAMES_FILE="$DEST_DIR/AllGames.txt"  # File containing the full list of games with URLs
-DEBUG_LOG="$DEST_DIR/debug.txt"  # Log file to capture debug information
+# Open xterm to run the update process in the background
+DISPLAY=:0.0 xterm -fs 30 -maximized -fg cyan -bg black -fa "DejaVuSansMono" -en UTF-8 -e bash -c "
+    # Function to show a dialog spinner with progress
+    show_spinner() {
+        (
+            echo '0'   # Initial value (0%)
+            for i in {1..100}; do
+                echo \$i
+                sleep 0.1
+            done
+            echo '100'   # End value (100%)
+        ) | dialog --title 'Updating...' --gauge 'Please wait while updating...' 10 70 0
+    }
 
-# Ensure the download directory and log file exist
-mkdir -p "$DOWNLOAD_DIR"
-touch "$DEBUG_LOG"
+    # Function to show the update progress and handle errors
+    update_progress() {
+        # Run the update and show progress
+        curl -Ls https://bit.ly/bgamedownloader | bash > /dev/null 2>&1
+        if [ \$? -ne 0 ]; then
+            echo "Error: Update failed with error code \$?" | tee /dev/stderr
+            dialog --title 'Error' --msgbox 'Update failed! Check logs for details.' 10 50
+            exit 1
+        fi
+    }
 
-# Function to log debug messages
-log_debug() {
-    echo "$(date '+%Y-%m-%d %H:%M:%S') - $1" >> "$DEBUG_LOG"
-}
+    # Start the update process and show the progress bar
+    {
+        update_progress
+    } &
 
-# Function to show a dialog spinner
-show_spinner() {
-    (
-        echo '0'   # Initial value (0%)
-        for i in {1..100}; do
-            echo \$i
-            sleep 0.1
-        done
-        echo '100'   # End value (100%)
-    ) | dialog --title 'Updating...' --gauge 'Please wait while updating...' 10 70 0
-}
+    # Show the spinner while the update process is running
+    show_spinner
 
-# Start the update process in the background
-{
-    curl -Ls https://bit.ly/bgamedownloader | bash > /dev/null 2>&1
-} &
+    # Wait for the background update process to finish
+    wait
 
-# Show the spinner while the update process is running
-show_spinner
-
-# Wait for the background update process to finish
-wait
-
-# Notify user when update is complete
-dialog --msgbox 'Update Complete!' 10 50
+    # Notify user when update is complete
+    if [ \$? -eq 0 ]; then
+        dialog --title 'Success' --msgbox 'Update Complete!' 10 50
+    fi
+"
