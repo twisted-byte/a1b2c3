@@ -30,7 +30,7 @@ curl -s "$BASE_URL" | grep -oP 'href="([^"]+\.chd)"' | sed -E 's/href="(.*)"/\1/
     decoded_name=$(decode_url "$file_name")
     
     # Encase the decoded name in double quotes
-    quoted_name="\"$decoded_name\""
+    # quoted_name="\"$decoded_name\""
     
     # Get the first character of the decoded file name
     first_char="${decoded_name:0:1}"
