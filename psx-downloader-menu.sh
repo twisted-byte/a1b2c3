@@ -21,7 +21,7 @@ select_games() {
     local file="$DEST_DIR/${letter}.txt"
 
     if [[ ! -f "$file" ]]; then
-        dialog --msgbox "No games found for letter '$letter'." 5 40
+        dialog --infobox "No games found for letter '$letter'." 5 40
         return
     fi
 
@@ -83,7 +83,7 @@ download_game() {
 
     if [ -z "$game_url" ]; then
         log_debug "Error: Could not find download URL for '$decoded_name_cleaned'."
-        dialog --msgbox "Error: Could not find download URL for '$decoded_name_cleaned'." 5 40
+        dialog --infobox "Error: Could not find download URL for '$decoded_name_cleaned'." 5 40
         return
     fi
 
@@ -93,7 +93,7 @@ download_game() {
     file_path="$DOWNLOAD_DIR/$(basename "$decoded_name_cleaned")"
     if [[ -f "$file_path" ]]; then
         log_debug "File already exists: '$file_path'. Skipping download."
-        dialog --msgbox "'$decoded_name_cleaned' already exists. Skipping download." 5 40
+        dialog --infobox "'$decoded_name_cleaned' already exists. Skipping download." 5 40
         return
     fi
 
@@ -110,7 +110,7 @@ download_game() {
     # Check if the download was successful
     if [[ $? -eq 0 ]]; then
         log_debug "Downloaded '$decoded_name_cleaned' successfully."
-        dialog --msgbox "Downloaded '$decoded_name_cleaned' successfully." 5 40
+        dialog --infobox "Downloaded '$decoded_name_cleaned' successfully." 5 40
         
         # Check file integrity if a checksum file exists
         if [[ -f "$CHECKSUM_FILE" ]]; then
@@ -120,7 +120,7 @@ download_game() {
                 downloaded_checksum=$(sha256sum "$DOWNLOAD_DIR/$(basename "$decoded_name_cleaned")" | cut -d ' ' -f 1)
                 if [[ "$checksum" != "$downloaded_checksum" ]]; then
                     log_debug "Error: Checksum mismatch for '$decoded_name_cleaned'."
-                    dialog --msgbox "Checksum mismatch for '$decoded_name_cleaned'. Download might be corrupted." 5 40
+                    dialog --infobox "Checksum mismatch for '$decoded_name_cleaned'. Download might be corrupted." 5 40
                 else
                     log_debug "Checksum verified for '$decoded_name_cleaned'."
                 fi
@@ -130,7 +130,7 @@ download_game() {
         fi
     else
         log_debug "Error downloading '$decoded_name_cleaned'."
-        dialog --msgbox "Error downloading '$decoded_name_cleaned'." 5 40
+        dialog --infobox "Error downloading '$decoded_name_cleaned'." 5 40
     fi
 }
 
@@ -174,3 +174,6 @@ done
 
 log_debug "Goodbye!"
 echo "Goodbye!"
+
+# Run the curl command to reload the games
+curl http://127.0.0.1:1234/reloadgames
