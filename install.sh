@@ -45,7 +45,7 @@ echo "Running PS2 scraper..."
 bash <(curl -s "$PS2_SCRAPER")
 
 # Download bkeys.txt and save it as GMD.sh.keys in the Ports folder
-curl -L "https://raw.githubusercontent.com/DTJW92/game-downloader/main/bkeys.txt" -o /userdata/roms/ports/GMD.sh.keys
+curl -L "https://raw.githubusercontent.com/DTJW92/game-downloader/main/bkeys.txt" -o /userdata/roms/ports/GameDownloader.sh.keys
 
 # Reload games to reflect changes
 curl http://127.0.0.1:1234/reloadgames &> /dev/null
