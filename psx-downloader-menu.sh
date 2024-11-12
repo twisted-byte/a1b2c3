@@ -40,15 +40,18 @@ select_games() {
         return
     fi
 
-    # Loop over the selected games and download them one by one
+    # Loop over the selected games and download them, splitting by .chd
     IFS=$'\n'  # Set the internal field separator to newline to preserve spaces in game names
-    # Split each selection (game name) by the quotes
     for game in $selected_games; do
-        # Process each game individually, only if it is inside quotes
-        while [[ "$game" =~ \"([^\"]+)\" ]]; do
-            game_cleaned="${BASH_REMATCH[1]}"  # Extract the content inside the quotes
-            download_game "$game_cleaned"
-            game="${game#*$game_cleaned}"  # Remove the processed game from the string
+        # Split by .chd, process each part as a game
+        IFS='.chd' read -r -a games_array <<< "$game"
+        
+        for game_item in "${games_array[@]}"; do
+            # Clean up the game name and download
+            game_cleaned=$(echo "$game_item" | sed 's/[[:space:]]//g')  # Remove any surrounding spaces
+            if [[ -n "$game_cleaned" ]]; then
+                download_game "$game_cleaned.chd"
+            fi
         done
     done
 }
