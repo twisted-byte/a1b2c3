@@ -20,6 +20,12 @@ download_game() {
 
     # Mark as complete
     echo "100" > "$status_file"  # Mark as complete
+
+    # Check if the downloaded file is a zip and extract it
+    if [[ "$file_name" =~ \.zip$ ]]; then
+        unzip -o "$output_path" -d "$folder"
+        rm "$output_path"  # Remove the zip file after extraction
+    fi
 }
 
 # Read download links from file and start concurrent downloads
