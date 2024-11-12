@@ -17,7 +17,7 @@ DC_MENU_URL="https://raw.githubusercontent.com/DTJW92/game-downloader/main/dc-do
 PSX_MENU="/userdata/system/game-downloader/psx-downloader-menu.sh"
 DC_MENU="/userdata/system/game-downloader/dc-downloader-menu.sh"
 
-# Function to download and update a script if needed
+# Function to download and update a script if needed, with progress bar in dialog
 download_if_needed() {
     local remote_url="$1"
     local local_file="$2"
@@ -34,7 +34,17 @@ download_if_needed() {
     fi
 
     # If not up-to-date or file doesn't exist, download the latest version
-    curl -L "$remote_url" -o "$local_file"
+    (
+        wget -c --progress=dot "$remote_url" -O "$local_file" 2>&1 | \
+        awk '{print $1}' | \
+        while read -r progress; do
+            # Extract the percentage from wget progress output
+            if [[ "$progress" =~ ([0-9]+)% ]]; then
+                percent="${BASH_REMATCH[1]}"
+                echo $percent
+            fi
+        done
+    ) | dialog --title "Downloading" --gauge "Downloading file..." 10 70 0
 }
 
 # Download and update the PSX and Dreamcast menu scripts if necessary
