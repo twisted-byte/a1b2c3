@@ -1,80 +1,110 @@
 #!/bin/bash
 
-# Directory where the download status files are stored
-STATUS_DIR="/userdata/system/game-downloader/status"
-mkdir -p "$STATUS_DIR"
+# Ensure clear display
+clear
+# Check if dialog is installed
+if ! command -v dialog &> /dev/null; then
+    dialog --msgbox "Error: dialog is not installed. Please install it and try again." 10 50
+    exit 1
+fi
+# Define the URLs to fetch the menu scripts from GitHub
+PSX_MENU_URL="https://raw.githubusercontent.com/DTJW92/game-downloader/main/psx-downloader-menu.sh"
+PS2_MENU_URL="https://raw.githubusercontent.com/DTJW92/game-downloader/main/ps2-downloader-menu.sh"
+DC_MENU_URL="https://raw.githubusercontent.com/DTJW92/game-downloader/main/dc-downloader-menu.sh"
+UPDATER_URL="https://raw.githubusercontent.com/DTJW92/game-downloader/main/Updater.sh"
+DOWNLOAD_MANAGER_URL="https://raw.githubusercontent.com/DTJW92/game-downloader/main/DownloadManager.sh"
+UNINSTALL_URL="https://raw.githubusercontent.com/DTJW92/game-downloader/main/uninstall.sh"
+# Define local file paths
+PSX_MENU="/userdata/system/game-downloader/psx-downloader-menu.sh"
+PS2_MENU="/userdata/system/game-downloader/ps2-downloader-menu.sh"
+DC_MENU="/userdata/system/game-downloader/dc-downloader-menu.sh"
+UPDATER="/userdata/system/game-downloader/Updater.sh"
+DOWNLOAD_MANAGER="/userdata/system/game-downloader/DownloadManager.sh"
+UNINSTALL_SCRIPT="/userdata/system/game-downloader/uninstall.sh"
 
-# Function to download a single game with a specific target folder
-download_game() {
-    local decoded_name="$1"
-    local url="$2"
-    local folder="$3"  # Folder passed from the caller
-    local file_name="$(basename "$url")"
-    local output_path="$folder/$file_name"
-    local status_file="$STATUS_DIR/$file_name.status"
+# Function to download and update a script if needed, with a simple infobox
+download_if_needed() {
+    local remote_url="$1"
+    local local_file="$2"
 
-    # Start download and update progress
-    wget -c "$url" -O "$output_path" --progress=dot 2>&1 | \
-    awk '/[0-9]%/ {gsub(/[\.\%]/,""); print $1}' | while read -r progress; do
-        echo "$progress" > "$status_file"
-    done
+    # Show a simple loading infobox
+    dialog --infobox "Downloading and updating scripts. Please wait..." 5 50
+    sleep 2  # Allow time for the infobox to display
 
-    # Mark as complete
-    echo "100" > "$status_file"  # Mark as complete
-
-    # Check if the downloaded file is a zip and extract it
-    if [[ "$file_name" =~ \.zip$ ]]; then
-        unzip -o "$output_path" -d "$folder"
-        rm "$output_path"  # Remove the zip file after extraction
-    fi
-}
-
-# Read download links from file and start concurrent downloads
-start_downloads() {
-    local download_file="$1"
+    # Get the remote file's timestamp
+    remote_timestamp=$(curl -sI "$remote_url" | grep -i '^Last-Modified:' | sed 's/Last-Modified: //')
     
-    # Read URLs from the provided file and derive the folder dynamically
-    while IFS='|' read -r decoded_name url folder; do
-        file_name="$(basename "$url")"
-        echo "0" > "$STATUS_DIR/$file_name.status"  # Initialize progress status
-        nohup bash -c "download_game \"$decoded_name\" \"$url\" \"$folder\"" &>/dev/null &  # Background download
-    done < "$download_file"
-}
-
-# Function to display download status with Dialog
-show_download_progress() {
-    while true; do
-        clear
-        progress_text="Downloading:\n"
-        any_progress=false
-        # Check the status of all downloads
-        for status_file in "$STATUS_DIR"/*.status; do
-            if [[ -f "$status_file" ]]; then
-                file_name=$(basename "$status_file" .status)
-                progress=$(<"$status_file")
-                decoded_name=$(grep -F "$file_name" "$download_file" | cut -d '|' -f 1)  # Get the decoded name
-                progress_text="$progress_text$decoded_name: $progress%\n"
-                any_progress=true
-            fi
-        done
-
-        # If there's ongoing downloads, show progress
-        if $any_progress; then
-            dialog --clear --title "Download Progress" --msgbox "$progress_text" 15 50
-        else
-            # Show a message when no downloads are active, with a Cancel button
-            dialog --clear --title "Download Progress" --msgbox "Nothing downloading currently!" 10 50
-            break
+    # Check if the remote timestamp is newer than the local file's timestamp
+    if [[ -f "$local_file" ]]; then
+        local_timestamp=$(stat -c %y "$local_file" | sed 's/\([0-9]*-[0-9]*-[0-9]*\).*/\1/')
+        if [[ "$remote_timestamp" == "$local_timestamp" ]]; then
+            return 0  # No need to download, local is up to date
         fi
-        sleep 2  # Refresh every 2 seconds
-    done
+    fi
+    # Download the latest version if the file is outdated or missing
+    wget -q -O "$local_file" "$remote_url"
 }
 
-# Main entry: specify download file
-download_file="/userdata/system/game-downloader/download.txt"
+# Show infobox and background the download tasks
+dialog --infobox "Checking for script updates..." 5 50
+download_if_needed "$PSX_MENU_URL" "$PSX_MENU" &
+download_if_needed "$PS2_MENU_URL" "$PS2_MENU" &
+download_if_needed "$DC_MENU_URL" "$DC_MENU" &
+download_if_needed "$UPDATER_URL" "$UPDATER" &
+download_if_needed "$DOWNLOAD_MANAGER_URL" "$DOWNLOAD_MANAGER" &
+download_if_needed "$UNINSTALL_URL" "$UNINSTALL_SCRIPT" &
+# Wait for all background downloads to complete
+wait
+# Ensure the scripts have the correct permissions
+chmod +x "$PSX_MENU" &> /dev/null
+chmod +x "$PS2_MENU" &> /dev/null
+chmod +x "$DC_MENU" &> /dev/null
+chmod +x "$UPDATER" &> /dev/null
+chmod +x "$DOWNLOAD_MANAGER" &> /dev/null
+chmod +x "$UNINSTALL_SCRIPT" &> /dev/null
+# Start the download manager silently in the background
+nohup bash "$DOWNLOAD_MANAGER" &>/dev/null &
+# Main dialog menu
+dialog --clear --backtitle "Game Downloader" \
+       --title "Select a System" \
+       --menu "Choose an option:" 15 50 8 \
+       1 "PSX Downloader" \
+       2 "PS2 Downloader" \
+       3 "Dreamcast Downloader" \
+       4 "Run Updater" \
+       5 "Run Download Manager" \
+       6 "Uninstall Game Downloader" 2>/tmp/game-downloader-choice
+# Read user choice
+choice=$(< /tmp/game-downloader-choice)
+rm /tmp/game-downloader-choice
+# Act based on choice
+case $choice in
+    1)
+        "$PSX_MENU"
+        ;;
+    2)
+        "$PS2_MENU"
+        ;;
+    3)
+        "$DC_MENU"
+        ;;
+    4)
+        "$UPDATER"
+        ;;
+    5)
+        "$DOWNLOAD_MANAGER"  # Only show the download manager when selected
+        ;;
+    6)
+        "$UNINSTALL_SCRIPT"
+        ;;
+    *)
+        dialog --infobox "Exiting..." 10 50
+        sleep 2
+        ;;
+esac
 
-# Start downloads and show progress
-start_downloads "$download_file"
-show_download_progress
+# Clear screen on exit
+clear
 
-echo "All downloads complete!"
+# Run the curl command to reload the games (output suppressed)
+curl http://127.0.0.1:1234/reloadgames &> /dev/null
