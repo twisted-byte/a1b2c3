@@ -6,8 +6,9 @@ mkdir -p "$STATUS_DIR"
 
 # Function to download a single game with a specific target folder
 download_game() {
-    local url="$1"
-    local folder="$2"  # Folder passed from the caller
+    local decoded_name="$1"
+    local url="$2"
+    local folder="$3"  # Folder passed from the caller
     local file_name="$(basename "$url")"
     local output_path="$folder/$file_name"
     local status_file="$STATUS_DIR/$file_name.status"
@@ -28,29 +29,23 @@ download_game() {
     fi
 }
 
-# Function to continuously check and process downloads
+# Read download links from file and start concurrent downloads
 start_downloads() {
     local download_file="$1"
     local folder="$2"  # Folder where the games will be downloaded
 
-    while true; do
-        # Read URLs from the provided file
-        mapfile -t downloads < "$download_file"
+    # Read URLs from the provided file
+    mapfile -t downloads < "$download_file"
 
-        # If no downloads are left, continue looping
-        if [ ${#downloads[@]} -gt 0 ]; then
-            for url in "${downloads[@]}"; do
-                file_name="$(basename "$url")"
-                echo "0" > "$STATUS_DIR/$file_name.status"  # Initialize progress status
-                nohup bash -c "download_game \"$url\" \"$folder\"" &>/dev/null &
+    # Loop through each download URL and start in background
+    for entry in "${downloads[@]}"; do
+        decoded_name=$(echo "$entry" | cut -d '|' -f 1)  # Get the decoded name
+        url=$(echo "$entry" | cut -d '|' -f 2)           # Get the URL
+        folder=$(echo "$entry" | cut -d '|' -f 3)         # Get the download folder
 
-                # Remove the URL from the download file once started
-                sed -i "/$url/d" "$download_file"
-            done
-        fi
-
-        # Sleep for 0.1 seconds to continually check the file
-        sleep 0.1
+        file_name="$(basename "$url")"
+        echo "0" > "$STATUS_DIR/$file_name.status"  # Initialize progress status
+        nohup bash -c "download_game \"$decoded_name\" \"$url\" \"$folder\"" &>/dev/null &
     done
 }
 
@@ -65,7 +60,8 @@ show_download_progress() {
             if [[ -f "$status_file" ]]; then
                 file_name=$(basename "$status_file" .status)
                 progress=$(<"$status_file")
-                progress_text="$progress_text$file_name: $progress%\n"
+                decoded_name=$(grep -F "$file_name" "$download_file" | cut -d '|' -f 1)  # Get the decoded name
+                progress_text="$progress_text$decoded_name: $progress%\n"
                 any_progress=true
             fi
         done
@@ -85,7 +81,7 @@ download_file="/userdata/system/game-downloader/download.txt"
 download_folder="/userdata/roms/ps2"  # Adjust this based on the caller script
 
 # Start downloads and show progress
-start_downloads "$download_file" "$download_folder" &
+start_downloads "$download_file" "$download_folder"
 show_download_progress
 
 echo "All downloads complete!"
