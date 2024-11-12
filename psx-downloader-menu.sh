@@ -50,30 +50,30 @@ select_games() {
     IFS=$'\n'  # Set IFS to newline to separate each selected game
     for game in $selected_games; do
         # Clean the game name by removing quotes and spaces, but preserving the name as-is
-        game=$(echo "$game" | sed 's/^"//;s/"$//')
+        game_cleaned=$(echo "$game" | sed 's/^"//;s/"$//')  # Remove quotes
 
         # Find the URL for the game in the AllGames.txt file
-        game_url=$(grep -F "$game" "$ALLGAMES_FILE" | cut -d '|' -f 2)
-        
+        game_url=$(grep -F "$game_cleaned" "$ALLGAMES_FILE" | cut -d '|' -f 2)
+
         if [ -z "$game_url" ]; then
-            log_debug "Error: Could not find download URL for '$game'."
-            dialog --msgbox "Error: Could not find download URL for '$game'." 5 40
+            log_debug "Error: Could not find download URL for '$game_cleaned'."
+            dialog --msgbox "Error: Could not find download URL for '$game_cleaned'." 5 40
             continue
         fi
 
         # Check if the file already exists
-        file_path="$DOWNLOAD_DIR/$(basename "$game")"
+        file_path="$DOWNLOAD_DIR/$(basename "$game_cleaned")"
         if [[ -f "$file_path" ]]; then
             log_debug "File already exists: '$file_path'. Skipping download."
-            dialog --msgbox "'$game' already exists. Skipping download." 5 40
+            dialog --msgbox "'$game_cleaned' already exists. Skipping download." 5 40
             continue
         fi
 
         # Log the game and URL being added to the temporary script
-        log_debug "Adding wget command for '$game' to temporary script"
+        log_debug "Adding wget command for '$game_cleaned' to temporary script"
 
         # Add wget command to the temporary script (quotes preserve spaces and special characters)
-        echo "wget "$game_url" -P \"$DOWNLOAD_DIR\"" >> "$temp_script"
+        echo "wget \"$game_url\" -P \"$DOWNLOAD_DIR\"" >> "$temp_script"
     done
 
     # Make the temporary script executable
