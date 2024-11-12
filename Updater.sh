@@ -5,6 +5,13 @@ DISPLAY=:0.0 xterm -fs 30 -maximized -fg white -bg black -fa "DejaVuSansMono" -e
     # Set terminal background color to black
     echo -e '\e[40m'
 
+    # Export dialog color environment variables
+    export DIALOG_COLOR='dialog=WHITE,BLACK'
+    export DIALOG_SCREEN_COLOR='BLACK,BLACK'
+    export DIALOG_TITLE_COLOR='WHITE,BLUE'
+    export DIALOG_BORDER_COLOR='CYAN,BLACK'
+    export DIALOG_SHADOW_COLOR='BLACK,BLACK'
+
     # Function to show a dialog spinner with colors enabled
     show_spinner() {
         (
@@ -14,7 +21,7 @@ DISPLAY=:0.0 xterm -fs 30 -maximized -fg white -bg black -fa "DejaVuSansMono" -e
                 sleep 1.1
             done
             echo '100'   # End value (100%)
-        ) | dialog --colors --title '\Zb\Z6Updating...' --gauge '\Zb\Z5Please wait while updating...' 10 70 0
+        ) | dialog --colors --title '\Zb\Z5Updating...' --gauge '\Zb\Z5Please wait while updating...' 10 70 0
     }
 
     # Start the update process in the background
