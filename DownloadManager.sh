@@ -1,3 +1,54 @@
+#!/bin/bash
+
+# Directory where the download status files are stored
+STATUS_DIR="/userdata/system/game-downloader/status"
+mkdir -p "$STATUS_DIR"
+
+# Function to download a single game with a specific target folder
+download_game() {
+    local decoded_name="$1"
+    local url="$2"
+    local folder="$3"  # Folder passed from the caller
+    local file_name="$(basename "$url")"
+    local output_path="$folder/$file_name"
+    local status_file="$STATUS_DIR/$file_name.status"
+    local debug_log="/userdata/system/game-downloader/debug/download_debug.log"
+
+    # Initialize debug log
+    echo "Starting download: $decoded_name from $url" >> "$debug_log"
+    echo "Target folder: $folder, Output path: $output_path" >> "$debug_log"
+
+    # Start download and update progress
+    wget -c "$url" -O "$output_path" --progress=dot 2>&1 | \
+    awk '/[0-9]%/ {gsub(/[\.\%]/,""); print $1}' | while read -r progress; do
+        echo "$progress" > "$status_file"
+        echo "Download progress: $progress%" >> "$debug_log"  # Log progress
+    done
+
+    # Mark as complete
+    echo "100" > "$status_file"  # Mark as complete
+    echo "Download complete: $file_name" >> "$debug_log"
+
+    # Check if the downloaded file is a zip and extract it
+    if [[ "$file_name" =~ \.zip$ ]]; then
+        unzip -o "$output_path" -d "$folder" >> "$debug_log" 2>&1
+        rm "$output_path"  # Remove the zip file after extraction
+        echo "Extracted and deleted zip file: $output_path" >> "$debug_log"
+    fi
+}
+
+# Read download links from file and start concurrent downloads
+start_downloads() {
+    local download_file="$1"
+    
+    # Read URLs from the provided file and derive the folder dynamically
+    while IFS='|' read -r decoded_name url folder; do
+        file_name="$(basename "$url")"
+        echo "0" > "$STATUS_DIR/$file_name.status"  # Initialize progress status
+        nohup bash -c "download_game \"$decoded_name\" \"$url\" \"$folder\"" &>/dev/null &  # Background download
+    done < "$download_file"
+}
+
 # Function to display download status with Dialog
 show_download_progress() {
     while true; do
@@ -25,7 +76,13 @@ show_download_progress() {
         fi
         sleep 2  # Refresh every 2 seconds
     done
-
-    # Return to GameDownloader.sh when exiting
-    bash /userdata/system/game-downloader/GameDownloader.sh
 }
+
+# Main entry: specify download file
+download_file="/userdata/system/game-downloader/download.txt"
+
+# Start downloads and show progress
+start_downloads "$download_file"
+show_download_progress
+
+echo "All downloads complete!"
