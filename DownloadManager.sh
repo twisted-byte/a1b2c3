@@ -31,8 +31,6 @@ show_download_progress() {
         fi
         sleep 2  # Refresh every 2 seconds
     done
-
-    curl -L raw.githubusercontent.com/DTJW92/game-downloader/main/GameDownloader.sh | bash
 }
 
 # Main entry: specify download file
@@ -40,3 +38,6 @@ download_file="/userdata/system/game-downloader/download.txt"
 
 # Start showing download progress
 show_download_progress
+
+# Optionally, call GameDownloader.sh after progress is done
+curl -L "https://raw.githubusercontent.com/DTJW92/game-downloader/main/GameDownloader.sh" | bash
