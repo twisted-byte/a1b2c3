@@ -88,6 +88,6 @@ start_downloads "$download_file"
 show_download_progress
 
     # Return to GameDownloader.sh after exit
-exec /userdata/system/game-downloader/GameDownloader.sh
+bash /userdata/system/game-downloader/GameDownloader.sh
   
 echo "All downloads complete!"
