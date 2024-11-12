@@ -34,10 +34,19 @@ start_downloads() {
     local download_file="$1"
     
     # Read URLs from the provided file and derive the folder dynamically
-    while IFS='|' read -r decoded_name url folder; do
-        file_name="$(basename "$url")"
-        echo "0" > "$STATUS_DIR/$file_name.status"  # Initialize progress status
-        nohup bash -c "download_game \"$decoded_name\" \"$url\" \"$folder\"" &>/dev/null &  # Background download
+    while IFS='|' read -r game_name url folder; do
+        file_name="$(basename "$url")"  # Extract the file name from URL
+        
+        # Display the game name in the download manager
+        echo "$game_name"
+        
+        # Initialize progress status file
+        echo "0" > "$STATUS_DIR/$file_name.status"
+        
+        # Download the game in the background and store in the target folder
+        nohup bash -c "wget -c \"$url\" -O \"$folder/$file_name\" --progress=dot 2>&1 | \
+                        awk '/[0-9]%/ {gsub(/[\.\%]/,\"\"); print \$1}' | while read -r progress; do \
+                        echo \$progress > \"$STATUS_DIR/$file_name.status\"; done" &>/dev/null &
     done < "$download_file"
 }
 
@@ -68,6 +77,7 @@ show_download_progress() {
         fi
         sleep 2  # Refresh every 2 seconds
     done
+
 }
 
 # Main entry: specify download file
@@ -77,7 +87,7 @@ download_file="/userdata/system/game-downloader/download.txt"
 start_downloads "$download_file"
 show_download_progress
 
-# Return to the main menu when all downloads are complete
+    # Return to GameDownloader.sh after exit
 exec /userdata/system/game-downloader/GameDownloader.sh
-
+  
 echo "All downloads complete!"
