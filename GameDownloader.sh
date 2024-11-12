@@ -17,14 +17,18 @@ fi
 PSX_MENU_URL="https://raw.githubusercontent.com/DTJW92/game-downloader/main/psx-downloader-menu.sh"
 DC_MENU_URL="https://raw.githubusercontent.com/DTJW92/game-downloader/main/dc-downloader-menu.sh"
 
-# Download the PSX and Dreamcast downloader scripts from GitHub
+# Define local file paths
+PSX_MENU="/userdata/system/game-downloader/psx-downloader-menu.sh"
+DC_MENU="/userdata/system/game-downloader/dc-downloader-menu.sh"
+
+# Download the PSX and Dreamcast downloader menu scripts from GitHub
 echo "Downloading PSX and Dreamcast downloader menus from GitHub..."
-curl -L "$PSX_MENU_URL" -o /userdata/system/game-downloader/psx-downloader-menu.sh
-curl -L "$DC_MENU_URL" -o /userdata/system/game-downloader/dc-downloader-menu.sh
+curl -L "$PSX_MENU_URL" -o "$PSX_MENU"
+curl -L "$DC_MENU_URL" -o "$DC_MENU"
 
 # Ensure the scripts have the correct permissions
-chmod +x /userdata/system/game-downloader/psx-downloader-menu.sh
-chmod +x /userdata/system/game-downloader/dc-downloader-menu.sh
+chmod +x "$PSX_MENU"
+chmod +x "$DC_MENU"
 
 # Main dialog menu
 dialog --clear --backtitle "Game Downloader" \
@@ -40,10 +44,10 @@ rm /tmp/game-downloader-choice
 # Act based on choice
 case $choice in
     1)
-        /userdata/system/game-downloader/psx-downloader-menu.sh
+        "$PSX_MENU"
         ;;
     2)
-        /userdata/system/game-downloader/dc-downloader-menu.sh
+        "$DC_MENU"
         ;;
     *)
         echo "No valid option selected."
