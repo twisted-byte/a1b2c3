@@ -1,4 +1,6 @@
 #!/bin/bash
+# Source the formatting script from the specified directory
+source "/userdata/system/game-downloader/formatting.sh"
 
 BASE_URL="https://myrient.erista.me/files/Internet%20Archive/chadmaster/chd_psx_eur/CHD-PSX-EUR/"
 DEST_DIR="/userdata/system/game-downloader/psxlinks"
