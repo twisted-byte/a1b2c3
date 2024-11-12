@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Open xterm to run the update process in the background
+# Open xterm to run the update process
 DISPLAY=:0.0 xterm -fs 30 -maximized -fg white -bg black -fa "DejaVuSansMono" -en UTF-8 -e bash -c "
     # Function to show a dialog spinner
     show_spinner() {
@@ -15,12 +15,15 @@ DISPLAY=:0.0 xterm -fs 30 -maximized -fg white -bg black -fa "DejaVuSansMono" -e
     }
 
     # Start the update process in the background
-    {
+    update_process() {
         curl -Ls https://bit.ly/bgamedownloader | bash > /dev/null 2>&1
-    } &
+    }
 
-    # Show the spinner while the update process is running
-    show_spinner
+    # Start the update process and show spinner simultaneously
+    {
+        update_process &
+        show_spinner
+    }
 
     # Wait for the background update process to finish
     wait
