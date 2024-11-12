@@ -2,7 +2,6 @@
 
 # Open xterm to run the update process
 DISPLAY=:0.0 xterm -fs 30 -maximized -fg white -bg black -fa "DejaVuSansMono" -en UTF-8 -e bash -c "
-
     # Function to show a dialog spinner with colors enabled
     show_spinner() {
         (
@@ -21,7 +20,7 @@ DISPLAY=:0.0 xterm -fs 30 -maximized -fg white -bg black -fa "DejaVuSansMono" -e
     }
 
     # Redirect all terminal output to debug-updater.txt
-    exec &> /userdata/system/game-downloader/debug-updater.txt
+    exec > /userdata/system/game-downloader/debug-updater.txt 2>&1
 
     # Start the update process and show spinner simultaneously
     {
@@ -34,5 +33,4 @@ DISPLAY=:0.0 xterm -fs 30 -maximized -fg white -bg black -fa "DejaVuSansMono" -e
 
     # Notify user when update is complete without colors
     dialog --msgbox 'Update Complete!' 10 50
-
 "
