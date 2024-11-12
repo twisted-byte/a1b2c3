@@ -50,14 +50,11 @@ curl -L "https://raw.githubusercontent.com/DTJW92/game-downloader/main/psx-downl
 curl -L "https://raw.githubusercontent.com/DTJW92/game-downloader/main/dc-downloader-menu.sh" -o /userdata/system/game-downloader/dc-downloader-menu.sh
 curl -L "https://raw.githubusercontent.com/DTJW92/game-downloader/main/ps2-downloader-menu.sh" -o /userdata/system/game-downloader/ps2-downloader-menu.sh
 
-# Download the Updater.sh script and rename it to GMD-Updater in the Ports folder
-curl -L "https://raw.githubusercontent.com/DTJW92/game-downloader/main/Updater.sh" -o /userdata/roms/ports/GMD-Updater.sh
+# Download the Updater.sh script
+curl -L "https://raw.githubusercontent.com/DTJW92/game-downloader/main/Updater.sh" -o /userdata/system/game-downloader/Updater.sh
 
 # Download bkeys.txt and rename it to GMD.sh.keys in the Ports folder
 curl -L "https://raw.githubusercontent.com/DTJW92/game-downloader/main/bkeys.txt" -o /userdata/roms/ports/GMD.sh.keys
-
-# Duplicate bkeys.txt and rename it to GMD-Updater.sh.keys in the Ports folder
-cp /userdata/roms/ports/GMD.sh.keys /userdata/roms/ports/GMD-Updater.sh.keys
 
 # Set execute permissions for all downloaded scripts
 chmod +x /userdata/roms/ports/GMD.sh
@@ -70,7 +67,7 @@ chmod +x /userdata/system/game-downloader/ps2-scraper.sh
 chmod +x /userdata/system/game-downloader/psx-downloader-menu.sh
 chmod +x /userdata/system/game-downloader/dc-downloader-menu.sh
 chmod +x /userdata/system/game-downloader/ps2-downloader-menu.sh
-chmod +x /userdata/roms/ports/GMD-Updater.sh
+chmod +x /userdata/system/game-downloader/Updater.sh
 
 # Run the scraper scripts for PSX, Dreamcast, and PS2
 echo "Running PSX scraper..."
