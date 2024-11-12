@@ -47,8 +47,8 @@ select_games() {
         IFS='.chd' read -r -a games_array <<< "$game"
         
         for game_item in "${games_array[@]}"; do
-            # Clean up the game name and download
-            game_cleaned=$(echo "$game_item" | sed 's/[[:space:]]//g')  # Remove any surrounding spaces
+            # Clean up the game name by trimming leading/trailing spaces
+            game_cleaned=$(echo "$game_item" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')  # Trim spaces
             if [[ -n "$game_cleaned" ]]; then
                 download_game "$game_cleaned.chd"
             fi
