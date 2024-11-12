@@ -1,64 +1,3 @@
-#!/bin/bash
-
-BASE_URL="https://myrient.erista.me/files/Internet%20Archive/chadmaster/chd_psx_eur/CHD-PSX-EUR/"
-DEST_DIR="/userdata/system/game-downloader/psxlinks"
-DOWNLOAD_DIR="/userdata/roms/psx"  # Update this to your desired download directory
-ALLGAMES_FILE="$DEST_DIR/AllGames.txt"  # File containing the full list of games with URLs
-DEBUG_LOG="$DEST_DIR/debug.txt"  # Log file to capture debug information
-CHECKSUM_FILE="$DEST_DIR/checksums.txt"  # Optional: File with checksums to verify downloaded files
-
-# Ensure the download directory and log file exist
-mkdir -p "$DOWNLOAD_DIR"
-touch "$DEBUG_LOG"
-
-# Function to log debug messages
-log_debug() {
-    echo "$(date '+%Y-%m-%d %H:%M:%S') - $1" >> "$DEBUG_LOG"
-}
-
-# Function to display the game list and allow selection
-select_games() {
-    local letter="$1"
-    local file="$DEST_DIR/${letter}.txt"
-
-    if [[ ! -f "$file" ]]; then
-        dialog --msgbox "No games found for letter '$letter'." 5 40
-        return
-    fi
-
-    # Read the list of games from the file and prepare the dialog input
-    local game_list=()
-    while IFS="|" read -r decoded_name encoded_url; do
-        game_list+=("$decoded_name" "$encoded_url" off)
-    done < "$file"
-
-    # Use dialog to show the list of games for the selected letter
-    selected_games=$(dialog --title "Select Games" --checklist "Choose games to download" 15 50 8 \
-        "${game_list[@]}" 3>&1 1>&2 2>&3)
-
-    # If no games are selected, exit
-    if [ -z "$selected_games" ]; then
-        return
-    fi
-
-    # Loop over the selected games, splitting each on ".chd" while retaining exact text
-    IFS=$'\n'  # Set the internal field separator to newline to preserve spaces in game names
-    for game in $selected_games; do
-        # Add '.chd' back to each split part, treating each as a separate game
-        game_items=$(echo "$game" | sed 's/\.chd/.chd\n/g')
-
-        # Iterate over each game item found in the split
-        while IFS= read -r game_item; do
-            # Only download if the game item is not empty
-            if [[ -n "$game_item" ]]; then
-                # Remove backslashes, quotes, and backticks from the game name
-                game_item_cleaned=$(echo "$game_item" | sed 's/[\\\"` ]//g')
-                download_game "$game_item_cleaned"
-            fi
-        done <<< "$game_items"
-    done
-}
-
 # Function to download the selected game
 download_game() {
     local decoded_name="$1"
@@ -67,7 +6,8 @@ download_game() {
     log_debug "Searching for game '$decoded_name' in AllGames.txt..."
 
     # Find the full URL using the decoded name in AllGames.txt
-    game_url=$(grep -F "$decoded_name" "$ALLGAMES_FILE" | cut -d '|' -f 2)
+    # Enclose the game name in double quotes for better matching
+    game_url=$(grep -F "\"$decoded_name\"" "$ALLGAMES_FILE" | cut -d '|' -f 2)
 
     if [ -z "$game_url" ]; then
         log_debug "Error: Could not find download URL for '$decoded_name'."
@@ -121,44 +61,3 @@ download_game() {
         dialog --msgbox "Error downloading '$decoded_name'." 5 40
     fi
 }
-
-# Function to show the letter selection menu
-select_letter() {
-    # Get the list of available letters and format as options for dialog
-    letter_list=$(ls "$DEST_DIR" | grep -oP '^[a-zA-Z#]' | sort | uniq)
-
-    # Prepare menu options for dialog
-    menu_options=()
-    while read -r letter; do
-        menu_options+=("$letter" "$letter")  # Repeat each letter to avoid pairing issue
-    done <<< "$letter_list"
-
-    # Use dialog to allow the user to select a letter
-    selected_letter=$(dialog --title "Select a Letter" --menu "Choose a letter" 15 50 8 \
-        "${menu_options[@]}" 3>&1 1>&2 2>&3)
-
-    # If no letter is selected, exit
-    if [ -z "$selected_letter" ]; then
-        return 1  # Return non-zero exit code if no selection is made
-    fi
-
-    # Call the function to select games for the chosen letter
-    select_games "$selected_letter"
-}
-
-# Main execution flow
-while true; do
-    select_letter
-    if [ $? -eq 0 ]; then
-        # Ask the user whether they want to select another letter or exit
-        dialog --title "Continue?" --yesno "Would you like to select some more games?" 7 50
-        if [ $? -eq 1 ]; then
-            break  # Exit if the user chooses "No"
-        fi
-    else
-        break  # Exit if no selection is made
-    fi
-done
-
-log_debug "Goodbye!"
-echo "Goodbye!"
