@@ -3,10 +3,11 @@
 BASE_URL="https://myrient.erista.me/files/Redump/Sony%20-%20PlayStation%202/"
 DEST_DIR="/userdata/system/game-downloader/ps2links"
 DOWNLOAD_DIR="/userdata/roms/ps2"  # Update this to your desired download directory
+TEMP_DIR="/tmp/ps2_download"  # Temporary directory for downloading and extracting
 ALLGAMES_FILE="$DEST_DIR/AllGames.txt"  # File containing the full list of games with URLs
 
-# Ensure the download directory exists
-mkdir -p "$DOWNLOAD_DIR"
+# Ensure the download and temporary directories exist
+mkdir -p "$DOWNLOAD_DIR" "$TEMP_DIR"
 
 # Function to display the game list and allow selection
 select_games() {
@@ -34,7 +35,7 @@ select_games() {
         return
     fi
 
-    # Loop over the selected games, splitting each on ".chd" while retaining exact text
+    # Loop over the selected games
     IFS=$'\n'
     for game in $selected_games; do
         game_items=$(echo "$game" | sed 's/\.zip/.zip\n/g')
@@ -63,8 +64,9 @@ download_game() {
         return
     fi
 
-    file_path="$DOWNLOAD_DIR/$(basename "$decoded_name_cleaned")"
-    if [[ -f "$file_path" ]]; then
+    # Check if extracted folder already exists (without .zip extension)
+    extracted_folder="$DOWNLOAD_DIR/$(basename "$decoded_name_cleaned" .zip)"
+    if [[ -d "$extracted_folder" ]]; then
         dialog --infobox "'$decoded_name_cleaned' already exists. Skipping download." 5 40
         sleep 2
         return
@@ -74,21 +76,30 @@ download_game() {
     dialog --infobox "Please note; some PS2 games are much larger than others, so they may take longer to download." 5 50
     sleep 2
 
-    # Now start the actual download and show progress
-    (
-        wget -c "$game_url" -P "$DOWNLOAD_DIR" 2>&1 | while read -r line; do
-            echo "$line" | grep -oP '([0-9]+)%' | sed 's/%//' | while read -r percent; do
-                # Update progress bar with percentage
-                echo $percent
-            done
-        done
-    ) | dialog --title "Downloading $decoded_name_cleaned" --gauge "Downloading..." 10 70 0
+    # Download the .zip file to the temporary directory
+    zip_file="$TEMP_DIR/$(basename "$decoded_name_cleaned")"
+    wget -c "$game_url" -O "$zip_file"
+
+    if [[ $? -ne 0 ]]; then
+        dialog --infobox "Error downloading '$decoded_name_cleaned'." 5 40
+        sleep 2
+        return
+    fi
+
+    # Unzip the file into the temporary directory
+    unzip -o "$zip_file" -d "$TEMP_DIR"
+
+    # Move the extracted files to the download directory
+    mv "$TEMP_DIR"/* "$DOWNLOAD_DIR"
+
+    # Remove the downloaded zip file after extraction
+    rm -f "$zip_file"
 
     if [[ $? -eq 0 ]]; then
-        dialog --infobox "Downloaded '$decoded_name_cleaned' successfully." 5 40
+        dialog --infobox "Downloaded and extracted '$decoded_name_cleaned' successfully." 5 40
         sleep 2
     else
-        dialog --infobox "Error downloading '$decoded_name_cleaned'." 5 40
+        dialog --infobox "Error extracting '$decoded_name_cleaned'." 5 40
         sleep 2
     fi
 }
