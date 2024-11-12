@@ -64,10 +64,13 @@ download_game() {
         return
     fi
 
-    # Check if extracted folder already exists (without .zip extension)
-    extracted_folder="$DOWNLOAD_DIR/$(basename "$decoded_name_cleaned" .zip)"
+    # Determine the folder name based on the zip file name (remove .zip extension)
+    folder_name=$(basename "$decoded_name_cleaned" .zip)
+    extracted_folder="$DOWNLOAD_DIR/$folder_name"
+
+    # Check if the folder already exists
     if [[ -d "$extracted_folder" ]]; then
-        dialog --infobox "'$decoded_name_cleaned' already exists. Skipping download." 5 40
+        dialog --infobox "'$folder_name' already exists. Skipping download." 5 40
         sleep 2
         return
     fi
@@ -86,20 +89,18 @@ download_game() {
         return
     fi
 
-    # Unzip the file into the temporary directory
-    unzip -o "$zip_file" -d "$TEMP_DIR"
-
-    # Move the extracted files to the download directory
-    mv "$TEMP_DIR"/* "$DOWNLOAD_DIR"
+    # Unzip the file into the folder within /roms/ps2
+    mkdir -p "$extracted_folder"
+    unzip -o "$zip_file" -d "$extracted_folder"
 
     # Remove the downloaded zip file after extraction
     rm -f "$zip_file"
 
     if [[ $? -eq 0 ]]; then
-        dialog --infobox "Downloaded and extracted '$decoded_name_cleaned' successfully." 5 40
+        dialog --infobox "Downloaded and extracted '$folder_name' successfully." 5 40
         sleep 2
     else
-        dialog --infobox "Error extracting '$decoded_name_cleaned'." 5 40
+        dialog --infobox "Error extracting '$folder_name'." 5 40
         sleep 2
     fi
 }
