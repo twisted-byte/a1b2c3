@@ -2,7 +2,7 @@
 
 # Open xterm to run the update process
 DISPLAY=:0.0 xterm -fs 30 -maximized -fg white -bg black -fa "DejaVuSansMono" -en UTF-8 -e bash -c "
-    # Function to show a dialog spinner
+    # Function to show a dialog spinner with colors
     show_spinner() {
         (
             echo '0'   # Initial value (0%)
@@ -11,7 +11,7 @@ DISPLAY=:0.0 xterm -fs 30 -maximized -fg white -bg black -fa "DejaVuSansMono" -e
                 sleep 0.1
             done
             echo '100'   # End value (100%)
-        ) | dialog --title 'Updating...' --gauge 'Please wait while updating...' 10 70 0
+        ) | dialog --title 'Updating...' --gauge 'Please wait while updating...' 10 70 0 --fg white --bg black
     }
 
     # Start the update process in the background
@@ -28,6 +28,6 @@ DISPLAY=:0.0 xterm -fs 30 -maximized -fg white -bg black -fa "DejaVuSansMono" -e
     # Wait for the background update process to finish
     wait
 
-    # Notify user when update is complete
-    dialog --msgbox 'Update Complete!' 10 50
+    # Notify user when update is complete with dialog colors
+    dialog --msgbox 'Update Complete!' 10 50 --fg white --bg green
 "
