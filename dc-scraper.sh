@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Base URL and destination directory variables from the original script
+# Base URL and destination directory
 BASE_URL="https://myrient.erista.me/files/Internet%20Archive/chadmaster/dc-chd-zstd-redump/dc-chd-zstd/"
 DEST_DIR="/userdata/system/game-downloader/dclinks"
 
@@ -25,12 +25,12 @@ clear_all_files
 # Fetch the page content
 page_content=$(curl -s "$BASE_URL")
 
-# Parse the .chd links and process each link
-echo "$page_content" | grep -oP '(?<=href=")[^"]*\.chd' | while read -r game_url; do
-    # Get the file name from the URL (e.g., AmazingGame.chd)
+# Parse only .chd links that contain "(UK)" or "(Europe)"
+echo "$page_content" | grep -oP '(?<=href=")[^"]*\.(UK|Europe)\.chd' | while read -r game_url; do
+    # Get the file name from the URL (e.g., GameName (Europe).chd)
     file_name=$(basename "$game_url")
     
-    # Decode the file name (ASCII decode if needed)
+    # Decode the file name if necessary
     decoded_name=$(decode_url "$file_name")
     
     # Encase the decoded name in backticks
@@ -42,18 +42,17 @@ echo "$page_content" | grep -oP '(?<=href=")[^"]*\.chd' | while read -r game_url
     # Always append to AllGames.txt with both quoted decoded name and original URL
     echo "$quoted_name|$BASE_URL$game_url" >> "$DEST_DIR/AllGames.txt"
     
-    # Ensure letter files are capitalized and save them to the appropriate letter-based file
+    # Save to a letter-based file (e.g., A.txt, B.txt) based on the first character of the name
     if [[ "$first_char" =~ [a-zA-Z] ]]; then
         first_char=$(echo "$first_char" | tr 'a-z' 'A-Z')  # Capitalize if it's a letter
-        # Save to the capitalized letter-based text file (e.g., A.txt, B.txt)
         echo "$quoted_name|$BASE_URL$game_url" >> "$DEST_DIR/${first_char}.txt"
     elif [[ "$first_char" =~ [0-9] ]]; then
-        # Save all number-prefixed files to a single #.txt (e.g., 1.txt, 2.txt)
+        # Save number-prefixed files to #.txt
         echo "$quoted_name|$BASE_URL$game_url" >> "$DEST_DIR/#.txt"
     else
-        # Handle other cases (if needed) – for now, ignoring symbols, etc.
+        # Save files with other starting characters to other.txt
         echo "$quoted_name|$BASE_URL$game_url" >> "$DEST_DIR/other.txt"
     fi
 done
 
-echo "Scraping complete!"
+echo "Scraping complete for (UK) and (Europe) files!"
