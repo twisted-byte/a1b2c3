@@ -136,26 +136,33 @@ download_game() {
 
 # Function to show the letter selection menu
 select_letter() {
-    # Get the list of available letters and format as options for dialog
-   letter_list=$(ls "$DEST_DIR" | grep -oP '^[a-zA-Z#]' | tr '[:lower:]' '[:upper:]' | sort | uniq)
+# Get the list of available letters, convert to uppercase, and sort
+letter_list=$(ls "$DEST_DIR" | grep -oP '^[a-zA-Z#]' | tr '[:lower:]' '[:upper:]' | sort | uniq)
 
-    # Prepare menu options for dialog
-    menu_options=()
-    while read -r letter; do
-        menu_options+=("$letter" "$letter")  # Repeat each letter to avoid pairing issue
-    done <<< "$letter_list"
-
-    # Use dialog to allow the user to select a letter
-    selected_letter=$(dialog --title "Select a Letter" --menu "Choose a letter" 15 50 8 \
-        "${menu_options[@]}" 3>&1 1>&2 2>&3)
-
-    # If no letter is selected, exit
-    if [ -z "$selected_letter" ]; then
-        return 1  # Return non-zero exit code if no selection is made
+# Prepare menu options in a 4x4 grid format
+menu_options=()
+counter=0
+for letter in $letter_list; do
+    menu_options+=("$letter" "$letter")  # Repeat each letter for dialog options
+    ((counter++))
+    
+    # If 4 items are added, break the line (start a new row)
+    if ((counter % 4 == 0)); then
+        menu_options+=("")  # This adds an empty line after every 4 letters
     fi
+done
 
-    # Call the function to select games for the chosen letter
-    select_games "$selected_letter"
+# Use dialog to allow the user to select a letter in a grid format
+selected_letter=$(dialog --title "Select a Letter" --menu "Choose a letter" 15 50 8 \
+    "${menu_options[@]}" 3>&1 1>&2 2>&3)
+
+# If no letter is selected, exit
+if [ -z "$selected_letter" ]; then
+    return 1  # Return non-zero exit code if no selection is made
+fi
+
+# Call the function to select games for the chosen letter
+select_games "$selected_letter"
 }
 
 # Main execution flow
