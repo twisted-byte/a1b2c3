@@ -136,23 +136,16 @@ download_game() {
 
 # Function to show the letter selection menu
 select_letter() {
-# Get the list of available letters, convert to uppercase, and sort
-letter_list=$(ls "$DEST_DIR" | grep -oP '^[a-zA-Z#]' | tr '[:lower:]' '[:upper:]' | sort | uniq)
+# Get the list of available letters and format as options for dialog
+letter_list=$(ls "$DEST_DIR" | grep -oP '^[a-zA-Z#]' | sort | uniq)
 
-# Prepare menu options in a 4x4 grid format
+# Prepare menu options for dialog
 menu_options=()
-counter=0
-for letter in $letter_list; do
-    menu_options+=("$letter" "$letter")  # Repeat each letter for dialog options
-    ((counter++))
-    
-    # If 4 items are added, break the line (start a new row)
-    if ((counter % 4 == 0)); then
-        menu_options+=("")  # This adds an empty line after every 4 letters
-    fi
-done
+while read -r letter; do
+    menu_options+=("$letter" "$letter")  # Repeat each letter to avoid pairing issue
+done <<< "$letter_list"
 
-# Use dialog to allow the user to select a letter in a grid format
+# Use dialog to allow the user to select a letter
 selected_letter=$(dialog --title "Select a Letter" --menu "Choose a letter" 15 50 8 \
     "${menu_options[@]}" 3>&1 1>&2 2>&3)
 
