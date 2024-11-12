@@ -40,16 +40,15 @@ select_games() {
         return
     fi
 
-    # Loop over the selected games and download them one by one
     IFS=$'\n'  # Set the internal field separator to newline to preserve spaces in game names
-    for game in $selected_games; do
-        # Clean the game name by removing quotes and backslashes
-        game_cleaned=$(echo "$game" | sed 's/[\"\\]//g')
+for game in $selected_games; do
+    # Clean the game name by removing quotes and backslashes
+    game_cleaned=$(echo "$game" | sed 's/[\"\\]//g')
 
-        log_debug "Searching for game '$game_cleaned' in AllGames.txt..."
+    log_debug "Searching for game '$game_cleaned' in AllGames.txt..."
 
-        # Find the full URL using the cleaned game name
-        game_url=$(grep -F "$game_cleaned" "$ALLGAMES_FILE" | cut -d '|' -f 2)
+    # Find the full URL using the cleaned game name (search individually)
+    game_url=$(grep -F -m 1 "$game_cleaned" "$ALLGAMES_FILE" | cut -d '|' -f 2)
 
         if [ -z "$game_url" ]; then
             log_debug "Error: Could not find download URL for '$game_cleaned'."
