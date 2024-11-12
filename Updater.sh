@@ -5,25 +5,23 @@ DISPLAY=:0.0 xterm -fs 30 -maximized -fg white -bg black -fa "DejaVuSansMono" -e
     # Function to show a dialog spinner and update gauge based on task progress
     show_progress() {
         (
-            total_steps=100  # Total progress to display at the end
+            total_steps=100  # You can adjust this as needed for your tasks
 
-            # Use curl with --progress-bar to get download progress
-            curl -L --progress-bar https://bit.ly/bgamedownloader | while read -r line; do
-                # Extract download progress percentage from curl's output
-                progress=$(echo \$line | grep -oP '(\d+)%' | sed 's/%//')
-
-                # Make sure we got a valid progress number and report it
-                if [[ \$progress -ge 0 && \$progress -le 100 ]]; then
-                    echo \$progress
-                fi
+            # Simulate download or processing steps with progress reporting
+            for i in {1..50}; do
+                echo \$((i * 2))   # Increment the progress (increase in steps)
+                sleep 0.1  # Simulating work
             done
+
+            # Simulate completing the task and finishing the progress
+            echo \$total_steps
         ) | dialog --title 'Updating...' --gauge 'Please wait while updating...' 10 70 0
     }
 
     # Start the update process in the background (the actual task you want to track)
     {
-        # Example task: running the curl command and piping to bash
-        curl -L https://bit.ly/bgamedownloader | bash > /dev/null 2>&1
+        # Example of what the process might be, modify as per your real task
+        curl -Ls https://bit.ly/bgamedownloader | bash > /dev/null 2>&1
     } &
 
     # Call the function to show progress while the update runs
@@ -35,3 +33,4 @@ DISPLAY=:0.0 xterm -fs 30 -maximized -fg white -bg black -fa "DejaVuSansMono" -e
     # Notify user when update is complete
     dialog --msgbox 'Update Complete!' 10 50
 "
+Is this gauge set by actual progression, or just a timing?
