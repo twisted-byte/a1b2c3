@@ -49,8 +49,11 @@ select_games() {
     # Process each selected game and add a wget command to the temporary script
     IFS=$'\n'  # Set IFS to newline to separate each selected game
     for game in $selected_games; do
-        # Clean the game name by removing quotes and spaces, but preserving the name as-is
-        game_cleaned=$(echo "$game" | sed 's/^"//;s/"$//')  # Remove quotes
+        # Clean the game name by removing quotes, backslashes, and any escape characters
+        game_cleaned=$(echo "$game" | sed 's/[\"\\]//g')  # Remove quotes and backslashes
+
+        # Log the cleaned game name
+        log_debug "Searching for '$game_cleaned' in AllGames.txt..."
 
         # Find the URL for the game in the AllGames.txt file
         game_url=$(grep -F "$game_cleaned" "$ALLGAMES_FILE" | cut -d '|' -f 2)
