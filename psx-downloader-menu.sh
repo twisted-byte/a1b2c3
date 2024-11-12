@@ -51,7 +51,7 @@ select_games() {
             # Only download if the game item is not empty
             if [[ -n "$game_item" ]]; then
                 # Clean the game name by removing backslashes, quotes, and backticks, while preserving spaces
-                game_item_cleaned=$(echo "$game_item" | sed 's/[\\\"`]//g')
+                game_item_cleaned=$(echo "$game_item" | sed 's/[\\\"`]//g' | sed 's/^[[:space:]]*//g')  # Trim leading spaces
                 download_game "$game_item_cleaned"
             fi
         done <<< "$game_items"
@@ -63,7 +63,7 @@ download_game() {
     local decoded_name="$1"
     
     # Clean up the game name by removing unwanted characters like backticks and quotes, but keep spaces
-    decoded_name_cleaned=$(echo "$decoded_name" | sed 's/[\\\"`]//g')
+    decoded_name_cleaned=$(echo "$decoded_name" | sed 's/[\\\"`]//g' | sed 's/^[[:space:]]*//g')  # Trim leading spaces
 
     # Log the search process for the game in AllGames.txt
     log_debug "Searching for game '$decoded_name_cleaned' in AllGames.txt..."
