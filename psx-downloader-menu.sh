@@ -40,10 +40,21 @@ select_games() {
         return
     fi
 
-    # Loop over the selected games and download them
+    # Loop over the selected games, splitting each on ".chd" while retaining exact text
     IFS=$'\n'  # Set the internal field separator to newline to preserve spaces in game names
     for game in $selected_games; do
-        download_game "$game"
+        # Add '.chd' back to each split part, treating each as a separate game
+        game_items=$(echo "$game" | sed 's/\.chd/.chd\n/g')
+
+        # Iterate over each game item found in the split
+        while IFS= read -r game_item; do
+            # Only download if the game item is not empty
+            if [[ -n "$game_item" ]]; then
+                # Remove backslashes, quotes, and backticks from the game name
+                game_item_cleaned=$(echo "$game_item" | sed 's/[\\\"` ]//g')
+                download_game "$game_item_cleaned"
+            fi
+        done <<< "$game_items"
     done
 }
 
@@ -51,27 +62,25 @@ select_games() {
 download_game() {
     local decoded_name="$1"
     
-    # Clean up the game name by removing unwanted characters like \ and `
-    decoded_name_cleaned=$(echo "$decoded_name" | sed 's/[\\`]//g')
-
-    log_debug "Searching for game '$decoded_name_cleaned' in AllGames.txt..."
+    # Log the search process for the game in AllGames.txt
+    log_debug "Searching for game '$decoded_name' in AllGames.txt..."
 
     # Find the full URL using the decoded name in AllGames.txt
-    game_url=$(grep -F "$decoded_name_cleaned" "$ALLGAMES_FILE" | cut -d '|' -f 2)
+    game_url=$(grep -F "$decoded_name" "$ALLGAMES_FILE" | cut -d '|' -f 2)
 
     if [ -z "$game_url" ]; then
-        log_debug "Error: Could not find download URL for '$decoded_name_cleaned'."
-        dialog --msgbox "Error: Could not find download URL for '$decoded_name_cleaned'." 5 40
+        log_debug "Error: Could not find download URL for '$decoded_name'."
+        dialog --msgbox "Error: Could not find download URL for '$decoded_name'." 5 40
         return
     fi
 
-    log_debug "Found download URL for '$decoded_name_cleaned': $game_url"
+    log_debug "Found download URL for '$decoded_name': $game_url"
 
     # Check if the file already exists
-    file_path="$DOWNLOAD_DIR/$(basename "$decoded_name_cleaned")"
+    file_path="$DOWNLOAD_DIR/$(basename "$decoded_name")"
     if [[ -f "$file_path" ]]; then
         log_debug "File already exists: '$file_path'. Skipping download."
-        dialog --msgbox "'$decoded_name_cleaned' already exists. Skipping download." 5 40
+        dialog --msgbox "'$decoded_name' already exists. Skipping download." 5 40
         return
     fi
 
@@ -83,15 +92,15 @@ download_game() {
                 echo $percent  # Outputs progress percentage for dialog gauge
             done
         done
-    ) | dialog --title "Downloading $decoded_name_cleaned" --gauge "Downloading..." 10 70 0
+    ) | dialog --title "Downloading $decoded_name" --gauge "Downloading..." 10 70 0
 
     # Check if the download was successful
     if [[ $? -eq 0 ]]; then
-        log_debug "Downloaded '$decoded_name_cleaned' successfully."
-        dialog --msgbox "Downloaded '$decoded_name_cleaned' successfully." 5 40
+        log_debug "Downloaded '$decoded_name' successfully."
+        dialog --msgbox "Downloaded '$decoded_name' successfully." 5 40
     else
-        log_debug "Error downloading '$decoded_name_cleaned'."
-        dialog --msgbox "Error downloading '$decoded_name_cleaned'." 5 40
+        log_debug "Error downloading '$decoded_name'."
+        dialog --msgbox "Error downloading '$decoded_name'." 5 40
     fi
 }
 
