@@ -19,11 +19,10 @@ while true; do
             # Log initial status
             echo "Starting download for $game_name from $url" > "$status_file"
 
-            # Download the file
-            file_name="$(basename "$url")"
-            output_path="$folder/$file_name"
+            # Use the game name as the file name for saving the downloaded file
+            output_path="$folder/$game_name"  # Save the file using the game_name as the filename
             
-            # Download with progress and update the status file with percentage
+            # Download the file with progress and update the status file with percentage
             wget -c "$url" -O "$output_path" --progress=dot 2>&1 | \
             awk '/[0-9]%/ {gsub(/[\.\%]/,""); print $1}' | while read -r progress; do
                 echo "$progress" > "$status_file"
@@ -36,7 +35,7 @@ while true; do
                 # Mark download as complete
                 echo "100" > "$status_file"
 
-                # Move the downloaded file to the target folder
+                # Move the downloaded file to the target folder (already saved with the correct name)
                 mv "$output_path" "$folder"
 
                 # Delete the status file once download is complete
