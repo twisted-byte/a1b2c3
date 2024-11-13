@@ -26,8 +26,15 @@ animate_title
 display_controls
 
 # Download and save download.sh locally in the Game Downloader folder
-curl -L "https://raw.githubusercontent.com/DTJW92/game-downloader/main/download.sh" -o /userdata/system/game-downloader/download.sh
+if ! curl -L "https://raw.githubusercontent.com/DTJW92/game-downloader/main/download.sh" -o /userdata/system/game-downloader/download.sh; then
+    echo "Error downloading download.sh."
+    exit 1
+fi
 chmod +x /userdata/system/game-downloader/download.sh
+
+# Convert download.sh to Unix format
+dos2unix /userdata/system/game-downloader/download.sh
+chmod 777 /userdata/system/game-downloader/download.sh
 
 # Define URLs for the scraper scripts
 PSX_SCRAPER="https://raw.githubusercontent.com/DTJW92/game-downloader/main/psx-scraper.sh"
@@ -36,27 +43,31 @@ PS2_SCRAPER="https://raw.githubusercontent.com/DTJW92/game-downloader/main/ps2-s
 
 # Run scraper scripts directly from GitHub
 echo "Running PSX scraper..."
-bash <(curl -s "$PSX_SCRAPER")
+if ! bash <(curl -s "$PSX_SCRAPER") >/dev/null 2>&1; then
+    echo "Error running PSX scraper."
+    exit 1
+fi
 
 echo "Running Dreamcast scraper..."
-bash <(curl -s "$DC_SCRAPER")
+if ! bash <(curl -s "$DC_SCRAPER") >/dev/null 2>&1; then
+    echo "Error running Dreamcast scraper."
+    exit 1
+fi
 
 echo "Running PS2 scraper..."
-bash <(curl -s "$PS2_SCRAPER")
+if ! bash <(curl -s "$PS2_SCRAPER") >/dev/null 2>&1; then
+    echo "Error running PS2 scraper."
+    exit 1
+fi
 
 # Download bkeys.txt and save it as GameDownloader.sh.keys in the Ports folder
-curl -L "https://raw.githubusercontent.com/DTJW92/game-downloader/main/bkeys.txt" -o /userdata/roms/ports/GameDownloader.sh.keys
+if ! curl -L "https://raw.githubusercontent.com/DTJW92/game-downloader/main/bkeys.txt" -o /userdata/roms/ports/GameDownloader.sh.keys; then
+    echo "Error downloading bkeys.txt."
+    exit 1
+fi
 
-# Download autostart.sh and make it executable
-curl -L "https://raw.githubusercontent.com/DTJW92/game-downloader/main/autostart.sh" -o /userdata/system/game-downloader/autostart.sh
-chmod +x /userdata/system/game-downloader/autostart.sh
-
-# Convert autostart.sh to Unix format and set permissions
-dos2unix /userdata/system/game-downloader/autostart.sh
-chmod 777 /userdata/system/game-downloader/autostart.sh
-
-# Append the contents of autostart.sh to custom.ch
-cat /userdata/system/game-downloader/autostart.sh >> /userdata/system/custom.ch
+# Append the location of download.sh to custom.sh with & for background execution
+echo "/userdata/system/game-downloader/download.sh &" >> /userdata/system/custom.sh
 
 # Reload games to reflect changes
 curl http://127.0.0.1:1234/reloadgames &> /dev/null
