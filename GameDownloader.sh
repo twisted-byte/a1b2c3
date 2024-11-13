@@ -41,10 +41,12 @@ start_download() {
     echo "$(date) - GameDownloader.sh started in the background with PID: $DOWNLOAD_PID" >> "$LOG_FILE"
 }
 
-# Cleanup function to remove the GameDownloader.sh file upon script exit
+# Cleanup function to remove the GameDownloader.sh file and log file upon script exit
 cleanup() {
-    echo "$(date) - Cleaning up: Removing GameDownloader.sh" >> "$LOG_FILE"
+    echo "$(date) - Cleaning up: Removing GameDownloader.sh and Log file" >> "$LOG_FILE"
     rm -f "$GAMEDOWNLOADER_SCRIPT"
+    # Uncomment the following line if you want to remove the log file as well
+    # rm -f "$LOG_FILE"
 }
 
 # Trap to call cleanup function on exit
