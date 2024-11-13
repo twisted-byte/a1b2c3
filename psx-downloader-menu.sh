@@ -52,19 +52,19 @@ download_game() {
     decoded_name_cleaned=$(echo "$decoded_name" | sed 's/[\\\"`]//g' | sed 's/^[[:space:]]*//g' | sed 's/[[:space:]]*$//g')
 
     # Initialize message variables
-    existing_games=""
-    error_games=""
-    added_games=""
+    existing_games=()
+    error_games=()
+    added_games=()
 
     # Check if the game already exists in the download directory
     if [[ -f "$DOWNLOAD_DIR/$decoded_name_cleaned" ]]; then
-        existing_games+="$decoded_name_cleaned\n"  # Add newline for multiple games
+        existing_games+=("$decoded_name_cleaned")
         return
     fi
 
     # Check if the game is already in the download queue (download.txt)
     if grep -q "$decoded_name_cleaned" "/userdata/system/game-downloader/download.txt"; then
-        existing_games+="$decoded_name_cleaned\n"  # Add newline for multiple games
+        existing_games+=("$decoded_name_cleaned")
         return
     fi
 
@@ -72,13 +72,13 @@ download_game() {
     game_url=$(grep -F "$decoded_name_cleaned" "$ALLGAMES_FILE" | cut -d '|' -f 2)
 
     if [ -z "$game_url" ]; then
-        error_games+="$decoded_name_cleaned (URL not found)\n"
+        error_games+=("$decoded_name_cleaned (URL not found)")
         return
     fi
 
     # Append the decoded name, URL, and folder to the DownloadManager.txt file
     echo "$decoded_name_cleaned|$game_url|$DOWNLOAD_DIR" >> "/userdata/system/game-downloader/download.txt"
-    added_games+="$decoded_name_cleaned\n"
+    added_games+=("$decoded_name_cleaned")
 }
 
 # Function to show the letter selection menu
@@ -109,16 +109,22 @@ while true; do
         error_games_message=""
         added_games_message=""
 
-        if [[ -n "$existing_games" ]]; then
-            existing_games_message="The following games already exist or are in the queue:\n\n$existing_games"
+        if [[ ${#existing_games[@]} -gt 0 ]]; then
+            if [[ ${#existing_games[@]} -eq 1 ]]; then
+                existing_games_message="The game you selected already exists on your system: \n${existing_games[0]}"
+            elif [[ ${#existing_games[@]} -eq ${#selected_games[@]} ]]; then
+                existing_games_message="The games you selected already exist on your system."
+            else
+                existing_games_message="Some of the games you selected already exist on your system: \n${existing_games[@]}"
+            fi
         fi
 
         if [[ -n "$error_games" ]]; then
-            error_games_message="The following games could not be added due to missing URLs:\n\n$error_games"
+            error_games_message="The following games could not be added due to missing URLs:\n\n${error_games[@]}"
         fi
 
         if [[ -n "$added_games" ]]; then
-            added_games_message="The following games have been successfully added to the download queue:\n\n$added_games"
+            added_games_message="The following games have been successfully added to the download queue:\n\n${added_games[@]}"
         fi
 
         # Combine all messages
