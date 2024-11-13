@@ -17,6 +17,10 @@ DOWNLOAD_QUEUE="/userdata/system/game-downloader/download.txt"
 # Log the start of the script
 echo "Starting download.sh script at $(date)"
 
+# Max number of concurrent background jobs
+MAX_JOBS=3
+current_jobs=0
+
 # Function to process each download
 process_download() {
     local game_name="$1"
@@ -34,7 +38,7 @@ process_download() {
 
     # Download the file with progress and update the status file with percentage
     wget -c "$url" -O "$output_path" --progress=dot 2>&1 | \
-    awk '/[0-9]+%/ {gsub(/[^\d%]/, ""); print $1}' | while read -r progress; do
+    awk '/[0-9]+%/ {gsub(/[^\x0-9%]/, ""); print $1}' | while read -r progress; do
         echo "$progress" > "$status_file"
     done
 
@@ -56,14 +60,30 @@ process_download() {
     fi
 }
 
+# Wait until the number of background jobs is less than MAX_JOBS
+wait_for_free_slot() {
+    while [ "$current_jobs" -ge "$MAX_JOBS" ]; do
+        sleep 1  # Wait for 1 second before checking again
+    done
+}
+
 # Run the script continuously
 while true; do
     # Check if download.txt exists and has content
     if [[ -f "$DOWNLOAD_QUEUE" ]]; then
         # Process each line in download.txt
         while IFS='|' read -r game_name url folder; do
+            wait_for_free_slot  # Wait for a free slot for a background job
+
             # Start the download in the background
             process_download "$game_name" "$url" "$folder" &
+
+            # Increment the background job count
+            ((current_jobs++))
+
+            # Monitor background jobs and decrease count when one finishes
+            wait -n
+            ((current_jobs--))
         done < "$DOWNLOAD_QUEUE"
     fi
 
