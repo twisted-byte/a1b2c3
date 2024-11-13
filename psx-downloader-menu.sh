@@ -104,6 +104,34 @@ select_letter() {
 while true; do
     select_letter
     if [ $? -eq 0 ]; then
+        # Check for existing games, errors, and added games
+        existing_games_message=""
+        error_games_message=""
+        added_games_message=""
+
+        if [[ -n "$existing_games" ]]; then
+            existing_games_message="The following games already exist or are in the queue:\n\n$existing_games"
+        fi
+
+        if [[ -n "$error_games" ]]; then
+            error_games_message="The following games could not be added due to missing URLs:\n\n$error_games"
+        fi
+
+        if [[ -n "$added_games" ]]; then
+            added_games_message="The following games have been successfully added to the download queue:\n\n$added_games"
+        fi
+
+        # Combine all messages
+        message=""
+        message+="$existing_games_message\n"
+        message+="$error_games_message\n"
+        message+="$added_games_message\n"
+
+        if [[ -n "$message" ]]; then
+            dialog --infobox "$message" 10 60
+            sleep 3
+        fi
+
         dialog --title "Continue?" --yesno "Would you like to select some more games?" 7 50
         if [ $? -eq 1 ]; then
             break
@@ -113,22 +141,7 @@ while true; do
     fi
 done
 
-# After processing all selected games
-if [[ -n "$existing_games" ]]; then
-    dialog --infobox "The following games already exist or are in the queue:\n\n$existing_games" 10 60
-    sleep 3
-fi
-
-if [[ -n "$error_games" ]]; then
-    dialog --infobox "The following games could not be added due to missing URLs:\n\n$error_games" 10 60
-    sleep 3
-fi
-
-if [[ -n "$added_games" ]]; then
-    dialog --infobox "The following games have been successfully added to the download queue:\n\n$added_games" 10 60
-    sleep 3
-fi
-
+# After the user exits the game selection loop
 echo "Goodbye!"
 
 # Run the curl command to reload the games
