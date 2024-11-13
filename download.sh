@@ -67,6 +67,9 @@ process_download() {
     # Set the temporary download path
     local temp_path="/tmp/$game_name"  # Save the file temporarily in /tmp
 
+    # Ensure that $game_name doesn't have any extra quotes or backticks
+    game_name=$(echo "$game_name" | sed 's/[`"]//g')
+
     # Start the download using wget with progress bar
     wget -c "$url" -O "$temp_path" --progress=dot:mega 2>&1 | \
     while IFS= read -r line; do
