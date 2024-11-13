@@ -111,16 +111,24 @@ while true; do
     fi
 done
 
-# Show messages for skipped games before Continue? prompt
+# Show messages for skipped games and added games before Continue? prompt
+skip_message=""
+added_message=""
+
 if [ ${#skipped_games[@]} -gt 0 ]; then
     skipped_games_list=$(IFS=$'\n'; echo "${skipped_games[*]}")
-    dialog --msgbox "A game you added already exists in the system and is being skipped:\n\n$skipped_games_list" 15 60
+    skip_message="A game you added already exists in the system and is being skipped:\n\n$skipped_games_list"
 fi
 
-# Show message for added games before Continue? prompt
 if [ ${#added_games[@]} -gt 0 ]; then
     added_games_list=$(IFS=$'\n'; echo "${added_games[*]}")
-    dialog --msgbox "The following games have been successfully added to the download queue:\n\n$added_games_list" 15 60
+    added_message="The following games have been successfully added to the download queue:\n\n$added_games_list"
+fi
+
+# Display combined message before Continue? dialog
+if [ -n "$skip_message" ] || [ -n "$added_message" ]; then
+    combined_message="$skip_message\n\n$added_message"
+    dialog --msgbox "$combined_message" 15 60
 fi
 
 # Display "Goodbye!" message
