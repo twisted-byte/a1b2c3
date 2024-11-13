@@ -3,12 +3,6 @@
 # Ensure clear display
 clear
 
-# Check if dialog is installed
-if ! command -v dialog &> /dev/null; then
-    echo "Error: dialog is not installed. Please install it and try again."
-    exit 1
-fi
-
 # URLs for external scripts
 PSX_MENU_URL="https://raw.githubusercontent.com/DTJW92/game-downloader/main/psx-downloader-menu.sh"
 PS2_MENU_URL="https://raw.githubusercontent.com/DTJW92/game-downloader/main/ps2-downloader-menu.sh"
@@ -52,7 +46,7 @@ while true; do
             bash <(curl -s "$UNINSTALL_URL")
             ;;
         *)
-            # Handle invalid choices
+             # Handle invalid choices
             dialog --infobox "Exiting..." 10 50
             sleep 2
             exit 0  # Exit the script when no valid choice is selected
@@ -64,4 +58,4 @@ done
 clear
 
 # Run the curl command to reload the games (output suppressed)
-curl http://127.0.0.1:1234/reloadgames &> /dev/null
+curl http://127.0.0.1:1234/reloadgames &> /dev/null"
