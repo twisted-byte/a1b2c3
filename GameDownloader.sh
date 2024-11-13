@@ -26,9 +26,10 @@ choice=$(< /tmp/game-downloader-choice)
 rm /tmp/game-downloader-choice
 
 # Check if the user canceled the dialog (no choice selected)
-if [ $? -ne 0 ]; then
+if [ ! -s /tmp/game-downloader-choice ]; then
     clear
-    break
+    dialog --msgbox "User canceled the dialog. Exiting." 10 50
+    exit 0  # Exit the script when Cancel is clicked
 fi
 
 # Execute the corresponding action based on user choice
@@ -53,10 +54,9 @@ case $choice in
         ;;
     *)
         # Handle invalid choices
-        dialog --infobox "Invalid option selected. Exiting..." 10 50
-        sleep 2
+        dialog --msgbox "Invalid option selected. Please try again." 10 50
         clear
-        # No exit or break, just continue
+        exit 0  # Exit the script if an invalid option is selected
         ;;
 esac
 
