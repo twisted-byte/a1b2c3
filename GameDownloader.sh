@@ -20,27 +20,21 @@ DC_MENU_URL="https://raw.githubusercontent.com/DTJW92/game-downloader/main/dc-do
 UPDATER_URL="https://raw.githubusercontent.com/DTJW92/game-downloader/main/Updater.sh"
 DOWNLOAD_MANAGER_URL="https://raw.githubusercontent.com/DTJW92/game-downloader/main/DownloadManager.sh"
 UNINSTALL_URL="https://raw.githubusercontent.com/DTJW92/game-downloader/main/uninstall.sh"
-GAMEDOWNLOADER_URL="https://raw.githubusercontent.com/DTJW92/game-downloader/main/GameDownloader.sh"  # URL for GameDownloader.sh
 
-# Path to the downloaded GameDownloader.sh file
-GAMEDOWNLOADER_SCRIPT="/userdata/system/game-downloader/GameDownloader.sh"
+# Path to the locally stored download.sh file
+DOWNLOAD_SCRIPT="/userdata/system/game-downloader/download.sh"
 
 # Function to start download.sh in the background with nohup
 start_download() {
-    # Download GameDownloader.sh script to local directory
-    echo "$(date) - Downloading GameDownloader.sh from $GAMEDOWNLOADER_URL" >> "$LOG_FILE"
-    curl -L "$GAMEDOWNLOADER_URL" -o "$GAMEDOWNLOADER_SCRIPT"
-
-    # Make it executable
-    chmod +x "$GAMEDOWNLOADER_SCRIPT"
-
-    # Run GameDownloader.sh using nohup, sending output to a log file
-    echo "$(date) - Starting GameDownloader.sh with nohup" >> "$LOG_FILE"
-    nohup bash "$GAMEDOWNLOADER_SCRIPT" >> "$LOG_FILE" 2>&1 &
+    # Log that the script is starting
+    echo "$(date) - Starting download.sh with nohup" >> "$LOG_FILE"
+    
+    # Run download.sh using nohup, sending output to a log file
+    nohup bash "$DOWNLOAD_SCRIPT" >> "$LOG_FILE" 2>&1 &
 
     # Get the PID of the process and log it
     DOWNLOAD_PID=$!
-    echo "$(date) - GameDownloader.sh started in the background with PID: $DOWNLOAD_PID" >> "$LOG_FILE"
+    echo "$(date) - download.sh started in the background with PID: $DOWNLOAD_PID" >> "$LOG_FILE"
 }
 
 # Main dialog menu with loop to keep the menu active until a valid choice is selected
@@ -96,8 +90,8 @@ while true; do
             ;;
     esac
 
-    # Start GameDownloader.sh in the background
-    start_download  # Run GameDownloader.sh in the background
+    # Start download.sh in the background
+    start_download  # Run download.sh in the background
 done
 
 # Clear screen on exit
