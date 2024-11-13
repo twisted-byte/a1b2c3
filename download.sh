@@ -13,6 +13,9 @@ download_game() {
     local output_path="$folder/$file_name"
     local status_file="$STATUS_DIR/$file_name.status"
 
+    # Log the URL before starting the download
+    echo "Starting download for $url" >> /userdata/system/game-downloader/debug/download-debug.txt
+
     # Log any errors during wget to the debug file
     wget -c "$url" -O "$output_path" --progress=dot 2>&1 | \
     awk '/[0-9]%/ {gsub(/[\.\%]/,""); print $1}' | while read -r progress; do
