@@ -46,14 +46,9 @@ while true; do
             bash <(curl -s "$UNINSTALL_URL")
             ;;
         *)
-             # Handle invalid choices
-            dialog --infobox "Exiting..." 10 50
-            sleep 2
-            exit 0  # Exit the script when no valid choice is selected
-            ;;
-    esac
-done
-
+        dialog --msgbox "No valid option selected. Exiting." 10 50
+        ;;
+esac
 # Clear screen on exit
 clear
 
