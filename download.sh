@@ -21,7 +21,7 @@ PROGRESS_FILE="/userdata/system/game-downloader/progress.txt"
 echo "Progress file initialized." > "$PROGRESS_FILE"
 
 # Log the start of the script
-echo "Starting download.sh script at $(date)"
+echo "Starting script at $(date)"
 
 # Max number of concurrent background jobs
 MAX_JOBS=3
@@ -142,4 +142,4 @@ while true; do
 done
 
 # Log the end of the script
-echo "download.sh completed at $(date)" >> "$DEBUG_LOG"
+echo "Script completed at $(date)" >> "$DEBUG_LOG"
