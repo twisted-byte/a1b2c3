@@ -21,6 +21,24 @@ echo "Starting download.sh script at $(date)"
 MAX_JOBS=3
 current_jobs=0
 
+# Function to check for an active internet connection
+check_internet() {
+    echo "Checking for an internet connection..."
+    if ping -c 1 -W 5 8.8.8.8 >/dev/null 2>&1; then
+        echo "Internet connection is active."
+        return 0  # Return 0 if connection is successful
+    else
+        echo "No internet connection detected. Stopping the service..."
+        return 1  # Return 1 if connection fails
+    fi
+}
+
+# Function to stop the service if there's no internet connection
+stop_service() {
+    echo "Stopping game downloader service due to no internet connection."
+    batocera-services stop download
+}
+
 # Function to process each download
 process_download() {
     local game_name="$1"
@@ -38,7 +56,7 @@ process_download() {
 
     # Download the file with progress and update the status file with percentage
     wget -c "$url" -O "$output_path" --progress=dot 2>&1 | \
-    awk '/[0-9]+%/ {gsub(/[^\x0-9%]/, ""); print $1}' | while read -r progress; do
+    awk '/[0-9]+%/ {gsub(/[^\d%]/, ""); print $1}' | while read -r progress; do
         echo "$progress" > "$status_file"
     done
 
@@ -66,6 +84,15 @@ wait_for_free_slot() {
         sleep 1  # Wait for 1 second before checking again
     done
 }
+
+# Check for internet connection before proceeding
+check_internet
+if [ $? -ne 0 ]; then
+    # Stop the service if there's no internet
+    stop_service
+    echo "$(date) - No internet connection. The script will now stop." >> "$DEBUG_LOG"
+    exit 0  # Exit the script since there's no connection
+fi
 
 # Run the script continuously
 while true; do
