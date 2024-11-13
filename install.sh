@@ -44,7 +44,7 @@ chmod +x /userdata/system/services/download.sh  # Ensure it's executable
 chmod 777 /userdata/system/services/download.sh  # Set read/write/execute permissions
 
 # Rename the file to remove the .sh extension (optional, since you want to avoid .sh)
-mv /userdata/system/services/download.sh /userdata/system/services/download
+mv /userdata/system/services/download.sh /userdata/system/services/Background_Game_Downloader
 
 # Ensure the script is executable
 chmod +x /userdata/system/services/download  # Make sure the service script is executable
