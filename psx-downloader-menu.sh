@@ -102,12 +102,17 @@ select_letter() {
 }
 
 # Main execution flow
+existing_games=0
+error_games=0
+added_games=0
+
 while true; do
     select_letter
     if [ $? -eq 0 ]; then
         # Prepare message variables based on counts
         message=""
 
+        # Generate the appropriate message based on the counts of existing, error, and added games
         if [ $existing_games -gt 0 ]; then
             if [ $existing_games -eq 1 ]; then
                 message="The game you selected already exists on your system."
