@@ -104,7 +104,7 @@ select_letter() {
 while true; do
     select_letter
     if [ $? -eq 0 ]; then
-        # Check for existing games, errors, and added games
+        # Prepare message variables
         existing_games_message=""
         error_games_message=""
         added_games_message=""
@@ -121,21 +121,28 @@ while true; do
         fi
 
         # Handle error games message
-        if [[ -n "$error_games" ]]; then
+        if [[ ${#error_games[@]} -gt 0 ]]; then
             error_games_message="The following games could not be added due to missing URLs:\n\n$(printf "%s\n" "${error_games[@]}")"
         fi
 
         # Handle added games message
-        if [[ -n "$added_games" ]]; then
+        if [[ ${#added_games[@]} -gt 0 ]]; then
             added_games_message="The following games have been successfully added to the download queue:\n\n$(printf "%s\n" "${added_games[@]}")"
         fi
 
         # Combine all messages
         message=""
-        message+="$existing_games_message\n"
-        message+="$error_games_message\n"
-        message+="$added_games_message\n"
+        if [[ -n "$existing_games_message" ]]; then
+            message+="$existing_games_message\n"
+        fi
+        if [[ -n "$error_games_message" ]]; then
+            message+="$error_games_message\n"
+        fi
+        if [[ -n "$added_games_message" ]]; then
+            message+="$added_games_message\n"
+        fi
 
+        # Display the message if any part is non-empty
         if [[ -n "$message" ]]; then
             dialog --infobox "$message" 10 60
             sleep 3
