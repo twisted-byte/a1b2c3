@@ -106,8 +106,8 @@ while true; do
     select_letter
     # Display skipped games message if there are any skipped games
     if [ ${#skipped_games[@]} -gt 0 ]; then
-        # Format the skipped games list with each game on a new line and break by .chd
-        skipped_games_list=$(IFS=$'\n'; echo "${skipped_games[*]}" | sed 's/.chd/\n&/g' | sed 's/^/• /')
+        # Format the skipped games list with each game on a new line
+        skipped_games_list=$(printf "%s\n" "${skipped_games[@]}" | sed 's/^/• /')
 
         # Display the grouped skipped games in a message box
         dialog --msgbox "The following games already exist in the system and are being skipped:\n\n$skipped_games_list" 15 60
