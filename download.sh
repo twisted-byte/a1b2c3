@@ -14,6 +14,12 @@ mkdir -p "$STATUS_DIR"
 # Path to the download queue file
 DOWNLOAD_QUEUE="/userdata/system/game-downloader/download.txt"
 
+# Path to the progress file (simple text format)
+PROGRESS_FILE="/userdata/system/game-downloader/progress.txt"
+
+# Initialize the progress file with an empty state
+echo "Progress file initialized." > "$PROGRESS_FILE"
+
 # Log the start of the script
 echo "Starting download.sh script at $(date)"
 
@@ -39,14 +45,21 @@ stop_service() {
     batocera-services stop download
 }
 
+# Function to update the progress file
+update_progress() {
+    local game_name="$1"
+    local progress="$2"
+
+    # Remove old progress for the game and update it with the new one
+    sed -i "/^$game_name|/d" "$PROGRESS_FILE"
+    echo "$game_name|$progress%" >> "$PROGRESS_FILE"
+}
+
 # Function to process each download
 process_download() {
     local game_name="$1"
     local url="$2"
     local folder="$3"
-
-    # Set the status file path (using game_name as the file name)
-    local status_file="$STATUS_DIR/$game_name.status"
 
     # Log initial status
     echo "Starting download for $game_name from $url" >> "$DEBUG_LOG"
@@ -55,14 +68,14 @@ process_download() {
     local output_path="$folder/$game_name"  # Save the file using the game_name as the filename
 
     # Start the download using wget with progress bar
-    wget -c "$url" -O "$output_path" --progress=bar:force 2>&1 | \
+    wget -c "$url" -O "$output_path" --progress=dot:mega 2>&1 | \
     while IFS= read -r line; do
         # Extract the percentage progress from wget's output
         progress=$(echo "$line" | grep -oP '\d+(?=%)')
 
-        # If we successfully get the progress, update the status file
+        # If we successfully get the progress, update the progress file
         if [[ -n "$progress" ]]; then
-            echo "$progress" > "$status_file"  # Update the status file with current progress
+            update_progress "$game_name" "$progress"  # Update progress in progress.txt
         fi
     done
 
@@ -70,14 +83,11 @@ process_download() {
     if [ $? -ne 0 ]; then
         echo "Error: Failed to download $url" >> "$DEBUG_LOG"
     else
-        # Mark download as complete
-        echo "100" > "$status_file"
+        # Mark download as complete by setting progress to 100%
+        update_progress "$game_name" "100"
 
         # Move the downloaded file to the target folder (already saved with the correct name)
         mv "$output_path" "$folder"
-
-        # Delete the status file once download is complete
-        rm -f "$status_file"
 
         # Remove the processed line from download.txt
         sed -i "/$game_name|/d" "$DOWNLOAD_QUEUE"
