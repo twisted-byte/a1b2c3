@@ -1,14 +1,10 @@
 #!/bin/bash
 
-# Log file for debugging and error logging
-LOG_FILE="/userdata/system/game-downloader/debug/dialog-debug.log"
-
 # Ensure clear display
 clear
 
 # Check if dialog is installed
 if ! command -v dialog &> /dev/null; then
-    echo "$(date) - Error: dialog is not installed" >> "$LOG_FILE"
     dialog --msgbox "Error: dialog is not installed. Please install it and try again." 10 50
     exit 1
 fi
@@ -20,22 +16,6 @@ DC_MENU_URL="https://raw.githubusercontent.com/DTJW92/game-downloader/main/dc-do
 UPDATER_URL="https://raw.githubusercontent.com/DTJW92/game-downloader/main/Updater.sh"
 DOWNLOAD_MANAGER_URL="https://raw.githubusercontent.com/DTJW92/game-downloader/main/DownloadManager.sh"
 UNINSTALL_URL="https://raw.githubusercontent.com/DTJW92/game-downloader/main/uninstall.sh"
-
-# Path to the locally stored download.sh file
-DOWNLOAD_SCRIPT="/userdata/system/game-downloader/download.sh"
-
-# Function to start download.sh in the background with nohup
-start_download() {
-    # Log that the script is starting
-    echo "$(date) - Starting download.sh with nohup" >> "$LOG_FILE"
-    
-    # Run download.sh using nohup, sending output to a log file
-    nohup bash "$DOWNLOAD_SCRIPT" >> "$LOG_FILE" 2>&1 &
-
-    # Get the PID of the process and log it
-    DOWNLOAD_PID=$!
-    echo "$(date) - download.sh started in the background with PID: $DOWNLOAD_PID" >> "$LOG_FILE"
-}
 
 # Main dialog menu with loop to keep the menu active until a valid choice is selected
 while true; do
@@ -54,13 +34,8 @@ while true; do
 
     # Check if user canceled the dialog
     if [ $? -ne 0 ]; then
-        echo "$(date) - User canceled the dialog, exiting." >> "$LOG_FILE"
         clear
-        
-        # Kill the xterm window if the dialog is canceled
-        kill $$  # This kills the current process (which in this case is the script running inside xterm)
-        
-        break  # Exit loop when Cancel is clicked
+        exit 0  # Exit the script when Cancel is clicked
     fi
 
     case $choice in
@@ -82,20 +57,8 @@ while true; do
         6)
             bash <(curl -s "$UNINSTALL_URL")
             ;;
-        *)
-            echo "$(date) - Invalid choice selected, exiting." >> "$LOG_FILE"
-            dialog --infobox "Exiting..." 10 50
-            sleep 2
-            break  # Exit loop when no valid choice is selected
-            ;;
     esac
-
-    # Start download.sh in the background
-    start_download  # Run download.sh in the background
 done
 
 # Clear screen on exit
 clear
-
-# Run the curl command to reload the games (output suppressed)
-curl http://127.0.0.1:1234/reloadgames &> /dev/null
