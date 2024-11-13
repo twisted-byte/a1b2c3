@@ -1,5 +1,10 @@
 #!/bin/bash
 
+# Function to display log messages with timestamp
+log() {
+    echo "[$(date +'%Y-%m-%d %H:%M:%S')] $1"
+}
+
 # Display animated title for uninstaller
 animate_title() {
     local text="GAME DOWNLOADER UNINSTALLER"
@@ -34,43 +39,49 @@ GAME_DOWNLOADER_SH="$PORTS_DIR/GameDownloader.sh"
 GAME_DOWNLOADER_KEYS="$PORTS_DIR/GameDownloader.sh.keys"
 BG_DOWNLOADER_SERVICE="$SERVICES_DIR/Background_Game_Downloader"
 
-# Stop and disable the service, checking if it's running first
+# Stop and disable the service if it's running
+log "Attempting to stop and disable Background_Game_Downloader service..."
 if batocera-services status Background_Game_Downloader | grep -q "running"; then
     batocera-services stop Background_Game_Downloader > /dev/null 2>&1
     batocera-services disable Background_Game_Downloader > /dev/null 2>&1 &
-    echo "Stopped and disabled Background_Game_Downloader service."
+    log "Service Background_Game_Downloader stopped and disabled."
 else
-    echo "Background_Game_Downloader service is not active, skipping stop."
+    log "Service Background_Game_Downloader is not active, skipping stop."
 fi
 
 # Remove the game-downloader directory
+log "Checking for game-downloader directory at $GMD_DIR..."
 if [[ -d "$GMD_DIR" ]]; then
-    rm -rf "$GMD_DIR" && echo "Removed directory $GMD_DIR"
+    rm -rf "$GMD_DIR" && log "Removed directory $GMD_DIR"
 else
-    echo "Directory $GMD_DIR not found."
+    log "Directory $GMD_DIR not found."
 fi
 
 # Remove GameDownloader.sh and GameDownloader.sh.keys from Ports
+log "Checking for $GAME_DOWNLOADER_SH in Ports..."
 if [[ -f "$GAME_DOWNLOADER_SH" ]]; then
-    rm "$GAME_DOWNLOADER_SH" && echo "Removed $GAME_DOWNLOADER_SH"
+    rm "$GAME_DOWNLOADER_SH" && log "Removed $GAME_DOWNLOADER_SH"
 else
-    echo "$GAME_DOWNLOADER_SH not found."
+    log "$GAME_DOWNLOADER_SH not found."
 fi
 
+log "Checking for $GAME_DOWNLOADER_KEYS in Ports..."
 if [[ -f "$GAME_DOWNLOADER_KEYS" ]]; then
-    rm "$GAME_DOWNLOADER_KEYS" && echo "Removed $GAME_DOWNLOADER_KEYS"
+    rm "$GAME_DOWNLOADER_KEYS" && log "Removed $GAME_DOWNLOADER_KEYS"
 else
-    echo "$GAME_DOWNLOADER_KEYS not found."
+    log "$GAME_DOWNLOADER_KEYS not found."
 fi
 
 # Remove Background_Game_Downloader service file if it exists
+log "Checking for Background_Game_Downloader service file..."
 if [[ -f "$BG_DOWNLOADER_SERVICE" ]]; then
-    rm "$BG_DOWNLOADER_SERVICE" && echo "Removed $BG_DOWNLOADER_SERVICE"
+    rm "$BG_DOWNLOADER_SERVICE" && log "Removed $BG_DOWNLOADER_SERVICE"
 else
-    echo "$BG_DOWNLOADER_SERVICE not found."
+    log "$BG_DOWNLOADER_SERVICE not found."
 fi
 
 # Restart EmulationStation to remove the entry in Ports
-curl -s http://127.0.0.1:1234/reloadgames && echo "Reloaded game entries." || echo "Failed to reload game entries."
+log "Reloading game entries in EmulationStation..."
+curl -s http://127.0.0.1:1234/reloadgames && log "Game entries reloaded." || log "Failed to reload game entries."
 
-echo "Uninstallation complete. The Game Downloader app has been removed from Ports."
+log "Uninstallation complete. The Game Downloader app has been removed from Ports."
