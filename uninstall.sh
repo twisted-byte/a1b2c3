@@ -34,6 +34,9 @@ GAME_DOWNLOADER_SH="$PORTS_DIR/GameDownloader.sh"
 GAME_DOWNLOADER_KEYS="$PORTS_DIR/GameDownloader.sh.keys"
 BG_DOWNLOADER_SERVICE="$SERVICES_DIR/Background_Game_Downloader"
 
+batocera-services stop Background_Game_Downloader
+batocera-services disable Background_Game_Downloader &
+
 # Remove the game-downloader directory
 if [[ -d "$GMD_DIR" ]]; then
     rm -rf "$GMD_DIR" && echo "Removed directory $GMD_DIR"
