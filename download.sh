@@ -64,11 +64,11 @@ process_download() {
     # Log initial status
     echo "Starting download for $game_name from $url" >> "$DEBUG_LOG"
 
-    # Use the game name as the file name for saving the downloaded file
-    local output_path="$folder/$game_name"  # Save the file using the game_name as the filename
+    # Set the temporary download path
+    local temp_path="/tmp/$game_name"  # Save the file temporarily in /tmp
 
     # Start the download using wget with progress bar
-    wget -c "$url" -O "$output_path" --progress=dot:mega 2>&1 | \
+    wget -c "$url" -O "$temp_path" --progress=dot:mega 2>&1 | \
     while IFS= read -r line; do
         # Extract the percentage progress from wget's output
         progress=$(echo "$line" | grep -oP '\d+(?=%)')
@@ -86,8 +86,11 @@ process_download() {
         # Mark download as complete by setting progress to 100%
         update_progress "$game_name" "100"
 
-        # Move the downloaded file to the target folder (already saved with the correct name)
-        mv "$output_path" "$folder"
+        # Move the downloaded file to the target folder (now that it's complete)
+        mv "$temp_path" "$folder"
+
+        # Log that the download is complete
+        echo "$(date) - Download complete for $game_name. Moved to $folder" >> "$DEBUG_LOG"
 
         # Remove the processed line from download.txt
         sed -i "/$game_name|/d" "$DOWNLOAD_QUEUE"
