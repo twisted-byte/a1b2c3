@@ -43,6 +43,10 @@ while true; do
     if [ $? -ne 0 ]; then
         echo "$(date) - User canceled the dialog, exiting." >> "$LOG_FILE"
         clear
+        
+        # Kill the xterm window if the dialog is canceled
+        kill $$  # This kills the current process (which in this case is the script running inside xterm)
+        
         break  # Exit loop when Cancel is clicked
     fi
 
