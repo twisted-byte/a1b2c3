@@ -39,10 +39,7 @@ case $choice in
         bash <(curl -s "$PSX_MENU_URL")
         ;;
     2)
-        echo "Running PS2 Downloader script..."
-        # Debugging: show the curl command output
-        curl -s "$PS2_MENU_URL"
-        bash <(curl -s "$PS2_MENU_URL")  # Ensure it's properly running the script
+        bash <(curl -s "$PS2_MENU_URL")
         ;;
     3)
         bash <(curl -s "$DC_MENU_URL")
