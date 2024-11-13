@@ -6,6 +6,14 @@ LOG_FILE="/userdata/system/game-downloader/debug/dialog-debug.log"
 # Ensure clear display
 clear
 
+# Define the URLs to fetch the scripts from GitHub
+PSX_MENU_URL="https://raw.githubusercontent.com/DTJW92/game-downloader/main/psx-downloader-menu.sh"
+PS2_MENU_URL="https://raw.githubusercontent.com/DTJW92/game-downloader/main/ps2-downloader-menu.sh"
+DC_MENU_URL="https://raw.githubusercontent.com/DTJW92/game-downloader/main/dc-downloader-menu.sh"
+UPDATER_URL="https://raw.githubusercontent.com/DTJW92/game-downloader/main/Updater.sh"
+DOWNLOAD_MANAGER_URL="https://raw.githubusercontent.com/DTJW92/game-downloader/main/DownloadManager.sh"
+UNINSTALL_URL="https://raw.githubusercontent.com/DTJW92/game-downloader/main/uninstall.sh"
+
 # Check if dialog is installed
 if ! command -v dialog &> /dev/null; then
     echo "$(date) - Error: dialog is not installed" >> "$LOG_FILE"
