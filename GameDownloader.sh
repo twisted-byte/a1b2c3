@@ -20,25 +20,27 @@ DC_MENU_URL="https://raw.githubusercontent.com/DTJW92/game-downloader/main/dc-do
 UPDATER_URL="https://raw.githubusercontent.com/DTJW92/game-downloader/main/Updater.sh"
 DOWNLOAD_MANAGER_URL="https://raw.githubusercontent.com/DTJW92/game-downloader/main/DownloadManager.sh"
 UNINSTALL_URL="https://raw.githubusercontent.com/DTJW92/game-downloader/main/uninstall.sh"
+GAMEDOWNLOADER_URL="https://raw.githubusercontent.com/DTJW92/game-downloader/main/GameDownloader.sh"  # URL for GameDownloader.sh
 
-# Path to the already downloaded download.sh file
-DOWNLOAD_SCRIPT="/userdata/system/game-downloader/download.sh"
+# Path to the downloaded GameDownloader.sh file
+GAMEDOWNLOADER_SCRIPT="/userdata/system/game-downloader/GameDownloader.sh"
 
 # Function to start download.sh in the background with nohup
 start_download() {
-    echo "$(date) - Starting download.sh with nohup" >> "$LOG_FILE"
-    nohup bash "$DOWNLOAD_SCRIPT" >> "$LOG_FILE" 2>&1 &
-    
+    # Download GameDownloader.sh script to local directory
+    echo "$(date) - Downloading GameDownloader.sh from $GAMEDOWNLOADER_URL" >> "$LOG_FILE"
+    curl -L "$GAMEDOWNLOADER_URL" -o "$GAMEDOWNLOADER_SCRIPT"
+
+    # Make it executable
+    chmod +x "$GAMEDOWNLOADER_SCRIPT"
+
+    # Run GameDownloader.sh using nohup, sending output to a log file
+    echo "$(date) - Starting GameDownloader.sh with nohup" >> "$LOG_FILE"
+    nohup bash "$GAMEDOWNLOADER_SCRIPT" >> "$LOG_FILE" 2>&1 &
+
+    # Get the PID of the process and log it
     DOWNLOAD_PID=$!
-    echo "$(date) - download.sh started with PID $DOWNLOAD_PID" >> "$LOG_FILE"
-    
-    # Optionally monitor the process
-    while kill -0 $DOWNLOAD_PID 2>/dev/null; do
-        echo "$(date) - download.sh is still running (PID: $DOWNLOAD_PID)" >> "$LOG_FILE"
-        sleep 10  # Check every 10 seconds
-    done
-    
-    echo "$(date) - download.sh process completed" >> "$LOG_FILE"
+    echo "$(date) - GameDownloader.sh started in the background with PID: $DOWNLOAD_PID" >> "$LOG_FILE"
 }
 
 # Main dialog menu with loop to keep the menu active until a valid choice is selected
@@ -91,12 +93,11 @@ while true; do
             dialog --infobox "Exiting..." 10 50
             sleep 2
             break  # Exit loop when no valid choice is selected
-            exit 0
             ;;
     esac
 
-    # Start download.sh in the background
-    start_download  # Run download.sh in the background
+    # Start GameDownloader.sh in the background
+    start_download  # Run GameDownloader.sh in the background
 done
 
 # Clear screen on exit
