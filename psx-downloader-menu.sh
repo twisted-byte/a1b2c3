@@ -51,10 +51,6 @@ download_game() {
     local decoded_name="$1"
     decoded_name_cleaned=$(echo "$decoded_name" | sed 's/[\\\"`]//g' | sed 's/^[[:space:]]*//g' | sed 's/[[:space:]]*$//g')
 
-    # Initialize counters for skipped and added games
-    skipped_games=()
-    added_games=()
-
     # Check if the game already exists in the download directory
     if [[ -f "$DOWNLOAD_DIR/$decoded_name_cleaned" ]]; then
         skipped_games+=("$decoded_name_cleaned")
@@ -71,12 +67,15 @@ download_game() {
     game_url=$(grep -F "$decoded_name_cleaned" "$ALLGAMES_FILE" | cut -d '|' -f 2)
 
     if [ -z "$game_url" ]; then
+        dialog --infobox "Error: Could not find download URL for '$decoded_name_cleaned'." 5 40
+        sleep 2
         return
     fi
 
     # Append the decoded name, URL, and folder to the DownloadManager.txt file
     echo "$decoded_name_cleaned|$game_url|$DOWNLOAD_DIR" >> "/userdata/system/game-downloader/download.txt"
-    added_games+=("$decoded_name_cleaned")
+    dialog --infobox "'$decoded_name_cleaned' link added to download list." 5 40
+    sleep 2
 }
 
 # Function to show the letter selection menu
@@ -98,44 +97,29 @@ select_letter() {
     select_games "$selected_letter"
 }
 
+# Initialize an array to hold skipped games
+skipped_games=()
+
 # Main loop to process selected games
 while true; do
     select_letter
-    if [ $? -eq 0 ]; then
-        dialog --title "Continue?" --yesno "Would you like to select some more games?" 7 50
-        if [ $? -eq 1 ]; then
-            break
-        fi
-    else
+    # Display skipped games message if there are any skipped games
+    if [ ${#skipped_games[@]} -gt 0 ]; then
+        skipped_games_list=$(IFS=$'\n'; echo "${skipped_games[*]}")
+        dialog --msgbox "The following games already exist in the system and are being skipped:\n\n$skipped_games_list" 15 60
+        # Clear the skipped games list after displaying the message
+        skipped_games=()
+    fi
+
+    # Ask user if they want to continue after displaying skipped games
+    dialog --title "Continue?" --yesno "Would you like to select some more games?" 7 50
+    if [ $? -eq 1 ]; then
         break
     fi
 done
 
-# Show messages for skipped games and added games before Continue? prompt
-skip_message=""
-added_message=""
-
-if [ ${#skipped_games[@]} -gt 0 ]; then
-    skipped_games_list=$(IFS=$'\n'; echo "${skipped_games[*]}")
-    skip_message="A game you added already exists in the system and is being skipped:\n\n$skipped_games_list"
-fi
-
-if [ ${#added_games[@]} -gt 0 ]; then
-    added_games_list=$(IFS=$'\n'; echo "${added_games[*]}")
-    added_message="The following games have been successfully added to the download queue:\n\n$added_games_list"
-fi
-
-# Display combined message first, before Continue?
-if [ -n "$skip_message" ] || [ -n "$added_message" ]; then
-    combined_message="$skip_message\n\n$added_message"
-    dialog --msgbox "$combined_message" 15 60
-fi
-
-# Display "Goodbye!" message
+# Goodbye message
 echo "Goodbye!"
 
 # Run the curl command to reload the games
 curl http://127.0.0.1:1234/reloadgames
-
-# Reload the script (this will re-run the game downloader)
-curl -L raw.githubusercontent.com/DTJW92/game-downloader/main/GameDownloader.sh | bash
