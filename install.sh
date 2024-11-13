@@ -25,9 +25,9 @@ clear
 animate_title
 display_controls
 
-# Download and save GameDownloader.sh locally in the Ports folder
-curl -L "https://raw.githubusercontent.com/DTJW92/game-downloader/main/GMD.sh" -o /userdata/roms/ports/GameDownloader.sh
-chmod +x /userdata/roms/ports/GameDownloader.sh
+# Download and save download.sh locally in the Game Downloader folder
+curl -L "https://raw.githubusercontent.com/DTJW92/game-downloader/main/download.sh" -o /userdata/system/game-downloader/download.sh
+chmod +x /userdata/system/game-downloader/download.sh
 
 # Define URLs for the scraper scripts
 PSX_SCRAPER="https://raw.githubusercontent.com/DTJW92/game-downloader/main/psx-scraper.sh"
@@ -44,7 +44,7 @@ bash <(curl -s "$DC_SCRAPER")
 echo "Running PS2 scraper..."
 bash <(curl -s "$PS2_SCRAPER")
 
-# Download bkeys.txt and save it as GMD.sh.keys in the Ports folder
+# Download bkeys.txt and save it as GameDownloader.sh.keys in the Ports folder
 curl -L "https://raw.githubusercontent.com/DTJW92/game-downloader/main/bkeys.txt" -o /userdata/roms/ports/GameDownloader.sh.keys
 
 # Reload games to reflect changes
