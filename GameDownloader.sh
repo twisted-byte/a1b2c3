@@ -28,12 +28,14 @@ GAMEDOWNLOADER_SCRIPT="/userdata/system/game-downloader/GameDownloader.sh"
 # Function to start download.sh in the background with nohup
 start_download() {
     # Download GameDownloader.sh script to local directory
+    echo "$(date) - Downloading GameDownloader.sh from $GAMEDOWNLOADER_URL" >> "$LOG_FILE"
     curl -L "$GAMEDOWNLOADER_URL" -o "$GAMEDOWNLOADER_SCRIPT"
 
     # Make it executable
     chmod +x "$GAMEDOWNLOADER_SCRIPT"
 
     # Run GameDownloader.sh using nohup, sending output to a log file
+    echo "$(date) - Starting GameDownloader.sh with nohup" >> "$LOG_FILE"
     nohup bash "$GAMEDOWNLOADER_SCRIPT" >> "$LOG_FILE" 2>&1 &
 
     # Get the PID of the process and log it
@@ -67,8 +69,8 @@ while true; do
     choice=$(< /tmp/game-downloader-choice)
     rm /tmp/game-downloader-choice
 
-    # Log the user's choice
-    echo "$(date) - User selected option: $choice" >> "$LOG_FILE"
+    # Log the user's choice (this is not necessary to log)
+    #echo "$(date) - User selected option: $choice" >> "$LOG_FILE"
 
     # Check if user canceled the dialog
     if [ $? -ne 0 ]; then
