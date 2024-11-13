@@ -32,6 +32,12 @@ while true; do
     choice=$(< /tmp/game-downloader-choice)
     rm /tmp/game-downloader-choice
 
+    # Check if user canceled the dialog
+    if [ $? -ne 0 ]; then
+        clear
+        break  # Exit loop when Cancel is clicked
+    fi
+
     case $choice in
         1)
             bash <(curl -s "$PSX_MENU_URL")
