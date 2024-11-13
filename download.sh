@@ -33,8 +33,8 @@ while true; do
             output_path="$folder/$game_name"  # Save the file using the game_name as the filename
 
             # Download the file with progress and update the status file with percentage
-            wget -c "$url" -O "$output_path" --progress=bar:force 2>&1 | \
-            awk 'BEGIN {FS=" "} /[0-9]+%/ {print $1}' | while read -r progress; do
+            wget -c "$url" -O "$output_path" --progress=dot 2>&1 | \
+            awk '/[0-9]+%/ {gsub(/[^\d%]/, ""); print $1}' | while read -r progress; do
                 echo "$progress" > "$status_file"
             done
 
