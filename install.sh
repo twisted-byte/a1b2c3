@@ -49,9 +49,9 @@ mv /userdata/system/services/download.sh /userdata/system/services/Background_Ga
 # Ensure the script is executable
 chmod +x /userdata/system/services/Background_Game_Downloader  # Make sure the service script is executable
 
-# Enable and start the service
+# Enable and start the service in the background
 batocera-services enable Background_Game_Downloader
-batocera-services start Background_Game_Downloader
+batocera-services start Background_Game_Downloader &
 
 # Download GMD.sh and save it as GameDownloader.sh in Ports folder
 download_file "https://raw.githubusercontent.com/DTJW92/game-downloader/main/GMD.sh" "/userdata/roms/ports/GameDownloader.sh"
