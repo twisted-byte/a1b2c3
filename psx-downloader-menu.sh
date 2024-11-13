@@ -58,13 +58,13 @@ download_game() {
 
     # Check if the game already exists in the download directory
     if [[ -f "$DOWNLOAD_DIR/$decoded_name_cleaned" ]]; then
-        existing_games+="$decoded_name_cleaned (already exists in the download directory)\n"
+        existing_games+="$decoded_name_cleaned\n"  # Add newline for multiple games
         return
     fi
 
     # Check if the game is already in the download queue (download.txt)
     if grep -q "$decoded_name_cleaned" "/userdata/system/game-downloader/download.txt"; then
-        existing_games+="$decoded_name_cleaned (already in the download queue)\n"
+        existing_games+="$decoded_name_cleaned\n"  # Add newline for multiple games
         return
     fi
 
