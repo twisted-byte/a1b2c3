@@ -51,15 +51,19 @@ download_game() {
     local decoded_name="$1"
     decoded_name_cleaned=$(echo "$decoded_name" | sed 's/[\\\"`]//g' | sed 's/^[[:space:]]*//g' | sed 's/[[:space:]]*$//g')
 
+    # Initialize counters for skipped and added games
+    skipped_games=()
+    added_games=()
+
     # Check if the game already exists in the download directory
     if [[ -f "$DOWNLOAD_DIR/$decoded_name_cleaned" ]]; then
-        dialog --msgbox "A game you added already exists in the system, this is being skipped: $decoded_name_cleaned" 10 50
+        skipped_games+=("$decoded_name_cleaned")
         return
     fi
 
     # Check if the game is already in the download queue (download.txt)
     if grep -q "$decoded_name_cleaned" "/userdata/system/game-downloader/download.txt"; then
-        dialog --msgbox "A game you added already exists in the system, this is being skipped: $decoded_name_cleaned" 10 50
+        skipped_games+=("$decoded_name_cleaned")
         return
     fi
 
@@ -72,6 +76,7 @@ download_game() {
 
     # Append the decoded name, URL, and folder to the DownloadManager.txt file
     echo "$decoded_name_cleaned|$game_url|$DOWNLOAD_DIR" >> "/userdata/system/game-downloader/download.txt"
+    added_games+=("$decoded_name_cleaned")
 }
 
 # Function to show the letter selection menu
@@ -105,6 +110,18 @@ while true; do
         break
     fi
 done
+
+# Display a single message for all skipped games (if any)
+if [ ${#skipped_games[@]} -gt 0 ]; then
+    skipped_games_list=$(IFS=$'\n'; echo "${skipped_games[*]}")
+    dialog --msgbox "The following games you added already exist in the system and are being skipped:\n\n$skipped_games_list" 15 60
+fi
+
+# Display a message for added games
+if [ ${#added_games[@]} -gt 0 ]; then
+    added_games_list=$(IFS=$'\n'; echo "${added_games[*]}")
+    dialog --msgbox "The following games have been successfully added to the download queue:\n\n$added_games_list" 15 60
+fi
 
 echo "Goodbye!"
 
