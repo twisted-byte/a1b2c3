@@ -93,6 +93,7 @@ select_letter() {
     selected_letter=$(dialog --title "Select a Letter" --menu "Choose a letter" 25 70 10 \
         "${menu_options[@]}" 3>&1 1>&2 2>&3)
 
+    # If no letter is selected or canceled, return an error code
     if [ -z "$selected_letter" ]; then
         return 1
     fi
@@ -153,6 +154,8 @@ while true; do
             break
         fi
     else
+        # Display a message if the letter selection fails (either canceled or invalid)
+        dialog --msgbox "Invalid selection or no games found. Exiting the script." 10 50
         break
     fi
 done
