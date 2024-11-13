@@ -50,6 +50,22 @@ select_games() {
 download_game() {
     local decoded_name="$1"
     decoded_name_cleaned=$(echo "$decoded_name" | sed 's/[\\\"`]//g' | sed 's/^[[:space:]]*//g' | sed 's/[[:space:]]*$//g')
+
+    # Check if the game already exists in the download directory
+    if [[ -f "$DOWNLOAD_DIR/$decoded_name_cleaned" ]]; then
+        dialog --infobox "Game '$decoded_name_cleaned' already exists in the download directory." 5 40
+        sleep 2
+        return
+    fi
+
+    # Check if the game is already in the download queue (download.txt)
+    if grep -q "$decoded_name_cleaned" "/userdata/system/game-downloader/download.txt"; then
+        dialog --infobox "Game '$decoded_name_cleaned' is already in the download queue." 5 40
+        sleep 2
+        return
+    fi
+
+    # Find the game URL from the AllGames.txt file
     game_url=$(grep -F "$decoded_name_cleaned" "$ALLGAMES_FILE" | cut -d '|' -f 2)
 
     if [ -z "$game_url" ]; then
@@ -59,7 +75,7 @@ download_game() {
     fi
 
    # Append the decoded name, URL, and folder to the DownloadManager.txt file
-    echo "\`$decoded_name_cleaned\`|$game_url|$DOWNLOAD_DIR" >> "/userdata/system/game-downloader/download.txt"
+    echo "$decoded_name_cleaned|$game_url|$DOWNLOAD_DIR" >> "/userdata/system/game-downloader/download.txt"
     dialog --infobox "'$decoded_name_cleaned' link added to download list." 5 40
     sleep 2
 }
