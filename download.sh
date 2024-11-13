@@ -24,7 +24,7 @@ UNINSTALL_URL="https://raw.githubusercontent.com/DTJW92/game-downloader/main/uni
 # Function to start download.sh in the background with nohup
 start_download() {
     # Run download.sh using nohup, sending output to a log file
-    nohup bash /userdata/system/game-downloader/download.sh >> /userdata/system/game-updater/debug/debug_log.txt 2>&1 &
+    nohup bash /userdata/system/game-downloader/download.sh >> "$LOG_FILE" 2>&1 &
 
     # Get the PID of the process and log it
     DOWNLOAD_PID=$!
