@@ -34,6 +34,7 @@ select_games() {
 
     IFS=$'\n'
     for game in $selected_games; do
+        # Split game by .chd to treat each game as a separate item
         game_items=$(echo "$game" | sed 's/\.chd/.chd\n/g')
         while IFS= read -r game_item; do
             if [[ -n "$game_item" ]]; then
@@ -105,7 +106,10 @@ while true; do
     select_letter
     # Display skipped games message if there are any skipped games
     if [ ${#skipped_games[@]} -gt 0 ]; then
-        skipped_games_list=$(IFS=$'\n'; echo "${skipped_games[*]}")
+        # Format the skipped games list with each game on a new line and break by .chd
+        skipped_games_list=$(IFS=$'\n'; echo "${skipped_games[*]}" | sed 's/.chd/\n&/g' | sed 's/^/• /')
+
+        # Display the grouped skipped games in a message box
         dialog --msgbox "The following games already exist in the system and are being skipped:\n\n$skipped_games_list" 15 60
         # Clear the skipped games list after displaying the message
         skipped_games=()
