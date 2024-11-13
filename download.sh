@@ -1,11 +1,18 @@
 #!/bin/bash
 
+# Log all outputs for debugging
+exec > >(tee -i /userdata/system/game-downloader/download-debug.log)
+exec 2>&1
+
 # Directory for the status files
 STATUS_DIR="/userdata/system/game-downloader/status"
 mkdir -p "$STATUS_DIR"
 
 # Path to the download queue file
 DOWNLOAD_QUEUE="/userdata/system/game-downloader/download.txt"
+
+# Log the start of the script
+echo "Starting download.sh script at $(date)"
 
 # Run the script continuously
 while true; do
@@ -21,7 +28,7 @@ while true; do
 
             # Use the game name as the file name for saving the downloaded file
             output_path="$folder/$game_name"  # Save the file using the game_name as the filename
-            
+
             # Download the file with progress and update the status file with percentage
             wget -c "$url" -O "$output_path" --progress=dot 2>&1 | \
             awk '/[0-9]%/ {gsub(/[\.]|\%/,""); print $1}' | while read -r progress; do
@@ -48,5 +55,9 @@ while true; do
     fi
 
     # Wait for a while before checking again for new downloads
+    echo "$(date) - Waiting for new downloads..." >> /userdata/system/game-downloader/download-debug.log
     sleep 5
 done
+
+# Log the end of the script
+echo "download.sh completed at $(date)"
