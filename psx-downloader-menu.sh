@@ -125,7 +125,7 @@ if [ ${#added_games[@]} -gt 0 ]; then
     added_message="The following games have been successfully added to the download queue:\n\n$added_games_list"
 fi
 
-# Display combined message before Continue? dialog
+# Display combined message first, before Continue?
 if [ -n "$skip_message" ] || [ -n "$added_message" ]; then
     combined_message="$skip_message\n\n$added_message"
     dialog --msgbox "$combined_message" 15 60
