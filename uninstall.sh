@@ -39,15 +39,11 @@ GAME_DOWNLOADER_SH="$PORTS_DIR/GameDownloader.sh"
 GAME_DOWNLOADER_KEYS="$PORTS_DIR/GameDownloader.sh.keys"
 BG_DOWNLOADER_SERVICE="$SERVICES_DIR/Background_Game_Downloader"
 
-# Stop and disable the service if it's running
-log "Attempting to stop and disable Background_Game_Downloader service..."
-if batocera-services status Background_Game_Downloader | grep -q "running"; then
-    batocera-services stop Background_Game_Downloader > /dev/null 2>&1
-    batocera-services disable Background_Game_Downloader > /dev/null 2>&1 &
-    log "Service Background_Game_Downloader stopped and disabled."
-else
-    log "Service Background_Game_Downloader is not active, skipping stop."
-fi
+# Stop and disable the service directly
+log "Disabling and stopping the Background_Game_Downloader service..."
+batocera-services disable Background_Game_Downloader > /dev/null 2>&1
+batocera-services stop Background_Game_Downloader > /dev/null 2>&1
+log "Service Background_Game_Downloader disabled and stopped."
 
 # Remove the game-downloader directory
 log "Checking for game-downloader directory at $GMD_DIR..."
