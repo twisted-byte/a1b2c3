@@ -6,14 +6,6 @@ LOG_FILE="/userdata/system/game-downloader/debug/dialog-debug.log"
 # Ensure clear display
 clear
 
-# Define the URLs to fetch the scripts from GitHub
-PSX_MENU_URL="https://raw.githubusercontent.com/DTJW92/game-downloader/main/psx-downloader-menu.sh"
-PS2_MENU_URL="https://raw.githubusercontent.com/DTJW92/game-downloader/main/ps2-downloader-menu.sh"
-DC_MENU_URL="https://raw.githubusercontent.com/DTJW92/game-downloader/main/dc-downloader-menu.sh"
-UPDATER_URL="https://raw.githubusercontent.com/DTJW92/game-downloader/main/Updater.sh"
-DOWNLOAD_MANAGER_URL="https://raw.githubusercontent.com/DTJW92/game-downloader/main/DownloadManager.sh"
-UNINSTALL_URL="https://raw.githubusercontent.com/DTJW92/game-downloader/main/uninstall.sh"
-
 # Check if dialog is installed
 if ! command -v dialog &> /dev/null; then
     echo "$(date) - Error: dialog is not installed" >> "$LOG_FILE"
@@ -21,12 +13,23 @@ if ! command -v dialog &> /dev/null; then
     exit 1
 fi
 
+# URLs for external scripts (ensure these are defined in the script)
+PSX_MENU_URL="https://raw.githubusercontent.com/DTJW92/game-downloader/main/psx-downloader-menu.sh"
+PS2_MENU_URL="https://raw.githubusercontent.com/DTJW92/game-downloader/main/ps2-downloader-menu.sh"
+DC_MENU_URL="https://raw.githubusercontent.com/DTJW92/game-downloader/main/dc-downloader-menu.sh"
+UPDATER_URL="https://raw.githubusercontent.com/DTJW92/game-downloader/main/Updater.sh"
+DOWNLOAD_MANAGER_URL="https://raw.githubusercontent.com/DTJW92/game-downloader/main/DownloadManager.sh"
+UNINSTALL_URL="https://raw.githubusercontent.com/DTJW92/game-downloader/main/uninstall.sh"
+
 # Function to start download.sh in the background with nohup
 start_download() {
-    # Run download.sh using nohup, sending output to a log file
-    nohup bash /userdata/system/game-downloader/download.sh >> /userdata/system/game-updater/debug/debug_log.txt 2>&1 &
+    # Ensure we are in the correct directory
+    cd /userdata/system/game-downloader || { echo "$(date) - Error: Failed to change directory"; exit 1; }
 
-    # Get the PID of the process and log it
+    # Run download.sh using nohup, sending output to a log file and ensuring DISPLAY is passed
+    nohup DISPLAY=:0.0 bash /userdata/system/game-downloader/download.sh >> /userdata/system/game-updater/debug/debug_log.txt 2>&1 &
+    
+    # Get the PID of the background process and log it
     DOWNLOAD_PID=$!
     echo "$(date) - download.sh started in the background with PID: $DOWNLOAD_PID" >> "$LOG_FILE"
 }
@@ -41,8 +44,7 @@ while true; do
            3 "Dreamcast Downloader" \
            4 "Run Updater" \
            5 "Run Download Manager" \
-           6 "Uninstall Game Downloader" \
-           7 "Exit" 2>/tmp/game-downloader-choice  # Adding an "Exit" option
+           6 "Uninstall Game Downloader" 2>/tmp/game-downloader-choice
 
     choice=$(< /tmp/game-downloader-choice)
     rm /tmp/game-downloader-choice
@@ -50,22 +52,17 @@ while true; do
     # Log the user's choice
     echo "$(date) - User selected option: $choice" >> "$LOG_FILE"
 
-    # Handle the "Exit" option
-    if [ "$choice" -eq 7 ]; then
-        echo "$(date) - User selected Exit, exiting the script." >> "$LOG_FILE"
-        dialog --msgbox "Exiting the Game Downloader. Goodbye!" 10 50
-        clear
-        break
-    fi
-
-    # Handle user canceling the menu
+    # Check if user canceled the dialog
     if [ $? -ne 0 ]; then
         echo "$(date) - User canceled the dialog, exiting." >> "$LOG_FILE"
         clear
-        break  # Exit if the user cancels
+        
+        # Kill the xterm window if the dialog is canceled
+        kill $$  # This kills the current process (which in this case is the script running inside xterm)
+        
+        break  # Exit loop when Cancel is clicked
     fi
 
-    # Execute the selected menu option
     case $choice in
         1)
             bash <(curl -s "$PSX_MENU_URL")
@@ -88,7 +85,8 @@ while true; do
         *)
             echo "$(date) - Invalid choice selected, exiting." >> "$LOG_FILE"
             dialog --infobox "Exiting..." 10 50
-            break  # Exit if no valid option is selected
+            sleep 2
+            break  # Exit loop when no valid choice is selected
             exit 0
             ;;
     esac
