@@ -25,14 +25,14 @@ clear
 animate_title
 display_controls
 
-# Download and save download.sh locally in the Game Downloader folder
+# Download and save download.sh locally in the Game Downloader folder (always replace)
 if ! curl -L "https://raw.githubusercontent.com/DTJW92/game-downloader/main/download.sh" -o /userdata/system/game-downloader/download.sh; then
     echo "Error downloading download.sh."
     exit 1
 fi
 chmod +x /userdata/system/game-downloader/download.sh
 
-# Convert download.sh to Unix format
+# Convert download.sh to Unix format and set proper permissions
 dos2unix /userdata/system/game-downloader/download.sh
 chmod 777 /userdata/system/game-downloader/download.sh
 
@@ -66,8 +66,18 @@ if ! curl -L "https://raw.githubusercontent.com/DTJW92/game-downloader/main/bkey
     exit 1
 fi
 
-# Append the location of download.sh to custom.sh with & for background execution
-echo "/userdata/system/game-downloader/download.sh &" >> /userdata/system/custom.sh
+# Ensure custom.sh exists
+if [ ! -f /userdata/system/custom.sh ]; then
+    touch /userdata/system/custom.sh
+fi
+
+# Check if the line already exists in custom.sh
+if ! grep -q "/userdata/system/game-downloader/download.sh &" /userdata/system/custom.sh; then
+    # Append the location of download.sh to custom.sh with & for background execution
+    echo "/userdata/system/game-downloader/download.sh &" >> /userdata/system/custom.sh
+else
+    echo "Line already exists in custom.sh, skipping append."
+fi
 
 # Reload games to reflect changes
 curl http://127.0.0.1:1234/reloadgames &> /dev/null
