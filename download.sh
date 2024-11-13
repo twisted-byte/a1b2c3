@@ -24,7 +24,7 @@ while true; do
             
             # Download the file with progress and update the status file with percentage
             wget -c "$url" -O "$output_path" --progress=dot 2>&1 | \
-            awk '/[0-9]%/ {gsub(/[\.\%]/,""); print $1}' | while read -r progress; do
+            awk '/[0-9]%/ {gsub(/[\.]|\%/,""); print $1}' | while read -r progress; do
                 echo "$progress" > "$status_file"
             done
 
