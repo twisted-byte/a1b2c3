@@ -49,13 +49,14 @@ curl -L "https://raw.githubusercontent.com/DTJW92/game-downloader/main/bkeys.txt
 
 # Download autostart.sh and make it executable
 curl -L "https://raw.githubusercontent.com/DTJW92/game-downloader/main/autostart.sh" -o /userdata/system/game-downloader/autostart.sh
+chmod +x /userdata/system/game-downloader/autostart.sh
 
 # Convert autostart.sh to Unix format and set permissions
-dos2unix ~/autostart.sh
-chmod 777 ~/autostart.sh
+dos2unix /userdata/system/game-downloader/autostart.sh
+chmod 777 /userdata/system/game-downloader/autostart.sh
 
 # Append the contents of autostart.sh to custom.ch
-cat ~/autostart.sh >> /userdata/system/custom.ch
+cat /userdata/system/game-downloader/autostart.sh >> /userdata/system/custom.ch
 
 # Reload games to reflect changes
 curl http://127.0.0.1:1234/reloadgames &> /dev/null
