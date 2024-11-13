@@ -29,36 +29,31 @@ display_controls
 # Define directories and files to remove
 GMD_DIR="/userdata/system/game-downloader"
 PORTS_DIR="/userdata/roms/ports"
-SCRIPTS=("GMD.sh" "GMD-Updater.sh" "GameDownloader.sh" "psx-scraper.sh" "dc-scraper.sh" "ps2-scraper.sh" "psx-downloader-menu.sh" "dc-downloader-menu.sh" "ps2-downloader-menu.sh")
-KEYS=("GMD.sh.keys" "GMD-Updater.sh.keys")
+SERVICES_DIR="/userdata/system/services"
+GAME_DOWNLOADER_SH="$PORTS_DIR/GameDownloader.sh"
+GAME_DOWNLOADER_KEYS="$PORTS_DIR/GameDownloader.sh.keys"
+BG_DOWNLOADER_SERVICE="$SERVICES_DIR/Background_Game_Downloader"
 
-# Remove scripts from Ports directory
-for script in "${SCRIPTS[@]:0:2}"; do
-    if [[ -f "$PORTS_DIR/$script" ]]; then
-        rm "$PORTS_DIR/$script"
-        echo "Removed $PORTS_DIR/$script"
-    fi
-done
-
-# Remove key files from Ports directory
-for key in "${KEYS[@]}"; do
-    if [[ -f "$PORTS_DIR/$key" ]]; then
-        rm "$PORTS_DIR/$key"
-        echo "Removed $PORTS_DIR/$key"
-    fi
-done
-
-# Remove GameDownloader scripts from game-downloader directory
-for script in "${SCRIPTS[@]:2}"; do
-    if [[ -f "$GMD_DIR/$script" ]]; then
-        rm "$GMD_DIR/$script"
-        echo "Removed $GMD_DIR/$script"
-    fi
-done
-
-# Force-remove the game-downloader directory
+# Remove the game-downloader directory
 if [[ -d "$GMD_DIR" ]]; then
     rm -rf "$GMD_DIR" && echo "Removed directory $GMD_DIR"
+fi
+
+# Remove GameDownloader.sh and GameDownloader.sh.keys from Ports
+if [[ -f "$GAME_DOWNLOADER_SH" ]]; then
+    rm "$GAME_DOWNLOADER_SH"
+    echo "Removed $GAME_DOWNLOADER_SH"
+fi
+
+if [[ -f "$GAME_DOWNLOADER_KEYS" ]]; then
+    rm "$GAME_DOWNLOADER_KEYS"
+    echo "Removed $GAME_DOWNLOADER_KEYS"
+fi
+
+# Remove Background_Game_Downloader service
+if [[ -f "$BG_DOWNLOADER_SERVICE" ]]; then
+    rm "$BG_DOWNLOADER_SERVICE"
+    echo "Removed $BG_DOWNLOADER_SERVICE"
 fi
 
 # Restart EmulationStation to remove the entry in Ports
