@@ -70,6 +70,7 @@ while true; do
             dialog --infobox "Exiting..." 10 50
             sleep 2
             break  # Exit loop when no valid choice is selected
+            exit 0
             ;;
     esac
 done
