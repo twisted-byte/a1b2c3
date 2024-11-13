@@ -111,18 +111,19 @@ while true; do
     fi
 done
 
-# Display a single message for all skipped games (if any)
+# Show messages for skipped games before Continue? prompt
 if [ ${#skipped_games[@]} -gt 0 ]; then
     skipped_games_list=$(IFS=$'\n'; echo "${skipped_games[*]}")
-    dialog --msgbox "The following games you added already exist in the system and are being skipped:\n\n$skipped_games_list" 15 60
+    dialog --msgbox "A game you added already exists in the system and is being skipped:\n\n$skipped_games_list" 15 60
 fi
 
-# Display a message for added games
+# Show message for added games before Continue? prompt
 if [ ${#added_games[@]} -gt 0 ]; then
     added_games_list=$(IFS=$'\n'; echo "${added_games[*]}")
     dialog --msgbox "The following games have been successfully added to the download queue:\n\n$added_games_list" 15 60
 fi
 
+# Display "Goodbye!" message
 echo "Goodbye!"
 
 # Run the curl command to reload the games
