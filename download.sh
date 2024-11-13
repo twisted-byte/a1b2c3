@@ -54,10 +54,16 @@ process_download() {
     # Use the game name as the file name for saving the downloaded file
     local output_path="$folder/$game_name"  # Save the file using the game_name as the filename
 
-    # Download the file with progress and update the status file with percentage
-    wget -c "$url" -O "$output_path" --progress=dot 2>&1 | \
-    awk '/[0-9]+%/ {gsub(/[^\d%]/, ""); print $1}' | while read -r progress; do
-        echo "$progress" > "$status_file"
+    # Start the download using wget with progress bar
+    wget -c "$url" -O "$output_path" --progress=bar:force 2>&1 | \
+    while IFS= read -r line; do
+        # Extract the percentage progress from wget's output
+        progress=$(echo "$line" | grep -oP '\d+(?=%)')
+
+        # If we successfully get the progress, update the status file
+        if [[ -n "$progress" ]]; then
+            echo "$progress" > "$status_file"  # Update the status file with current progress
+        fi
     done
 
     # Check if download was successful
