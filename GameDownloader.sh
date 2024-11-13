@@ -13,26 +13,36 @@ if ! command -v dialog &> /dev/null; then
     exit 1
 fi
 
-# URLs for external scripts (ensure these are defined in the script)
+# Function to start download.sh in the background with nohup
+start_download() {
+    # Ensure we're in the correct directory before running the script
+    cd /userdata/system/game-downloader || { echo "$(date) - Error: Failed to change directory"; exit 1; }
+
+    # Run download.sh using nohup, sending output to a log file and ensuring DISPLAY is passed
+    nohup DISPLAY=:0.0 bash /userdata/system/game-downloader/download.sh >> /userdata/system/game-updater/debug/debug_log.txt 2>&1 &
+
+    # Get the PID of the background process and log it
+    DOWNLOAD_PID=$!
+    echo "$(date) - download.sh started in the background with PID: $DOWNLOAD_PID" >> "$LOG_FILE"
+
+    # Sleep for a moment to give time for the background process to start
+    sleep 2
+
+    # Log whether download.sh is still running
+    if ps -p $DOWNLOAD_PID > /dev/null; then
+        echo "$(date) - download.sh is still running with PID: $DOWNLOAD_PID" >> "$LOG_FILE"
+    else
+        echo "$(date) - download.sh failed to start or exited unexpectedly" >> "$LOG_FILE"
+    fi
+}
+
+# Define the URLs to fetch the scripts from GitHub
 PSX_MENU_URL="https://raw.githubusercontent.com/DTJW92/game-downloader/main/psx-downloader-menu.sh"
 PS2_MENU_URL="https://raw.githubusercontent.com/DTJW92/game-downloader/main/ps2-downloader-menu.sh"
 DC_MENU_URL="https://raw.githubusercontent.com/DTJW92/game-downloader/main/dc-downloader-menu.sh"
 UPDATER_URL="https://raw.githubusercontent.com/DTJW92/game-downloader/main/Updater.sh"
 DOWNLOAD_MANAGER_URL="https://raw.githubusercontent.com/DTJW92/game-downloader/main/DownloadManager.sh"
 UNINSTALL_URL="https://raw.githubusercontent.com/DTJW92/game-downloader/main/uninstall.sh"
-
-# Function to start download.sh in the background with nohup
-start_download() {
-    # Ensure we are in the correct directory
-    cd /userdata/system/game-downloader || { echo "$(date) - Error: Failed to change directory"; exit 1; }
-
-    # Run download.sh using nohup, sending output to a log file and ensuring DISPLAY is passed
-    nohup DISPLAY=:0.0 bash /userdata/system/game-downloader/download.sh >> /userdata/system/game-updater/debug/debug_log.txt 2>&1 &
-    
-    # Get the PID of the background process and log it
-    DOWNLOAD_PID=$!
-    echo "$(date) - download.sh started in the background with PID: $DOWNLOAD_PID" >> "$LOG_FILE"
-}
 
 # Main dialog menu with loop to keep the menu active until a valid choice is selected
 while true; do
@@ -56,10 +66,10 @@ while true; do
     if [ $? -ne 0 ]; then
         echo "$(date) - User canceled the dialog, exiting." >> "$LOG_FILE"
         clear
-        
+
         # Kill the xterm window if the dialog is canceled
         kill $$  # This kills the current process (which in this case is the script running inside xterm)
-        
+
         break  # Exit loop when Cancel is clicked
     fi
 
