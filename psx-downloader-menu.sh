@@ -109,22 +109,25 @@ while true; do
         error_games_message=""
         added_games_message=""
 
+        # Handle existing games message
         if [[ ${#existing_games[@]} -gt 0 ]]; then
             if [[ ${#existing_games[@]} -eq 1 ]]; then
                 existing_games_message="The game you selected already exists on your system: \n${existing_games[0]}"
             elif [[ ${#existing_games[@]} -eq ${#selected_games[@]} ]]; then
                 existing_games_message="The games you selected already exist on your system."
             else
-                existing_games_message="Some of the games you selected already exist on your system: \n${existing_games[@]}"
+                existing_games_message="Some of the games you selected already exist on your system: \n$(printf "%s\n" "${existing_games[@]}")"
             fi
         fi
 
+        # Handle error games message
         if [[ -n "$error_games" ]]; then
-            error_games_message="The following games could not be added due to missing URLs:\n\n${error_games[@]}"
+            error_games_message="The following games could not be added due to missing URLs:\n\n$(printf "%s\n" "${error_games[@]}")"
         fi
 
+        # Handle added games message
         if [[ -n "$added_games" ]]; then
-            added_games_message="The following games have been successfully added to the download queue:\n\n${added_games[@]}"
+            added_games_message="The following games have been successfully added to the download queue:\n\n$(printf "%s\n" "${added_games[@]}")"
         fi
 
         # Combine all messages
