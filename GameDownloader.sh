@@ -88,7 +88,6 @@ while true; do
         *)
             echo "$(date) - Invalid choice selected, exiting." >> "$LOG_FILE"
             dialog --infobox "Exiting..." 10 50
-            sleep 2
             break  # Exit if no valid option is selected
             exit 0
             ;;
