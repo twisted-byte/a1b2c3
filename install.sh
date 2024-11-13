@@ -30,6 +30,9 @@ download_file() {
     fi
 }
 
+# Create debug directory at the start
+mkdir -p /userdata/system/game-downloader/debug
+
 # Main execution
 clear
 animate_title
