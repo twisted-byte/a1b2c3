@@ -28,7 +28,8 @@ rm /tmp/game-downloader-choice
 # Check if the user canceled the dialog (no choice selected)
 if [ ! -s /tmp/game-downloader-choice ]; then
     clear
-    dialog --msgbox "User canceled the dialog. Exiting." 10 50
+    dialog --infobox "Thank you for using Game Downloader! Any issues, message DTJW92 on Discord!" 10 50
+    sleep 3
     exit 0  # Exit the script when Cancel is clicked
 fi
 
