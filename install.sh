@@ -35,13 +35,23 @@ clear
 animate_title
 display_controls
 
-# Download and save download.sh locally in the Game Downloader folder (always replace)
-download_file "https://raw.githubusercontent.com/DTJW92/game-downloader/main/download.sh" "/userdata/system/game-downloader/download.sh"
-chmod +x /userdata/system/game-downloader/download.sh
+# Download and save download.sh locally (always replace)
+download_file "https://raw.githubusercontent.com/DTJW92/game-downloader/main/download.sh" "/userdata/system/services/download.sh"
 
 # Convert download.sh to Unix format and set proper permissions
-dos2unix /userdata/system/game-downloader/download.sh
-chmod 777 /userdata/system/game-downloader/download.sh
+dos2unix /userdata/system/services/download.sh
+chmod +x /userdata/system/services/download.sh  # Ensure it's executable
+chmod 777 /userdata/system/services/download.sh  # Set read/write/execute permissions
+
+# Rename the file to remove the .sh extension (optional, since you want to avoid .sh)
+mv /userdata/system/services/download.sh /userdata/system/services/download
+
+# Ensure the script is executable
+chmod +x /userdata/system/services/download  # Make sure the service script is executable
+
+# Enable and start the service
+batocera-services enable download
+batocera-services start download
 
 # Define URLs for the scraper scripts
 PSX_SCRAPER="https://raw.githubusercontent.com/DTJW92/game-downloader/main/psx-scraper.sh"
@@ -70,25 +80,5 @@ fi
 # Download bkeys.txt and save it as GameDownloader.sh.keys in the Ports folder
 download_file "https://raw.githubusercontent.com/DTJW92/game-downloader/main/bkeys.txt" "/userdata/roms/ports/GameDownloader.sh.keys"
 
-# Ensure custom.sh exists
-if [ ! -f /userdata/system/custom.sh ]; then
-    touch /userdata/system/custom.sh
-fi
-
-# Check if the line already exists in custom.sh
-if ! grep -q "/userdata/system/game-downloader/download.sh &" /userdata/system/custom.sh; then
-    # Append the location of download.sh to custom.sh with & for background execution
-    echo "/userdata/system/game-downloader/download.sh &" >> /userdata/system/custom.sh
-else
-    echo "Line already exists in custom.sh, skipping append."
-fi
-
-echo "Installation complete. 'Game Downloader' should now be available in Ports. Batocera will need to reboot to initiate the background downloader."
-
-# Confirm with the user before rebooting
-dialog --title "Reboot Now?" --yesno "Batocera needs to reboot to initiate the background downloader, would you like to reboot Batocera now?" 7 50
-if [ $? -eq 0 ]; then
-    reboot  # Reboot command with sudo for Batocera
-else
-    echo "You can manually reboot later to complete the setup."
-fi
+echo "Installation complete. 'Game Downloader' should now be available in Ports."
+echo "Batocera will initiate the background downloader automatically, you should find a toggle switch for it within Main Menu -> System Settings -> Sevices."
