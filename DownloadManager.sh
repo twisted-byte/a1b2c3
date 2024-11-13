@@ -1,29 +1,29 @@
 #!/bin/bash
 
-# Directory where the download status files are stored
-STATUS_DIR="/userdata/system/game-downloader/status"
-mkdir -p "$STATUS_DIR"
+# Path to the progress file
+PROGRESS_FILE="/userdata/system/game-downloader/progress.txt"
+mkdir -p "$(dirname "$PROGRESS_FILE")"
 
-# Function to display download status with Dialog
+# Function to display download status with Dialog (non-blocking)
 show_download_progress() {
     while true; do
-        clear
         progress_text="Downloading:\n"
         any_progress=false
-        # Check the status of all downloads
-        for status_file in "$STATUS_DIR"/*.status; do
-            if [[ -f "$status_file" ]]; then
-                file_name=$(basename "$status_file" .status)
-                progress=$(<"$status_file")
-                decoded_name=$(grep -F "$file_name" "$download_file" | cut -d '|' -f 1)  # Get the decoded name
-                progress_text="$progress_text$decoded_name: $progress%\n"
-                any_progress=true
-            fi
-        done
+
+        # Check the progress file for all downloads
+        if [[ -f "$PROGRESS_FILE" ]]; then
+            while IFS='|' read -r game_name progress; do
+                if [[ -n "$game_name" && -n "$progress" ]]; then
+                    progress_text="$progress_text$game_name: $progress%\n"
+                    any_progress=true
+                fi
+            done < "$PROGRESS_FILE"
+        fi
 
         # If there's ongoing downloads, show progress
         if $any_progress; then
-            dialog --clear --title "Download Progress" --msgbox "$progress_text" 15 50
+            # Use dialog --gauge for a progress bar
+            dialog --title "Download Progress" --gauge "$progress_text" 15 50 0
         else
             # Show a message when no downloads are active
             dialog --clear --title "Download Progress" --msgbox "Nothing downloading currently!" 10 50
@@ -34,16 +34,14 @@ show_download_progress() {
         if [[ $? -eq 0 ]]; then
             break
         fi
-        
+
         sleep 2  # Refresh every 2 seconds
     done
 }
 
-# Main entry: specify download file
-download_file="/userdata/system/game-downloader/download.txt"
+# Start showing download progress in the background
+show_download_progress &
 
-# Start showing download progress
-show_download_progress
-
-# Optionally, call GameDownloader.sh after progress is done
-curl -L "https://raw.githubusercontent.com/DTJW92/game-downloader/main/GameDownloader.sh" | bash
+# Main menu or other logic here
+# You can now show the main menu, and the download progress will continue updating in the background
+echo "You can return to the main menu while the downloads continue in the background."
