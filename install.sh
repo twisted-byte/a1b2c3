@@ -86,7 +86,7 @@ fi
 echo "Installation complete. 'Game Downloader' should now be available in Ports. Batocera will need to reboot to initiate the background downloader."
 
 # Confirm with the user before rebooting
-dialog --title "Reboot Now?" --yesno "Would you like to reboot Batocera now?" 7 50
+dialog --title "Reboot Now?" --yesno "Batocera needs to reboot to initiate the background downloader, would you like to reboot Batocera now?" 7 50
 if [ $? -eq 0 ]; then
     reboot  # Reboot command with sudo for Batocera
 else
