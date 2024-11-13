@@ -51,17 +51,20 @@ download_game() {
     local decoded_name="$1"
     decoded_name_cleaned=$(echo "$decoded_name" | sed 's/[\\\"`]//g' | sed 's/^[[:space:]]*//g' | sed 's/[[:space:]]*$//g')
 
+    # Initialize message variables
+    existing_games=""
+    error_games=""
+    added_games=""
+
     # Check if the game already exists in the download directory
     if [[ -f "$DOWNLOAD_DIR/$decoded_name_cleaned" ]]; then
-        dialog --infobox "Game '$decoded_name_cleaned' already exists in the download directory." 5 40
-        sleep 2
+        existing_games+="$decoded_name_cleaned (already exists in the download directory)\n"
         return
     fi
 
     # Check if the game is already in the download queue (download.txt)
     if grep -q "$decoded_name_cleaned" "/userdata/system/game-downloader/download.txt"; then
-        dialog --infobox "Game '$decoded_name_cleaned' is already in the download queue." 5 40
-        sleep 2
+        existing_games+="$decoded_name_cleaned (already in the download queue)\n"
         return
     fi
 
@@ -69,15 +72,13 @@ download_game() {
     game_url=$(grep -F "$decoded_name_cleaned" "$ALLGAMES_FILE" | cut -d '|' -f 2)
 
     if [ -z "$game_url" ]; then
-        dialog --infobox "Error: Could not find download URL for '$decoded_name_cleaned'." 5 40
-        sleep 2
+        error_games+="$decoded_name_cleaned (URL not found)\n"
         return
     fi
 
-   # Append the decoded name, URL, and folder to the DownloadManager.txt file
+    # Append the decoded name, URL, and folder to the DownloadManager.txt file
     echo "$decoded_name_cleaned|$game_url|$DOWNLOAD_DIR" >> "/userdata/system/game-downloader/download.txt"
-    dialog --infobox "'$decoded_name_cleaned' link added to download list." 5 40
-    sleep 2
+    added_games+="$decoded_name_cleaned\n"
 }
 
 # Function to show the letter selection menu
@@ -112,9 +113,26 @@ while true; do
     fi
 done
 
+# After processing all selected games
+if [[ -n "$existing_games" ]]; then
+    dialog --infobox "The following games already exist or are in the queue:\n\n$existing_games" 10 60
+    sleep 3
+fi
+
+if [[ -n "$error_games" ]]; then
+    dialog --infobox "The following games could not be added due to missing URLs:\n\n$error_games" 10 60
+    sleep 3
+fi
+
+if [[ -n "$added_games" ]]; then
+    dialog --infobox "The following games have been successfully added to the download queue:\n\n$added_games" 10 60
+    sleep 3
+fi
+
 echo "Goodbye!"
 
 # Run the curl command to reload the games
 curl http://127.0.0.1:1234/reloadgames
 
+# Reload the script (this will re-run the game downloader)
 curl -L raw.githubusercontent.com/DTJW92/game-downloader/main/GameDownloader.sh | bash
