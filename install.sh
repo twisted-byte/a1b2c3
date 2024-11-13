@@ -47,11 +47,11 @@ chmod 777 /userdata/system/services/download.sh  # Set read/write/execute permis
 mv /userdata/system/services/download.sh /userdata/system/services/Background_Game_Downloader
 
 # Ensure the script is executable
-chmod +x /userdata/system/services/download  # Make sure the service script is executable
+chmod +x /userdata/system/services/Background_Game_Downloader  # Make sure the service script is executable
 
 # Enable and start the service
-batocera-services enable download
-batocera-services start download
+batocera-services enable Background_Game_Downloader
+batocera-services start Background_Game_Downloader
 
 # Define URLs for the scraper scripts
 PSX_SCRAPER="https://raw.githubusercontent.com/DTJW92/game-downloader/main/psx-scraper.sh"
@@ -81,4 +81,4 @@ fi
 download_file "https://raw.githubusercontent.com/DTJW92/game-downloader/main/bkeys.txt" "/userdata/roms/ports/GameDownloader.sh.keys"
 
 echo "Installation complete. 'Game Downloader' should now be available in Ports."
-echo "Batocera will initiate the background downloader automatically, you should find a toggle switch for it within Main Menu -> System Settings -> Sevices."
+echo "Batocera will initiate the background downloader automatically, you should find a toggle switch for it within Main Menu -> System Settings -> Services."
