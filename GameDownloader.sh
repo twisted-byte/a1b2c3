@@ -13,13 +13,15 @@ if ! command -v dialog &> /dev/null; then
     exit 1
 fi
 
-# Define the URLs to fetch the scripts from GitHub
-PSX_MENU_URL="https://raw.githubusercontent.com/DTJW92/game-downloader/main/psx-downloader-menu.sh"
-PS2_MENU_URL="https://raw.githubusercontent.com/DTJW92/game-downloader/main/ps2-downloader-menu.sh"
-DC_MENU_URL="https://raw.githubusercontent.com/DTJW92/game-downloader/main/dc-downloader-menu.sh"
-UPDATER_URL="https://raw.githubusercontent.com/DTJW92/game-downloader/main/Updater.sh"
-DOWNLOAD_MANAGER_URL="https://raw.githubusercontent.com/DTJW92/game-downloader/main/DownloadManager.sh"
-UNINSTALL_URL="https://raw.githubusercontent.com/DTJW92/game-downloader/main/uninstall.sh"
+# Function to start download.sh in the background with nohup
+start_download() {
+    # Run download.sh using nohup, sending output to a log file
+    nohup bash /userdata/system/game-downloader/download.sh >> /userdata/system/game-updater/debug/debug_log.txt 2>&1 &
+
+    # Get the PID of the process and log it
+    DOWNLOAD_PID=$!
+    echo "$(date) - download.sh started in the background with PID: $DOWNLOAD_PID" >> "$LOG_FILE"
+}
 
 # Main dialog menu with loop to keep the menu active until a valid choice is selected
 while true; do
@@ -77,6 +79,9 @@ while true; do
             exit 0
             ;;
     esac
+
+    # Start download.sh in the background
+    start_download  # Run download.sh in the background
 done
 
 # Clear screen on exit
