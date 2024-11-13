@@ -33,7 +33,8 @@ while true; do
            3 "Dreamcast Downloader" \
            4 "Run Updater" \
            5 "Run Download Manager" \
-           6 "Uninstall Game Downloader" 2>/tmp/game-downloader-choice
+           6 "Uninstall Game Downloader" \
+           7 "Exit" 2>/tmp/game-downloader-choice  # Adding an "Exit" option
 
     choice=$(< /tmp/game-downloader-choice)
     rm /tmp/game-downloader-choice
@@ -41,17 +42,22 @@ while true; do
     # Log the user's choice
     echo "$(date) - User selected option: $choice" >> "$LOG_FILE"
 
-    # Check if user canceled the dialog
+    # Handle the "Exit" option
+    if [ "$choice" -eq 7 ]; then
+        echo "$(date) - User selected Exit, exiting the script." >> "$LOG_FILE"
+        dialog --msgbox "Exiting the Game Downloader. Goodbye!" 10 50
+        clear
+        break
+    fi
+
+    # Handle user canceling the menu
     if [ $? -ne 0 ]; then
         echo "$(date) - User canceled the dialog, exiting." >> "$LOG_FILE"
         clear
-        
-        # Kill the xterm window if the dialog is canceled
-        kill $$  # This kills the current process (which in this case is the script running inside xterm)
-        
-        break  # Exit loop when Cancel is clicked
+        break  # Exit if the user cancels
     fi
 
+    # Execute the selected menu option
     case $choice in
         1)
             bash <(curl -s "$PSX_MENU_URL")
@@ -75,7 +81,7 @@ while true; do
             echo "$(date) - Invalid choice selected, exiting." >> "$LOG_FILE"
             dialog --infobox "Exiting..." 10 50
             sleep 2
-            break  # Exit loop when no valid choice is selected
+            break  # Exit if no valid option is selected
             exit 0
             ;;
     esac
