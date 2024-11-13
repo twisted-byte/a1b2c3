@@ -8,7 +8,7 @@ DISPLAY=:0.0 xterm -fs 30 -maximized -fg white -bg black -fa "DejaVuSansMono" -e
             echo '0'   # Initial value (0%)
             for i in {1..100}; do
                 echo \$i
-                sleep 1.1
+                sleep 0.1
             done
             echo '100'   # End value (100%)
         ) | dialog --title 'Updating...' --gauge 'Please wait while updating...' 10 70 0
