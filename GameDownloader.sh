@@ -1,10 +1,14 @@
 #!/bin/bash
 
+# Log file for debugging and error logging
+LOG_FILE="/userdata/system/game-downloader/debug/dialog-debug.log"
+
 # Ensure clear display
 clear
 
 # Check if dialog is installed
 if ! command -v dialog &> /dev/null; then
+    echo "$(date) - Error: dialog is not installed" >> "$LOG_FILE"
     dialog --msgbox "Error: dialog is not installed. Please install it and try again." 10 50
     exit 1
 fi
@@ -32,8 +36,12 @@ while true; do
     choice=$(< /tmp/game-downloader-choice)
     rm /tmp/game-downloader-choice
 
+    # Log the user's choice
+    echo "$(date) - User selected option: $choice" >> "$LOG_FILE"
+
     # Check if user canceled the dialog
     if [ $? -ne 0 ]; then
+        echo "$(date) - User canceled the dialog, exiting." >> "$LOG_FILE"
         clear
         break  # Exit loop when Cancel is clicked
     fi
@@ -58,6 +66,7 @@ while true; do
             bash <(curl -s "$UNINSTALL_URL")
             ;;
         *)
+            echo "$(date) - Invalid choice selected, exiting." >> "$LOG_FILE"
             dialog --infobox "Exiting..." 10 50
             sleep 2
             break  # Exit loop when no valid choice is selected
