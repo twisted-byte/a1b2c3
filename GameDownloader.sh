@@ -5,7 +5,7 @@ clear
 
 # Check if dialog is installed
 if ! command -v dialog &> /dev/null; then
-    dialog --msgbox "Error: dialog is not installed. Please install it and try again." 10 50
+    echo "Error: dialog is not installed. Please install it and try again."
     exit 1
 fi
 
@@ -32,12 +32,6 @@ while true; do
     choice=$(< /tmp/game-downloader-choice)
     rm /tmp/game-downloader-choice
 
-    # Check if user canceled the dialog
-    if [ $? -ne 0 ]; then
-        clear
-        exit 0  # Exit the script when Cancel is clicked
-    fi
-
     case $choice in
         1)
             bash <(curl -s "$PSX_MENU_URL")
@@ -57,8 +51,17 @@ while true; do
         6)
             bash <(curl -s "$UNINSTALL_URL")
             ;;
+        *)
+            # Handle invalid choices
+            dialog --infobox "Exiting..." 10 50
+            sleep 2
+            exit 0  # Exit the script when no valid choice is selected
+            ;;
     esac
 done
 
 # Clear screen on exit
 clear
+
+# Run the curl command to reload the games (output suppressed)
+curl http://127.0.0.1:1234/reloadgames &> /dev/null
