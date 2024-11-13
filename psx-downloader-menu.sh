@@ -8,6 +8,14 @@ ALLGAMES_FILE="$DEST_DIR/AllGames.txt"  # File containing the full list of games
 # Ensure the download directory exists
 mkdir -p "$DOWNLOAD_DIR"
 
+# Initialize counters
+existing_games=0
+error_games=0
+added_games=0
+existing_games_list=""
+error_games_list=""
+added_games_list=""
+
 # Function to display the game list and allow selection
 select_games() {
     local letter="$1"
@@ -51,20 +59,17 @@ download_game() {
     local decoded_name="$1"
     decoded_name_cleaned=$(echo "$decoded_name" | sed 's/[\\\"`]//g' | sed 's/^[[:space:]]*//g' | sed 's/[[:space:]]*$//g')
 
-    # Initialize message variables
-    existing_games=0
-    error_games=0
-    added_games=0
-
     # Check if the game already exists in the download directory
     if [[ -f "$DOWNLOAD_DIR/$decoded_name_cleaned" ]]; then
-        ((existing_games++))
+        ((existing_games++))  # Increment counter if the game exists in the directory
+        existing_games_list+="$decoded_name_cleaned\n"
         return
     fi
 
     # Check if the game is already in the download queue (download.txt)
     if grep -q "$decoded_name_cleaned" "/userdata/system/game-downloader/download.txt"; then
-        ((existing_games++))
+        ((existing_games++))  # Increment counter if the game is in the download queue
+        existing_games_list+="$decoded_name_cleaned\n"
         return
     fi
 
@@ -72,13 +77,15 @@ download_game() {
     game_url=$(grep -F "$decoded_name_cleaned" "$ALLGAMES_FILE" | cut -d '|' -f 2)
 
     if [ -z "$game_url" ]; then
-        ((error_games++))
+        ((error_games++))  # Increment counter if the URL is missing
+        error_games_list+="$decoded_name_cleaned\n"
         return
     fi
 
     # Append the decoded name, URL, and folder to the DownloadManager.txt file
     echo "$decoded_name_cleaned|$game_url|$DOWNLOAD_DIR" >> "/userdata/system/game-downloader/download.txt"
-    ((added_games++))
+    ((added_games++))  # Increment counter if the game was successfully added to the queue
+    added_games_list+="$decoded_name_cleaned\n"
 }
 
 # Function to show the letter selection menu
@@ -93,7 +100,6 @@ select_letter() {
     selected_letter=$(dialog --title "Select a Letter" --menu "Choose a letter" 25 70 10 \
         "${menu_options[@]}" 3>&1 1>&2 2>&3)
 
-    # If no letter is selected or canceled, return an error code
     if [ -z "$selected_letter" ]; then
         return 1
     fi
@@ -101,54 +107,48 @@ select_letter() {
     select_games "$selected_letter"
 }
 
-# Main execution flow
-existing_games=0
-error_games=0
-added_games=0
-
+# Main loop to process selected games
 while true; do
     select_letter
     if [ $? -eq 0 ]; then
-        # Prepare message variables based on counts
-        message=""
-
-        # Generate the appropriate message based on the counts of existing, error, and added games
-        if [ $existing_games -gt 0 ]; then
-            if [ $existing_games -eq 1 ]; then
-                message="The game you selected already exists on your system."
-            elif [ $existing_games -eq ${#selected_games[@]} ]; then
-                message="The games you selected already exist on your system."
-            else
-                message="Some of the games you selected already exist on your system."
-            fi
-        fi
-
-        if [ $error_games -gt 0 ]; then
-            message="$message\nThe following games could not be added due to missing URLs: $(printf "%s\n" "$error_games")"
-        fi
-
-        if [ $added_games -gt 0 ]; then
-            message="$message\nThe following games have been successfully added to the download queue: $(printf "%s\n" "$added_games")"
-        fi
-
-        # Display the message if any part is non-empty
-        if [[ -n "$message" ]]; then
-            dialog --infobox "$message" 10 60
-            sleep 3
-        fi
-
         dialog --title "Continue?" --yesno "Would you like to select some more games?" 7 50
         if [ $? -eq 1 ]; then
             break
         fi
     else
-        # Display a message if the letter selection fails (either canceled or invalid)
-        dialog --msgbox "Invalid selection or no games found. Exiting the script." 10 50
         break
     fi
 done
 
-# After the user exits the game selection loop
+# After all games are processed, we check the counts and set the message accordingly
+message=""
+
+if [ $existing_games -gt 0 ]; then
+    if [ $existing_games -eq 1 ]; then
+        message="The game you selected already exists on your system."
+    elif [ $existing_games -eq ${#selected_games[@]} ]; then
+        message="The games you selected already exist on your system."
+    else
+        message="Some of the games you selected already exist on your system."
+    fi
+fi
+
+# If there were any errors
+if [ $error_games -gt 0 ]; then
+    message="$message\nThe following games could not be added due to missing URLs:\n$exists_list"
+fi
+
+# If there were successful additions
+if [ $added_games -gt 0 ]; then
+    message="$message\nThe following games have been successfully added to the download queue:\n$added_games_list"
+fi
+
+# Display the message based on the counts
+if [ -n "$message" ]; then
+    dialog --infobox "$message" 10 60
+    sleep 3
+fi
+
 echo "Goodbye!"
 
 # Run the curl command to reload the games
