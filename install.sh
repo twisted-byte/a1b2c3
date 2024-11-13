@@ -91,3 +91,5 @@ download_file "https://raw.githubusercontent.com/DTJW92/game-downloader/main/bke
 
 echo "Installation complete. 'Game Downloader' should now be available in Ports."
 echo "Batocera will initiate the background downloader automatically, you should find a toggle switch for it within Main Menu -> System Settings -> Services."
+
+curl http://127.0.0.1:1234/reloadgames
