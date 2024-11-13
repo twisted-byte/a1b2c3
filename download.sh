@@ -1,63 +1,99 @@
 #!/bin/bash
 
-# Log all outputs for debugging
-exec > >(tee -i /userdata/system/game-downloader/download-debug.log)
-exec 2>&1
+# Log file for debugging and error logging
+LOG_FILE="/userdata/system/game-downloader/debug/dialog-debug.log"
 
-# Directory for the status files
-STATUS_DIR="/userdata/system/game-downloader/status"
-mkdir -p "$STATUS_DIR"
+# Ensure clear display
+clear
 
-# Path to the download queue file
-DOWNLOAD_QUEUE="/userdata/system/game-downloader/download.txt"
+# Check if dialog is installed
+if ! command -v dialog &> /dev/null; then
+    echo "$(date) - Error: dialog is not installed" >> "$LOG_FILE"
+    dialog --msgbox "Error: dialog is not installed. Please install it and try again." 10 50
+    exit 1
+fi
 
-# Log the start of the script
-echo "Starting download.sh script at $(date)"
+# URLs for external scripts
+PSX_MENU_URL="https://raw.githubusercontent.com/DTJW92/game-downloader/main/psx-downloader-menu.sh"
+PS2_MENU_URL="https://raw.githubusercontent.com/DTJW92/game-downloader/main/ps2-downloader-menu.sh"
+DC_MENU_URL="https://raw.githubusercontent.com/DTJW92/game-downloader/main/dc-downloader-menu.sh"
+UPDATER_URL="https://raw.githubusercontent.com/DTJW92/game-downloader/main/Updater.sh"
+DOWNLOAD_MANAGER_URL="https://raw.githubusercontent.com/DTJW92/game-downloader/main/DownloadManager.sh"
+UNINSTALL_URL="https://raw.githubusercontent.com/DTJW92/game-downloader/main/uninstall.sh"
 
-# Run the script continuously
+# Function to start download.sh in the background with nohup
+start_download() {
+    # Run download.sh using nohup, sending output to a log file
+    nohup bash /userdata/system/game-downloader/download.sh >> /userdata/system/game-updater/debug/debug_log.txt 2>&1 &
+
+    # Get the PID of the process and log it
+    DOWNLOAD_PID=$!
+    echo "$(date) - download.sh started in the background with PID: $DOWNLOAD_PID" >> "$LOG_FILE"
+}
+
+# Main dialog menu with loop to keep the menu active until a valid choice is selected
 while true; do
-    # Check if download.txt exists and has content
-    if [[ -f "$DOWNLOAD_QUEUE" ]]; then
-        # Process each line in download.txt
-        while IFS='|' read -r game_name url folder; do
-            # Set the status file path (using game_name as the file name)
-            status_file="$STATUS_DIR/$game_name.status"
+    dialog --clear --backtitle "Game Downloader" \
+           --title "Select a System" \
+           --menu "Choose an option:" 15 50 8 \
+           1 "PSX Downloader" \
+           2 "PS2 Downloader" \
+           3 "Dreamcast Downloader" \
+           4 "Run Updater" \
+           5 "Run Download Manager" \
+           6 "Uninstall Game Downloader" 2>/tmp/game-downloader-choice
 
-            # Log initial status
-            echo "Starting download for $game_name from $url" > "$status_file"
+    choice=$(< /tmp/game-downloader-choice)
+    rm /tmp/game-downloader-choice
 
-            # Use the game name as the file name for saving the downloaded file
-            output_path="$folder/$game_name"  # Save the file using the game_name as the filename
+    # Log the user's choice
+    echo "$(date) - User selected option: $choice" >> "$LOG_FILE"
 
-            # Download the file with progress and update the status file with percentage
-            wget -c "$url" -O "$output_path" --progress=dot 2>&1 | \
-            awk '/[0-9]%/ {gsub(/[\.]|\%/,""); print $1}' | while read -r progress; do
-                echo "$progress" > "$status_file"
-            done
-
-            # Check if download was successful
-            if [ $? -ne 0 ]; then
-                echo "Error: Failed to download $url" >> "$status_file"
-            else
-                # Mark download as complete
-                echo "100" > "$status_file"
-
-                # Move the downloaded file to the target folder (already saved with the correct name)
-                mv "$output_path" "$folder"
-
-                # Delete the status file once download is complete
-                rm -f "$status_file"
-
-                # Remove the processed line from download.txt
-                sed -i "/$game_name|/d" "$DOWNLOAD_QUEUE"
-            fi
-        done < "$DOWNLOAD_QUEUE"
+    # Check if user canceled the dialog
+    if [ $? -ne 0 ]; then
+        echo "$(date) - User canceled the dialog, exiting." >> "$LOG_FILE"
+        clear
+        
+        # Kill the xterm window if the dialog is canceled
+        kill $$  # This kills the current process (which in this case is the script running inside xterm)
+        
+        break  # Exit loop when Cancel is clicked
     fi
 
-    # Wait for a while before checking again for new downloads
-    echo "$(date) - Waiting for new downloads..." >> /userdata/system/game-downloader/download-debug.log
-    sleep 5
+    case $choice in
+        1)
+            bash <(curl -s "$PSX_MENU_URL")
+            ;;
+        2)
+            bash <(curl -s "$PS2_MENU_URL")
+            ;;
+        3)
+            bash <(curl -s "$DC_MENU_URL")
+            ;;
+        4)
+            bash <(curl -s "$UPDATER_URL")
+            ;;
+        5)
+            bash <(curl -s "$DOWNLOAD_MANAGER_URL")
+            ;;
+        6)
+            bash <(curl -s "$UNINSTALL_URL")
+            ;;
+        *)
+            echo "$(date) - Invalid choice selected, exiting." >> "$LOG_FILE"
+            dialog --infobox "Exiting..." 10 50
+            sleep 2
+            break  # Exit loop when no valid choice is selected
+            exit 0
+            ;;
+    esac
+
+    # Start download.sh in the background
+    start_download  # Run download.sh in the background
 done
 
-# Log the end of the script
-echo "download.sh completed at $(date)"
+# Clear screen on exit
+clear
+
+# Run the curl command to reload the games (output suppressed)
+curl http://127.0.0.1:1234/reloadgames &> /dev/null
