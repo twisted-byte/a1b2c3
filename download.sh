@@ -1,7 +1,10 @@
 #!/bin/bash
 
+# Path to the debug log file
+DEBUG_LOG="/userdata/system/game-downloader/debug/download_debug.txt"
+
 # Log all outputs for debugging
-exec > >(tee -i /userdata/system/game-downloader/download-debug.log)
+exec > >(tee -i "$DEBUG_LOG")
 exec 2>&1
 
 # Directory for the status files
@@ -24,7 +27,7 @@ while true; do
             status_file="$STATUS_DIR/$game_name.status"
 
             # Log initial status
-            echo "Starting download for $game_name from $url" > "$status_file"
+            echo "Starting download for $game_name from $url" >> "$DEBUG_LOG"
 
             # Use the game name as the file name for saving the downloaded file
             output_path="$folder/$game_name"  # Save the file using the game_name as the filename
@@ -37,7 +40,7 @@ while true; do
 
             # Check if download was successful
             if [ $? -ne 0 ]; then
-                echo "Error: Failed to download $url" >> "$status_file"
+                echo "Error: Failed to download $url" >> "$DEBUG_LOG"
             else
                 # Mark download as complete
                 echo "100" > "$status_file"
@@ -55,9 +58,9 @@ while true; do
     fi
 
     # Wait for a while before checking again for new downloads
-    echo "$(date) - Waiting for new downloads..." >> /userdata/system/game-downloader/download-debug.log
+    echo "$(date) - Waiting for new downloads..." >> "$DEBUG_LOG"
     sleep 5
 done
 
 # Log the end of the script
-echo "download.sh completed at $(date)"
+echo "download.sh completed at $(date)" >> "$DEBUG_LOG"
