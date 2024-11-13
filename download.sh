@@ -4,10 +4,14 @@
 STATUS_DIR="/userdata/system/game-downloader/status"
 mkdir -p "$STATUS_DIR"
 
+# Path to the download queue file
+DOWNLOAD_QUEUE="/userdata/system/game-downloader/download.txt"
+
 # Run the script continuously
 while true; do
     # Check if download.txt exists and has content
-    if [[ -f "/userdata/system/game-downloader/download.txt" ]]; then
+    if [[ -f "$DOWNLOAD_QUEUE" ]]; then
+        # Process each line in download.txt
         while IFS='|' read -r game_name url folder; do
             # Set the status file path (using game_name as the file name)
             status_file="$STATUS_DIR/$game_name.status"
@@ -34,8 +38,14 @@ while true; do
 
                 # Move the downloaded file to the target folder
                 mv "$output_path" "$folder"
+
+                # Delete the status file once download is complete
+                rm -f "$status_file"
+
+                # Remove the processed line from download.txt
+                sed -i "/$game_name|/d" "$DOWNLOAD_QUEUE"
             fi
-        done < "/userdata/system/game-downloader/download.txt"
+        done < "$DOWNLOAD_QUEUE"
     fi
 
     # Wait for a while before checking again for new downloads
