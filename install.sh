@@ -53,6 +53,12 @@ chmod +x /userdata/system/services/Background_Game_Downloader  # Make sure the s
 batocera-services enable Background_Game_Downloader
 batocera-services start Background_Game_Downloader
 
+# Download GMD.sh and save it as GameDownloader.sh in Ports folder
+download_file "https://raw.githubusercontent.com/DTJW92/game-downloader/main/GMD.sh" "/userdata/roms/ports/GameDownloader.sh"
+
+# Make the downloaded GameDownloader.sh executable
+chmod +x /userdata/roms/ports/GameDownloader.sh
+
 # Define URLs for the scraper scripts
 PSX_SCRAPER="https://raw.githubusercontent.com/DTJW92/game-downloader/main/psx-scraper.sh"
 DC_SCRAPER="https://raw.githubusercontent.com/DTJW92/game-downloader/main/dc-scraper.sh"
