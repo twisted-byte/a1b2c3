@@ -131,4 +131,4 @@ done
 # Goodbye message
 echo "Goodbye!"
 
-curl -L "https://raw.githubusercontent.com/DTJW92/game-downloader/main/GameDownloader.sh" -o /tmp/GameDownloader.sh
+bash /tmp/GameDownloader.sh
