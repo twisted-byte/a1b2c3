@@ -132,5 +132,4 @@ done
 # Goodbye message
 echo "Goodbye!"
 
-# Download the GameDownloader script and execute it
-curl -L raw.githubusercontent.com/DTJW92/game-downloader/main/GameDownloader.sh | bash
+bash /userdata/system/game-downloader/GameDownloader.sh
