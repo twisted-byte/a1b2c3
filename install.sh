@@ -50,7 +50,7 @@ download_file "https://raw.githubusercontent.com/DTJW92/game-downloader/main/dow
 # Convert download.sh to Unix format and set proper permissions
 dos2unix /userdata/system/services/download.sh >/dev/null 2>&1
 chmod +x /userdata/system/services/download.sh >/dev/null 2>&1
-chmod 777 /userdata/system/services/download.sh >/dev/null 2>&1# Ensure it's executable
+chmod 777 /userdata/system/services/download.sh >/dev/null 2>&1 
 
 # Rename the file to remove the .sh extension
 mv /userdata/system/services/download.sh /userdata/system/services/Background_Game_Downloader >/dev/null 2>&1
