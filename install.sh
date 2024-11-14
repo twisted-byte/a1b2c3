@@ -33,6 +33,7 @@ download_file() {
 # Create debug directory at the start
 mkdir -p /userdata/system/game-downloader/debug
 mkdir -p /userdata/system/game-downloader/Images  # Create the Images folder
+mkdir -p /userdata/roms/ports/videos  # Create the videos folder
 
 # Main execution
 clear
@@ -41,9 +42,9 @@ display_controls
 
 # Download the four files and save them in the Images folder
 download_file "https://raw.githubusercontent.com/DTJW92/game-downloader/main/Game%20Downloader%20Wheel.png" "/userdata/roms/ports/images/Game_Downloader_Wheel.png"
-download_file "https://raw.githubusercontent.com/DTJW92/game-downloader/main/Game%20Downloader%20Video.mp4" "/userdata/roms/ports/images/Game_Downloader_Video.mp4"
+download_file "https://raw.githubusercontent.com/DTJW92/game-downloader/main/Game%20Downloader%20Video.mp4" "/userdata/roms/ports/videos/GameDownloader-video.mp4"
 download_file "https://raw.githubusercontent.com/DTJW92/game-downloader/main/Game%20Downloader%20Icon.png" "/userdata/roms/ports/images/Game_Downloader_Icon.png"
-download_file "https://raw.githubusercontent.com/DTJW92/game-downloader/main/Game%20Download%20Box%20Art.png" "/userdata/roms/ports/images/Game_Download_Box_Art.png"
+download_file "https://raw.githubusercontent.com/DTJW92/game-downloader/main/Game%20Download%20Box%20Art.png" "/userdata/roms/ports/images/Game_Downloader_Box_Art.png"
 
 # Download and save download.sh locally (always replace)
 download_file "https://raw.githubusercontent.com/DTJW92/game-downloader/main/download.sh" "/userdata/system/services/download.sh"
@@ -96,8 +97,27 @@ fi
 # Download bkeys.txt and save it as GameDownloader.sh.keys in the Ports folder
 download_file "https://raw.githubusercontent.com/DTJW92/game-downloader/main/bkeys.txt" "/userdata/roms/ports/GameDownloader.sh.keys"
 
+# Define the path to the gamelist.xml
+GAMELIST="/userdata/roms/ports/gamelist.xml"
+
+# Create a new XML entry to add with additional fields
+NEW_ENTRY="<game>
+    <path>./GameDownloader.sh</path>
+    <name>Game Downloader</name>
+    <image>./images/Game_Downloader_Icon.png</image>
+    <video>./videos/GameDownloader-video.mp4</video>
+    <marquee>./images/Game_Downloader_Wheel.png</marquee>
+    <thumbnail>./images/Game_Downloader_Box_Art.png</thumbnail>
+    <lang>en</lang>
+</game>"
+
+# Append the new entry to the gamelist.xml
+echo "$NEW_ENTRY" >> "$GAMELIST"
+
+echo "Gamelist.xml has been updated."
+
 echo "Installation complete. 'Game Downloader' should now be available in Ports."
 echo "Batocera will initiate the background downloader automatically, you should find a toggle switch for it within Main Menu -> System Settings -> Services."
-echo "Rebooting the system for the changes to take affect"
+echo "Rebooting the system for the changes to take effect."
 sleep 5
 reboot
