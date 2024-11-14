@@ -31,64 +31,47 @@ process_download() {
     local url="$2"
     local folder="$3"
 
-    # Log the download attempt
-    echo "Processing download for game: $game_name"
-    echo "URL: $url"
-    echo "Target folder: $folder"
+    local temp_path="/userdata/system/game-downloader/$game_name"
+    echo "Starting download for $game_name..."
 
-    # Set the temporary download path
-    local temp_path="/userdata/system/game-downloader/$game_name"  # Save the file temporarily
+    # Start the download in the background
+    wget -c "$url" -O "$temp_path" >/dev/null 2>&1 &
+    wget_pid=$!
 
-    # Ensure that $game_name doesn't have any extra quotes or backticks
-    game_name=$(echo "$game_name" | sed 's/["]//g')
-
-    # Start the download using wget without progress bar
-    wget -c "$url" -O "$temp_path" >/dev/null 2>&1
-    local wget_exit_code=$?
+    # Wait for wget to finish
+    wait $wget_pid
+    wget_exit_code=$?
     echo "wget exit code: $wget_exit_code"
 
-    # Check if download was successful
     if [ $wget_exit_code -ne 0 ]; then
         echo "Download failed for $game_name"
-        return 1  # Download failed
     else
         echo "Download succeeded for $game_name"
+        # Start the unzip process for this file immediately
+        process_unzip "$game_name" "$temp_path" "$folder" &
+    fi
+}
 
-        # Check if the file is a .zip
-        if [[ "$temp_path" == *.zip ]]; then
-            echo "File is a zip, proceeding to unzip."
+# Function to unzip downloaded files
+process_unzip() {
+    local game_name="$1"
+    local temp_path="$2"
+    local folder="$3"
 
-            # Remove .zip extension from game_name for folder creation if present
-            game_name_no_ext="${game_name%.zip}"
+    echo "Processing unzip for $game_name..."
 
-            # Create a temporary folder named after the game without the .zip extension
-            local game_folder="/userdata/system/game-downloader/$game_name_no_ext"
-            mkdir -p "$game_folder"
+    # Remove .zip extension from game_name for folder creation
+    game_name_no_ext="${game_name%.zip}"
+    local game_folder="/userdata/system/game-downloader/$game_name_no_ext"
+    mkdir -p "$game_folder"
 
-            # Unzip the downloaded file into the temporary folder
-            unzip -q "$temp_path" -d "$game_folder"
-            local unzip_exit_code=$?
-            echo "unzip exit code: $unzip_exit_code"
-
-            # Check if the unzip was successful
-            if [ $unzip_exit_code -ne 0 ]; then
-                echo "Unzip failed for $game_name"
-                return 1  # Unzip failed
-            fi
-
-            # Move the entire folder to the target folder
-            mv "$game_folder" "$folder"
-            echo "Moved unzipped files for $game_name to $folder"
-        else
-            # If it's not a .zip, just move the downloaded file directly
-            mv "$temp_path" "$folder"
-            echo "Moved downloaded file for $game_name to $folder"
-        fi
-
-        # Remove the processed line from download.txt
-        sed -i "/$game_name|/d" "$DOWNLOAD_QUEUE"
-        echo "Removed $game_name from download queue"
-        return 0  # Success
+    # Unzip the downloaded file into the temporary folder
+    unzip -q "$temp_path" -d "$game_folder"
+    if [ $? -ne 0 ]; then
+        echo "Unzip failed for $game_name"
+    else
+        mv "$game_folder" "$folder"
+        echo "Moved unzipped files for $game_name to $folder"
     fi
 }
 
@@ -103,14 +86,13 @@ fi
 while true; do
     echo "Checking for new downloads at $(date)"
 
-    # Check if download.txt exists and has content
+    # Process each line in download.txt
     if [[ -f "$DOWNLOAD_QUEUE" ]]; then
-        # Process each line in download.txt
         while IFS='|' read -r game_name url folder; do
             echo "Reading download entry: $game_name | $url | $folder"
             
-            # Start the download and wait for completion
-            process_download "$game_name" "$url" "$folder"
+            # Start the download and unzip in parallel (background processes)
+            process_download "$game_name" "$url" "$folder" &
         done < "$DOWNLOAD_QUEUE"
     else
         echo "No downloads found in queue."
