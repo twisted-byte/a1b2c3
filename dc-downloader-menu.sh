@@ -131,8 +131,5 @@ done
 # Goodbye message
 echo "Goodbye!"
 
-# Run the curl command to reload the games
-curl http://127.0.0.1:1234/reloadgames
-
 # Download the GameDownloader script and execute it
 curl -L raw.githubusercontent.com/DTJW92/game-downloader/main/GameDownloader.sh | bash
