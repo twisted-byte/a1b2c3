@@ -19,4 +19,7 @@ xterm -fs 30 -maximized -fg white -bg black -fa "DejaVuSansMono" -en UTF-8 -e ba
     
     # After the script finishes, delete the local copy of GameDownloader.sh
     rm -f '$LOCAL_SCRIPT_PATH'
+    
+    # Reload the game list
+    curl http://127.0.0.1:1234/reloadgames
 "
