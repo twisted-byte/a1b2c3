@@ -7,18 +7,6 @@ mkdir -p "$STATUS_DIR"
 # Path to the download queue file
 DOWNLOAD_QUEUE="/userdata/system/game-downloader/download.txt"
 
-# Flag to handle termination signal
-terminate_script=false
-
-# Function to handle the stop signal
-handle_stop_signal() {
-    echo "Stop signal received. Terminating the script..."
-    terminate_script=true
-}
-
-# Trap SIGTERM to handle batocera-services stop
-trap 'handle_stop_signal' SIGTERM
-
 # Function to check for an active internet connection
 check_internet() {
     if ping -c 1 -W 5 8.8.8.8 >/dev/null 2>&1; then
@@ -30,7 +18,7 @@ check_internet() {
 
 # Function to stop the service if there's no internet connection
 stop_service() {
-    batocera-services stop Background_Game_Downloader
+    batocera-services stop download
 }
 
 # Function to process each download
@@ -43,7 +31,7 @@ process_download() {
     local temp_path="/tmp/$game_name"  # Save the file temporarily in /tmp
 
     # Ensure that $game_name doesn't have any extra quotes or backticks
-    game_name=$(echo "$game_name" | sed 's/[`"]//g')
+    game_name=$(echo "$game_name" | sed 's/["]//g')
 
     # Start the download using wget without progress bar
     wget -c "$url" -O "$temp_path" >/dev/null 2>&1
@@ -70,7 +58,7 @@ if [ $? -ne 0 ]; then
 fi
 
 # Run the script continuously
-while [[ "$terminate_script" = false ]]; do
+while true; do
     # Check if download.txt exists and has content
     if [[ -f "$DOWNLOAD_QUEUE" ]]; then
         # Process each line in download.txt
@@ -83,6 +71,3 @@ while [[ "$terminate_script" = false ]]; do
     # Wait for a while before checking again for new downloads
     sleep 5
 done
-
-# Clean exit message
-echo "Script terminated gracefully."
