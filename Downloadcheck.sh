@@ -3,6 +3,11 @@
 # File containing the list of downloads
 download_file="/userdata/system/game-downloader/download.txt"
 
+# Ensure the download.txt file exists; if not, create it as an empty file
+if [[ ! -f "$download_file" ]]; then
+    touch "$download_file"
+fi
+
 # Function to check if there are any ongoing downloads
 check_downloads() {
     if [[ -s "$download_file" ]]; then
