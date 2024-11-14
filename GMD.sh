@@ -4,7 +4,7 @@
 DISPLAY=:0.0
 
 # Define the local path to save GameDownloader.sh
-LOCAL_SCRIPT_PATH="/userdata/system/game-downloader/GameDownloader.sh"
+LOCAL_SCRIPT_PATH="/tmp/GameDownloader.sh"
 
 # Download the GameDownloader.sh script locally
 curl -L "https://raw.githubusercontent.com/DTJW92/game-downloader/main/GameDownloader.sh" -o "$LOCAL_SCRIPT_PATH"
