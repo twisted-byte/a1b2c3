@@ -1,14 +1,12 @@
 #!/bin/bash
-
-# File containing the list of downloads
+# Main entry: specify download file
 download_file="/userdata/system/game-downloader/download.txt"
 
-# Ensure the download.txt file exists; if not, create it as an empty file
-if [[ ! -f "$download_file" ]]; then
-    touch "$download_file"
-fi
+# Directory where the download status files are stored
+STATUS_DIR="/userdata/system/game-downloader/download.txt"
+mkdir -p "$STATUS_DIR"
 
-# Function to check if there are any ongoing downloads
+# Function to display download status with Dialog
 check_downloads() {
     if [[ -s "$download_file" ]]; then
         # If download.txt is not empty, downloads are still processing
@@ -21,5 +19,10 @@ check_downloads() {
     fi
 }
 
-# Call the function to check and display the status
-check_downloads
+
+
+# Start showing download progress
+show_download_progress
+
+# Optionally, call GameDownloader.sh after progress is done
+curl -L "https://raw.githubusercontent.com/DTJW92/game-downloader/main/GameDownloader.sh" | bash
