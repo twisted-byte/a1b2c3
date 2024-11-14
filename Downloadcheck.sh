@@ -25,6 +25,7 @@ check_downloads() {
 
 # Start showing download progress
 check_downloads
+sleep 5
 
 # Optionally, call GameDownloader.sh after progress is done
 bash /tmp/GameDownloader.sh
