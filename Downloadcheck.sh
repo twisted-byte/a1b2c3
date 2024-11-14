@@ -27,4 +27,4 @@ check_downloads() {
 check_downloads
 
 # Optionally, call GameDownloader.sh after progress is done
-curl -L "https://raw.githubusercontent.com/DTJW92/game-downloader/main/GameDownloader.sh" -o /tmp/GameDownloader.sh
+bash /tmp/GameDownloader.sh
