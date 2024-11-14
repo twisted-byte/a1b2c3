@@ -58,8 +58,11 @@ process_download() {
         if [[ "$temp_path" == *.zip ]]; then
             echo "File is a zip, proceeding to unzip."
 
-            # Create a temporary folder named after the game
-            local game_folder="/userdata/system/game-downloader/$game_name"
+            # Remove .zip extension from game_name for folder creation if present
+            game_name_no_ext="${game_name%.zip}"
+
+            # Create a temporary folder named after the game without the .zip extension
+            local game_folder="/userdata/system/game-downloader/$game_name_no_ext"
             mkdir -p "$game_folder"
 
             # Unzip the downloaded file into the temporary folder
