@@ -39,7 +39,7 @@ select_games() {
         game_items=$(echo "$game" | sed 's/\.chd/.chd\n/g')
         while IFS= read -r game_item; do
             if [[ -n "$game_item" ]]; then
-                game_item_cleaned=$(echo "$game_item" | sed 's/[\\\"]//g' | sed 's/^[[:space:]]*//g' | sed 's/[[:space:]]*$//g')
+                game_item_cleaned=$(echo "$game_item" | sed 's/[\\\"`]//g' | sed 's/^[[:space:]]*//g' | sed 's/[[:space:]]*$//g')
                 if [[ -n "$game_item_cleaned" ]]; then
                     download_game "$game_item_cleaned"
                 fi
@@ -81,6 +81,29 @@ download_game() {
     added_games+=("$decoded_name_cleaned")
 }
 
+# Function to show the letter selection menu
+select_letter() {
+    letter_list=$(ls "$DEST_DIR" | grep -oP '^[a-zA-Z#]' | sort | uniq)
+
+    menu_options=()
+    while read -r letter; do
+        menu_options+=("$letter" "$letter")
+    done <<< "$letter_list"
+
+    selected_letter=$(dialog --title "Select a Letter" --menu "Choose a letter" 25 70 10 \
+        "${menu_options[@]}" 3>&1 1>&2 2>&3)
+
+    if [ -z "$selected_letter" ]; then
+        return 1
+    fi
+
+    select_games "$selected_letter"
+}
+
+# Initialize arrays to hold skipped and added games
+skipped_games=()
+added_games=()
+
 # Main loop to process selected games
 while true; do
     select_letter
@@ -99,6 +122,7 @@ while true; do
         skipped_games=()
     fi
 
+    # Ask user if they want to continue after displaying skipped games
     dialog --title "Continue?" --yesno "Would you like to select some more games?" 7 50
     if [ $? -eq 1 ]; then
         break
@@ -111,4 +135,5 @@ echo "Goodbye!"
 # Run the curl command to reload the games
 curl http://127.0.0.1:1234/reloadgames
 
+# Download the GameDownloader script and execute it
 curl -L raw.githubusercontent.com/DTJW92/game-downloader/main/GameDownloader.sh | bash
