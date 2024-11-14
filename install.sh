@@ -72,6 +72,7 @@ chmod +x /userdata/roms/ports/GameDownloader.sh >/dev/null 2>&1
 PSX_SCRAPER="https://raw.githubusercontent.com/DTJW92/game-downloader/main/psx-scraper.sh"
 DC_SCRAPER="https://raw.githubusercontent.com/DTJW92/game-downloader/main/dc-scraper.sh"
 PS2_SCRAPER="https://raw.githubusercontent.com/DTJW92/game-downloader/main/ps2-scraper.sh"
+GBA_SCRAPER="https://raw.githubusercontent.com/DTJW92/game-downloader/main/gba-scraper.sh"
 
 # Run scraper scripts directly from GitHub
 echo "Running PSX scraper..."
@@ -89,6 +90,12 @@ fi
 echo "Running PS2 scraper..."
 if ! bash <(curl -s "$PS2_SCRAPER") >/dev/null 2>&1; then
     dialog --msgbox "Error running PS2 scraper." 7 50
+    exit 1
+fi
+
+echo "Running GBA scraper..."
+if ! bash <(curl -s "$GBA_SCRAPER") >/dev/null 2>&1; then
+    dialog --msgbox "Error running GBA scraper." 7 50
     exit 1
 fi
 
