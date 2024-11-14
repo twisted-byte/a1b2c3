@@ -31,6 +31,9 @@ process_download() {
     local url="$2"
     local folder="$3"
 
+    # Remove double quotes from $game_name
+    game_name=$(echo "$game_name" | sed 's/["]//g')
+
     local temp_path="/userdata/system/game-downloader/$game_name"
     echo "Starting download for $game_name..."
 
