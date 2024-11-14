@@ -1,9 +1,5 @@
 #!/bin/bash
 
-# Directory for the status files
-STATUS_DIR="/userdata/system/game-downloader/status"
-mkdir -p "$STATUS_DIR"
-
 # Path to the download queue file
 DOWNLOAD_QUEUE="/userdata/system/game-downloader/download.txt"
 
@@ -14,11 +10,6 @@ check_internet() {
     else
         return 1  # Return 1 if connection fails
     fi
-}
-
-# Function to stop the service if there's no internet connection
-stop_service() {
-    batocera-services stop download
 }
 
 # Function to process each download
@@ -40,8 +31,26 @@ process_download() {
     if [ $? -ne 0 ]; then
         return 1  # Download failed
     else
-        # Move the downloaded file to the target folder (now that it's complete)
-        mv "$temp_path" "$folder"
+        # Check if the file is a .zip
+        if [[ "$temp_path" == *.zip ]]; then
+            # Create a temporary folder named after the game
+            local game_folder="/tmp/$game_name"
+            mkdir -p "$game_folder"
+
+            # Unzip the downloaded file into the temporary folder
+            unzip -q "$temp_path" -d "$game_folder"
+
+            # Check if the unzip was successful
+            if [ $? -ne 0 ]; then
+                return 1  # Unzip failed
+            fi
+
+            # Move the entire folder to the target folder
+            mv "$game_folder" "$folder"
+        else
+            # If it's not a .zip, just move the downloaded file directly
+            mv "$temp_path" "$folder"
+        fi
 
         # Remove the processed line from download.txt
         sed -i "/$game_name|/d" "$DOWNLOAD_QUEUE"
@@ -52,9 +61,8 @@ process_download() {
 # Check for internet connection before proceeding
 check_internet
 if [ $? -ne 0 ]; then
-    # Stop the service if there's no internet
-    stop_service
-    exit 0  # Exit the script since there's no connection
+    echo "No internet connection found. Exiting script."
+    exit 1  # Exit the script since there's no internet
 fi
 
 # Run the script continuously
