@@ -24,14 +24,14 @@ display_controls() {
 download_file() {
     local url=$1
     local dest=$2
-    if ! curl -L "$url" -o "$dest"; then
+    if ! curl -L "$url" -o "$dest" >/dev/null 2>&1; then
         dialog --msgbox "Error downloading $url. Please check your network connection or the URL." 7 50
         exit 1
     fi
 }
 
 # Create debug directory at the start
-mkdir -p /userdata/system/game-downloader/debug
+mkdir -p /userdata/system/game-downloader/debug >/dev/null 2>&1
 
 # Main execution
 clear
@@ -48,25 +48,24 @@ download_file "https://raw.githubusercontent.com/DTJW92/game-downloader/main/Gam
 download_file "https://raw.githubusercontent.com/DTJW92/game-downloader/main/download.sh" "/userdata/system/services/download.sh"
 
 # Convert download.sh to Unix format and set proper permissions
-dos2unix /userdata/system/services/download.sh
-chmod +x /userdata/system/services/download.sh  # Ensure it's executable
-chmod 777 /userdata/system/services/download.sh  # Set read/write/execute permissions
+dos2unix /userdata/system/services/download.sh >/dev/null 2>&1
+chmod +x /userdata/system/services/download.sh >/dev/null 2>&1  # Ensure it's executable
 
-# Rename the file to remove the .sh extension (optional, since you want to avoid .sh)
-mv /userdata/system/services/download.sh /userdata/system/services/Background_Game_Downloader
+# Rename the file to remove the .sh extension
+mv /userdata/system/services/download.sh /userdata/system/services/Background_Game_Downloader >/dev/null 2>&1
 
 # Ensure the script is executable
-chmod +x /userdata/system/services/Background_Game_Downloader  # Make sure the service script is executable
+chmod +x /userdata/system/services/Background_Game_Downloader >/dev/null 2>&1
 
 # Enable and start the service in the background
-batocera-services enable Background_Game_Downloader
-batocera-services start Background_Game_Downloader &
+batocera-services enable Background_Game_Downloader >/dev/null 2>&1
+batocera-services start Background_Game_Downloader &>/dev/null &
 
 # Download GMD.sh and save it as GameDownloader.sh in Ports folder
 download_file "https://raw.githubusercontent.com/DTJW92/game-downloader/main/GMD.sh" "/userdata/roms/ports/GameDownloader.sh"
 
 # Make the downloaded GameDownloader.sh executable
-chmod +x /userdata/roms/ports/GameDownloader.sh
+chmod +x /userdata/roms/ports/GameDownloader.sh >/dev/null 2>&1
 
 # Define URLs for the scraper scripts
 PSX_SCRAPER="https://raw.githubusercontent.com/DTJW92/game-downloader/main/psx-scraper.sh"
@@ -110,7 +109,7 @@ NEW_ENTRY="<game>
 </game>"
 
 # Append the new entry to the gamelist.xml
-echo "$NEW_ENTRY" >> "$GAMELIST"
+echo "$NEW_ENTRY" >> "$GAMELIST" >/dev/null 2>&1
 
 echo "Gamelist.xml has been updated."
 
