@@ -11,10 +11,17 @@ mkdir -p "$DOWNLOAD_DIR"
 # Function to display the game list and allow selection
 select_games() {
     local letter="$1"
-    local file="$DEST_DIR/${letter}.txt"
+    local file
+
+    # Set file path based on the selection
+    if [[ "$letter" == "AllGames" ]]; then
+        file="$ALLGAMES_FILE"
+    else
+        file="$DEST_DIR/${letter}.txt"
+    fi
 
     if [[ ! -f "$file" ]]; then
-        dialog --infobox "No games found for letter '$letter'." 5 40
+        dialog --infobox "No games found for selection '$letter'." 5 40
         sleep 2
         return
     fi
@@ -46,6 +53,7 @@ select_games() {
         done <<< "$game_items"
     done
 }
+
 
 # Function to download the selected game and send the link to the DownloadManager
 download_game() {
@@ -80,24 +88,31 @@ download_game() {
     added_games+=("$decoded_name_cleaned")
 }
 
-# Function to show the letter selection menu
+# Function to show the letter selection menu with an "All Games" option
 select_letter() {
     letter_list=$(ls "$DEST_DIR" | grep -oP '^[a-zA-Z#]' | sort | uniq)
 
-    menu_options=()
+    # Add "All" option to the menu
+    menu_options=("All" "All Games")
+
     while read -r letter; do
         menu_options+=("$letter" "$letter")
     done <<< "$letter_list"
 
-    selected_letter=$(dialog --title "Select a Letter" --menu "Choose a letter" 25 70 10 \
+    selected_letter=$(dialog --title "Select a Letter" --menu "Choose a letter or select 'All Games'" 25 70 10 \
         "${menu_options[@]}" 3>&1 1>&2 2>&3)
 
     if [ -z "$selected_letter" ]; then
         return 1
+    elif [ "$selected_letter" == "All" ]; then
+        # If "All Games" is selected, link to AllGames.txt
+        select_games "AllGames"
+    else
+        # Otherwise, proceed with the selected letter
+        select_games "$selected_letter"
     fi
-
-    select_games "$selected_letter"
 }
+
 
 # Initialize arrays to hold skipped and added games
 skipped_games=()
