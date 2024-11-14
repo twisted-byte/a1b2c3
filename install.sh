@@ -32,11 +32,18 @@ download_file() {
 
 # Create debug directory at the start
 mkdir -p /userdata/system/game-downloader/debug
+mkdir -p /userdata/system/game-downloader/Images  # Create the Images folder
 
 # Main execution
 clear
 animate_title
 display_controls
+
+# Download the four files and save them in the Images folder
+download_file "https://raw.githubusercontent.com/DTJW92/game-downloader/main/Game%20Downloader%20Wheel.png" "/userdata/system/game-downloader/Images/Game_Downloader_Wheel.png"
+download_file "https://raw.githubusercontent.com/DTJW92/game-downloader/main/Game%20Downloader%20Video.mp4" "/userdata/system/game-downloader/Images/Game_Downloader_Video.mp4"
+download_file "https://raw.githubusercontent.com/DTJW92/game-downloader/main/Game%20Downloader%20Icon.jpeg" "/userdata/system/game-downloader/Images/Game_Downloader_Icon.jpeg"
+download_file "https://raw.githubusercontent.com/DTJW92/game-downloader/main/Game%20Download%20Box%20Art.png" "/userdata/system/game-downloader/Images/Game_Download_Box_Art.png"
 
 # Download and save download.sh locally (always replace)
 download_file "https://raw.githubusercontent.com/DTJW92/game-downloader/main/download.sh" "/userdata/system/services/download.sh"
@@ -91,5 +98,6 @@ download_file "https://raw.githubusercontent.com/DTJW92/game-downloader/main/bke
 
 echo "Installation complete. 'Game Downloader' should now be available in Ports."
 echo "Batocera will initiate the background downloader automatically, you should find a toggle switch for it within Main Menu -> System Settings -> Services."
-
-curl http://127.0.0.1:1234/reloadgames
+echo "Rebooting the system for the changes to take affect"
+sleep 5
+reboot
