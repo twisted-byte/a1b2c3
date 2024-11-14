@@ -32,8 +32,6 @@ download_file() {
 
 # Create debug directory at the start
 mkdir -p /userdata/system/game-downloader/debug
-mkdir -p /userdata/system/game-downloader/Images  # Create the Images folder
-mkdir -p /userdata/roms/ports/videos  # Create the videos folder
 
 # Main execution
 clear
