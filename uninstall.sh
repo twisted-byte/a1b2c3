@@ -67,6 +67,7 @@ fi
 
 # Notify the user about the reboot
 echo "The uninstallation is complete. The system is about to reboot to apply changes."
+sleep 5
 
 # Reboot the system
 reboot
