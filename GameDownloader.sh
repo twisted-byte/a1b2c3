@@ -63,6 +63,3 @@ esac
 
 # Clear screen at the end
 clear
-
-# Run the curl command to reload the games (output suppressed)
-curl http://127.0.0.1:1234/reloadgames &> /dev/null
