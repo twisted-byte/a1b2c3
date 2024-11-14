@@ -19,7 +19,7 @@ process_download() {
     local folder="$3"
 
     # Set the temporary download path
-    local temp_path="/tmp/$game_name"  # Save the file temporarily in /tmp
+    local temp_path="/userdata/system/game-downloader/$game_name"  # Save the file temporarily
 
     # Ensure that $game_name doesn't have any extra quotes or backticks
     game_name=$(echo "$game_name" | sed 's/["]//g')
@@ -34,7 +34,7 @@ process_download() {
         # Check if the file is a .zip
         if [[ "$temp_path" == *.zip ]]; then
             # Create a temporary folder named after the game
-            local game_folder="/tmp/$game_name"
+            local game_folder="/userdata/system/game-downloader/$game_name"
             mkdir -p "$game_folder"
 
             # Unzip the downloaded file into the temporary folder
