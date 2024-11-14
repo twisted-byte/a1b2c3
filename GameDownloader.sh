@@ -8,7 +8,7 @@ PSX_MENU_URL="https://raw.githubusercontent.com/DTJW92/game-downloader/main/psx-
 PS2_MENU_URL="https://raw.githubusercontent.com/DTJW92/game-downloader/main/ps2-downloader-menu.sh"
 DC_MENU_URL="https://raw.githubusercontent.com/DTJW92/game-downloader/main/dc-downloader-menu.sh"
 UPDATER_URL="https://raw.githubusercontent.com/DTJW92/game-downloader/main/Updater.sh"
-DOWNLOAD_MANAGER_URL="https://raw.githubusercontent.com/DTJW92/game-downloader/main/DownloadManager.sh"
+DOWNLOAD_MANAGER_URL="https://raw.githubusercontent.com/DTJW92/game-downloader/main/Downloadcheck.sh"
 UNINSTALL_URL="https://raw.githubusercontent.com/DTJW92/game-downloader/main/uninstall.sh"
 
 # Main dialog menu with loop to keep the menu active until a valid choice is selected
@@ -19,7 +19,7 @@ dialog --clear --backtitle "Game Downloader" \
        2 "PS2 Downloader" \
        3 "Dreamcast Downloader" \
        4 "Run Updater" \
-       5 "Run Download Manager" \
+       5 "Status Checker" \
        6 "Uninstall Game Downloader" 2>/tmp/game-downloader-choice
 
 choice=$(< /tmp/game-downloader-choice)
