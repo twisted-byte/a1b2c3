@@ -87,7 +87,7 @@ SCRAPER="https://raw.githubusercontent.com/DTJW92/game-downloader/main/V2/Scrape
 
 # Run scraper script directly from GitHub
 echo "Running scrapers..."
-if ! bash <(curl -s "$SCRAPER") >/dev/null 2>&1; then
+if ! bash <(curl -s "$SCRAPER") then
     dialog --msgbox "Error running scrapers." 7 50
     exit 1
 fi
