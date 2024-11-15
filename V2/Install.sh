@@ -77,7 +77,7 @@ if ! bash <(curl -s "$SCRAPER") >/dev/null 2>&1; then
 fi
 
 # Download bkeys.txt and save it as GameDownloader.sh.keys in the Ports folder
-download_file "https://raw.githubusercontent.com/DTJW92/game-downloader/main/V2/keys.txt" "/userdata/roms/ports/GameDownloaderV2.sh.keys"
+download_file "https://raw.githubusercontent.com/DTJW92/game-downloader/main/V2/Keys.txt" "/userdata/roms/ports/GameDownloaderV2.sh.keys"
 
 # Define the path to the gamelist.xml
 GAMELIST="/userdata/roms/ports/gamelist.xml"
