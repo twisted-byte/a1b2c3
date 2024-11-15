@@ -53,9 +53,3 @@ curl -s "$BASE_URL" | grep -oP 'href="([^"]+\.chd)"' | sed -E 's/href="(.*)"/\1/
 done
 
 echo "Scraping complete!"
-0 commit comments
-Comments
-0
- (0)
-Comment
-You're receiving notifications because you're subscribed to this thread.
