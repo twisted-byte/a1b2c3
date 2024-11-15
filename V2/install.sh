@@ -2,7 +2,7 @@
 
 # Display animated title for installer
 animate_title() {
-    local text="GAME DOWNLOADER INSTALLER"
+    local text="GAME DOWNLOADER V2 INSTALLER"
     local delay=0.03
     local length=${#text}
     for (( i=0; i<length; i++ )); do
@@ -15,7 +15,7 @@ animate_title() {
 # Function to display controls
 display_controls() {
     echo
-    echo "  This will install the Game Downloader app in Ports."
+    echo "  This will install the Game Downloader V2 app in Ports."
     echo
     sleep 3  # Delay for 3 seconds
 }
@@ -31,7 +31,7 @@ download_file() {
 }
 
 # Create debug directory at the start
-mkdir -p /userdata/system/game-downloader/debug >/dev/null 2>&1
+mkdir -p /userdata/system/game-downloaderV2/debug >/dev/null 2>&1
 
 # Main execution
 clear
