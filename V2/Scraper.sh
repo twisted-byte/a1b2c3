@@ -10,18 +10,17 @@ declare -A BASE_URLS=(
 
 # Define filtering rules for each system
 declare -A FILTER_RULES=(
-    ["psx"]='.*'  # No specific filtering for PSX
-    ["dc"]='\(.*Europe.*\|.*UK.*\)'  # DC filter for (En) English, Europe, Australia
-    ["ps2"]='\(.*Europe.*\|.*UK.*\)' # No specific filtering for PS2
-    ["gba"]='\(.*Europe.*\|.*UK.*\)'  # Filter for (En) English games in GBA
+    ["psx"]='.*'  
+    ["dc"]='\(.*Europe.*\|.*UK.*\)'  
+    ["ps2"]='\(.*Europe.*\|.*UK.*\)' 
+    ["gba"]='\(.*Europe.*\|.*UK.*\)'
 )
-
 
 # Define file extensions for each system
 declare -A FILE_EXTENSIONS=(
     ["psx"]='.chd'  # PSX games are in .chd format
     ["dc"]='.chd'   # DC games are in .chd format
-    ["ps2"]='.zip'  # PS2 games are in .iso format
+    ["ps2"]='.zip'  # PS2 games are in .zip format
     ["gba"]='.zip'  # GBA games are in .zip format
 )
 
@@ -46,9 +45,8 @@ scrape_game_system() {
     local system_dir="$DEST_DIR/$system"  # Create a subfolder for each system in the links directory
     local allgames_file="$system_dir/AllGames.txt"
 
-    # Delete the entire 'links' folder and recreate it
-    rm -rf "$DEST_DIR"
-    mkdir -p "$DEST_DIR"  # Ensure the destination directory exists
+    # Ensure the destination and system directories exist
+    mkdir -p "$system_dir"  # Ensure system folder exists
 
     # Initialize arrays to hold the game data for this system
     local game_data=()
@@ -75,17 +73,19 @@ scrape_game_system() {
             # Find the first alphanumeric character
             first_alnum=$(find_first_alnum "$decoded_name")
             
-            # If an alphanumeric character is found, write to the corresponding file
+            # If an alphanumeric character is found, write to the corresponding file (overwrite)
             if [[ "$first_alnum" =~ [a-zA-Z] ]]; then
                 first_alnum=$(echo "$first_alnum" | tr 'a-z' 'A-Z')  # Capitalize the letter
-                echo "$game_entry" >> "$system_dir/$first_alnum.txt"
+                # Overwrite the file if it exists or create it if it doesn't
+                echo "$game_entry" > "$system_dir/$first_alnum.txt"
             elif [[ "$first_alnum" =~ [0-9] ]]; then
-                echo "$game_entry" >> "$system_dir/#.txt"
+                # Overwrite the file if it exists or create it if it doesn't
+                echo "$game_entry" > "$system_dir/game_#.txt"
             fi
         fi
     done
 
-    # Write all game data to the AllGames file
+    # Write all game data to the AllGames file (overwrite)
     printf "%s\n" "${game_data[@]}" > "$allgames_file"
 
     echo "Scraping and writing complete for $system!"
