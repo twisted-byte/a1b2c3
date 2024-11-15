@@ -8,6 +8,22 @@ declare -A BASE_URLS=(
     ["gba"]="https://myrient.erista.me/files/No-Intro/Nintendo%20-%20Game%20Boy%20Advance/"
 )
 
+# Define filtering rules for each system
+declare -A FILTER_RULES=(
+    ["psx"]='.*'  # No specific filtering for PSX (example, you can adjust it)
+    ["dc"]='.*'  # No specific filtering for DC
+    ["ps2"]='.*'  # No specific filtering for PS2
+    ["gba"]='\(.*[Ee][Nn].*\).*'  # Filter for (En) English games in GBA (example)
+)
+
+# Define file extensions for each system
+declare -A FILE_EXTENSIONS=(
+    ["psx"]='.chd'  # PSX games are in .chd format
+    ["dc"]='.chd'   # DC games are in .chd format
+    ["ps2"]='.iso'  # PS2 games are in .iso format
+    ["gba"]='.zip'  # GBA games are in .zip format
+)
+
 DEST_DIR="/userdata/system/game-downloader/links"  # Common links directory for all systems
 
 # Function to decode URL (ASCII decode)
@@ -17,7 +33,6 @@ decode_url() {
 
 # Function to find the first alphanumeric character
 find_first_alnum() {
-    # Extract the first alphanumeric character (A-Z, a-z, 0-9) from the decoded name
     echo "$1" | sed -n 's/[^a-zA-Z0-9]*\([a-zA-Z0-9]\).*/\1/p'
 }
 
@@ -25,6 +40,8 @@ find_first_alnum() {
 scrape_game_system() {
     local system=$1
     local base_url=${BASE_URLS[$system]}
+    local filter_rule=${FILTER_RULES[$system]}  # Get the filtering rule for the system
+    local file_extension=${FILE_EXTENSIONS[$system]}  # Get the file extension for the system
     local system_dir="$DEST_DIR/$system"  # Create a subfolder for each system in the links directory
     local allgames_file="$system_dir/AllGames.txt"
 
@@ -42,31 +59,34 @@ scrape_game_system() {
     rm -f "$system_dir/#.txt"
 
     # Scrape and collect game data
-    curl -s "$base_url" | grep -oP 'href="([^"]+\.chd)"' | sed -E 's/href="(.*)"/\1/' | while read -r game_url; do
+    curl -s "$base_url" | grep -oP "href=\"([^\"]+${file_extension})\"" | sed -E 's/href="(.*)"/\1/' | while read -r game_url; do
         # Extract file name from the URL
         file_name=$(basename "$game_url")
         
         # Decode the file name
         decoded_name=$(decode_url "$file_name")
         
-        # Encase the decoded name in backticks for formatting
-        quoted_name="\`$decoded_name\`"
-        
-        # Prepare the full game data
-        game_entry="$quoted_name|$base_url$game_url"
-        
-        # Add to the general game list
-        game_data+=("$game_entry")
-        
-        # Find the first alphanumeric character
-        first_alnum=$(find_first_alnum "$decoded_name")
-        
-        # If an alphanumeric character is found, write to the corresponding file
-        if [[ "$first_alnum" =~ [a-zA-Z] ]]; then
-            first_alnum=$(echo "$first_alnum" | tr 'a-z' 'A-Z')  # Capitalize the letter
-            echo "$game_entry" >> "$system_dir/$first_alnum.txt"
-        elif [[ "$first_alnum" =~ [0-9] ]]; then
-            echo "$game_entry" >> "$system_dir/#.txt"
+        # Check if the game matches the filtering rule
+        if [[ "$decoded_name" =~ $filter_rule ]]; then
+            # Encase the decoded name in backticks for formatting
+            quoted_name="\`$decoded_name\`"
+            
+            # Prepare the full game data
+            game_entry="$quoted_name|$base_url$game_url"
+            
+            # Add to the general game list
+            game_data+=("$game_entry")
+            
+            # Find the first alphanumeric character
+            first_alnum=$(find_first_alnum "$decoded_name")
+            
+            # If an alphanumeric character is found, write to the corresponding file
+            if [[ "$first_alnum" =~ [a-zA-Z] ]]; then
+                first_alnum=$(echo "$first_alnum" | tr 'a-z' 'A-Z')  # Capitalize the letter
+                echo "$game_entry" >> "$system_dir/$first_alnum.txt"
+            elif [[ "$first_alnum" =~ [0-9] ]]; then
+                echo "$game_entry" >> "$system_dir/#.txt"
+            fi
         fi
     done
 
