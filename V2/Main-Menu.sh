@@ -6,6 +6,10 @@ UPDATER_URL="https://raw.githubusercontent.com/DTJW92/game-downloader/main/Updat
 DOWNLOAD_MANAGER_URL="https://raw.githubusercontent.com/DTJW92/game-downloader/main/Downloadcheck.sh"
 UNINSTALL_URL="https://raw.githubusercontent.com/DTJW92/game-downloader/main/uninstall.sh"
 
+# Initialize global arrays
+skipped_games=()
+added_games=()
+
 # Function to display the Main Menu
 main_menu() {
     local selection
@@ -22,7 +26,9 @@ main_menu() {
             system_type_menu
             ;;
         2)
-            bash <(curl -s "$UPDATER_URL")
+            if ! bash <(curl -s "$UPDATER_URL"); then
+                dialog --msgbox "Error: Could not run the updater. Check your internet connection or URL." 10 50
+            fi
             ;;
         3)
             bash <(curl -s "$DOWNLOAD_MANAGER_URL")
@@ -102,7 +108,7 @@ game_system_menu() {
 
     case $system in
         1)
-            game_menu "$system_type" "PSX"
+            game_menu "$system_type" "$system"
             ;;
         2)
             if [ "$system_type" == "Sony" ]; then
@@ -171,9 +177,14 @@ select_letter() {
     # Add "All" option to the menu
     menu_options=("All" "All Games")
 
-    while read -r letter; do
-        menu_options+=("$letter" "$letter")
-    done <<< "$letter_list"
+    if [ -n "$letter_list" ]; then
+        while read -r letter; do
+            menu_options+=("$letter" "$letter")
+        done <<< "$letter_list"
+    else
+        dialog --msgbox "No letter options available." 10 50
+        return
+    fi
 
     selected_letter=$(dialog --title "Select a Letter" --menu "Choose a letter or select 'All Games'" 25 70 10 \
         "${menu_options[@]}" 3>&1 1>&2 2>&3)
@@ -232,7 +243,7 @@ select_games() {
     done
 }
 
-# Function to download the selected game
+# Function to download the selected game (add to queue)
 download_game() {
     local decoded_name="$1"
     local DOWNLOAD_DIR="$2"
@@ -251,21 +262,10 @@ download_game() {
         return
     fi
 
-    # Find the game URL from the AllGames.txt file
-    game_url=$(grep -F "$decoded_name_cleaned" "$ALLGAMES_FILE" | cut -d '|' -f 2)
-
-    if [ -z "$game_url" ]; then
-        dialog --infobox "Error: Could not find download URL for '$decoded_name_cleaned'." 5 40
-        sleep 2
-        return
-    fi
-
-    # Append the decoded name, URL, and folder to the DownloadManager.txt file
-    echo "$decoded_name_cleaned|$game_url|$DOWNLOAD_DIR" >> "/userdata/system/game-downloader/download.txt"
-    
-    # Collect the added game
+    # Add the game to the download queue
+    echo "$decoded_name_cleaned" >> "/userdata/system/game-downloader/download.txt"
     added_games+=("$decoded_name_cleaned")
 }
 
-# Start with the main menu
+# Run the main menu
 main_menu
