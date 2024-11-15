@@ -1,80 +1,84 @@
 #!/bin/bash
 
-# Define variables for each game system
-PSX_BASE_URL="https://myrient.erista.me/files/Internet%20Archive/chadmaster/chd_psx_eur/CHD-PSX-EUR/"
-PSX_DEST_DIR="/userdata/system/game-downloader/psxlinks"
+# Define base URLs and destination directory for all systems
+declare -A BASE_URLS=(
+    ["psx"]="https://myrient.erista.me/files/Internet%20Archive/chadmaster/chd_psx_eur/CHD-PSX-EUR/"
+    ["dc"]="https://myrient.erista.me/files/Internet%20Archive/chadmaster/dc-chd-zstd-redump/dc-chd-zstd/"
+    ["ps2"]="https://myrient.erista.me/files/Redump/Sony%20-%20PlayStation%202/"
+    ["gba"]="https://myrient.erista.me/files/No-Intro/Nintendo%20-%20Game%20Boy%20Advance/"
+)
 
-DC_BASE_URL="https://myrient.erista.me/files/Internet%20Archive/chadmaster/dc-chd-zstd-redump/dc-chd-zstd/"
-DC_DEST_DIR="/userdata/system/game-downloader/dclinks"
-
-PS2_BASE_URL="https://myrient.erista.me/files/Redump/Sony%20-%20PlayStation%202/"
-PS2_DEST_DIR="/userdata/system/game-downloader/ps2links"
-
-GBA_BASE_URL="https://myrient.erista.me/files/No-Intro/Nintendo%20-%20Game%20Boy%20Advance/"
-GBA_DEST_DIR="/userdata/system/game-downloader/gbalinks"
-
-# Ensure the destination directories exist
-mkdir -p "$PSX_DEST_DIR" "$DC_DEST_DIR" "$PS2_DEST_DIR" "$GBA_DEST_DIR"
+DEST_DIR="/userdata/system/game-downloader/links"  # Common links directory for all systems
 
 # Function to decode URL (ASCII decode)
 decode_url() {
-    # Decode percent-encoded string
     echo -n "$1" | sed 's/%/\\x/g' | xargs -0 printf "%b"
 }
 
-# Function to clear all text files in the destination folder
-clear_all_files() {
-    rm -f "$1"/*.txt
-    echo "All game list files have been cleared in $1."
+# Function to find the first alphanumeric character
+find_first_alnum() {
+    # Extract the first alphanumeric character (A-Z, a-z, 0-9) from the decoded name
+    echo "$1" | sed -n 's/[^a-zA-Z0-9]*\([a-zA-Z0-9]\).*/\1/p'
 }
 
-# Function to scrape a given base URL and save game lists
-scrape_games() {
-    local BASE_URL=$1
-    local DEST_DIR=$2
+# Function to scrape a game system
+scrape_game_system() {
+    local system=$1
+    local base_url=${BASE_URLS[$system]}
+    local system_dir="$DEST_DIR/$system"  # Create a subfolder for each system in the links directory
+    local allgames_file="$system_dir/AllGames.txt"
 
-    # Ensure destination directory exists
-    mkdir -p "$DEST_DIR"
+    # Ensure the destination directory for this system exists
+    mkdir -p "$system_dir"
 
-    # Clear all text files before starting new scrape
-    clear_all_files "$DEST_DIR"
+    # Initialize arrays to hold the game data for this system
+    local game_data=()
 
-    # Scrape the game list and save the file names (not full URLs)
-    curl -s "$BASE_URL" | grep -oP 'href="([^"]+\.chd)"' | sed -E 's/href="(.*)"/\1/' | while read -r game_url; do
-        # Get the file name from the URL (e.g., AmazingGame.chd)
+    # Clear old data files for this system
+    rm -f "$allgames_file"
+    for letter in {A..Z}; do
+        rm -f "$system_dir/$letter.txt"
+    done
+    rm -f "$system_dir/#.txt"
+
+    # Scrape and collect game data
+    curl -s "$base_url" | grep -oP 'href="([^"]+\.chd)"' | sed -E 's/href="(.*)"/\1/' | while read -r game_url; do
+        # Extract file name from the URL
         file_name=$(basename "$game_url")
         
-        # Decode the file name (ASCII decode if needed)
+        # Decode the file name
         decoded_name=$(decode_url "$file_name")
         
-        # Encase the decoded name in backticks
+        # Encase the decoded name in backticks for formatting
         quoted_name="\`$decoded_name\`"
         
-        # Get the first character of the decoded file name
-        first_char="${decoded_name:0:1}"
+        # Prepare the full game data
+        game_entry="$quoted_name|$base_url$game_url"
         
-        # Always append to AllGames.txt with both quoted decoded name and original URL
-        echo "$quoted_name|$BASE_URL$game_url" >> "$DEST_DIR/AllGames.txt"
+        # Add to the general game list
+        game_data+=("$game_entry")
         
-        # Ensure letter files are capitalized and save them to the appropriate letter-based file
-        if [[ "$first_char" =~ [a-zA-Z] ]]; then
-            first_char=$(echo "$first_char" | tr 'a-z' 'A-Z')  # Capitalize if it's a letter
-            # Save to the capitalized letter-based text file (e.g., A.txt, B.txt)
-            echo "$quoted_name|$BASE_URL$game_url" >> "$DEST_DIR/${first_char}.txt"
-        elif [[ "$first_char" =~ [0-9] ]]; then
-            # Save all number-prefixed files to a single #.txt (e.g., 1.txt, 2.txt)
-            echo "$quoted_name|$BASE_URL$game_url" >> "$DEST_DIR/#.txt"
-        else
-            # Handle other cases (if needed) – for now, ignoring symbols, etc.
-            echo "$quoted_name|$BASE_URL$game_url" >> "$DEST_DIR/other.txt"
+        # Find the first alphanumeric character
+        first_alnum=$(find_first_alnum "$decoded_name")
+        
+        # If an alphanumeric character is found, write to the corresponding file
+        if [[ "$first_alnum" =~ [a-zA-Z] ]]; then
+            first_alnum=$(echo "$first_alnum" | tr 'a-z' 'A-Z')  # Capitalize the letter
+            echo "$game_entry" >> "$system_dir/$first_alnum.txt"
+        elif [[ "$first_alnum" =~ [0-9] ]]; then
+            echo "$game_entry" >> "$system_dir/#.txt"
         fi
     done
 
-    echo "Scraping complete for $BASE_URL!"
+    # Write all game data to the AllGames file
+    printf "%s\n" "${game_data[@]}" > "$allgames_file"
+
+    echo "Scraping and writing complete for $system!"
 }
 
-# Scrape games for all systems
-scrape_games "$PSX_BASE_URL" "$PSX_DEST_DIR"
-scrape_games "$DC_BASE_URL" "$DC_DEST_DIR"
-scrape_games "$PS2_BASE_URL" "$PS2_DEST_DIR"
-scrape_games "$GBA_BASE_URL" "$GBA_DEST_DIR"
+# Scrape each game system and batch write the results
+for system in "${!BASE_URLS[@]}"; do
+    scrape_game_system "$system"
+done
+
+echo "All systems have been scraped and batch written to the 'links' directory."
