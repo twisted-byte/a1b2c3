@@ -71,7 +71,7 @@ for SYSTEM in "${!SYSTEMS[@]}"; do
                 else
                     echo "$quoted_name|$BASE_URL$game_url" >> "$DEST_DIR/other.txt"
                 fi
-            fi
+            fi # Closing the 'if' block
         done
     done
 
