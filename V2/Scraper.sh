@@ -24,7 +24,7 @@ declare -A FILE_EXTENSIONS=(
     ["gba"]='.zip'  # GBA games are in .zip format
 )
 
-DEST_DIR="/userdata/system/game-downloader/links"  # Common links directory for all systems
+DEST_DIR="/userdata/system/game-downloaderV2/links"  # Common links directory for all systems
 
 # Function to decode URL (ASCII decode)
 decode_url() {
