@@ -13,7 +13,7 @@ SYSTEMS=(
 FILE_EXTENSIONS=(".chd" ".zip" ".iso")  # Add other extensions as needed
 
 # Destination directory (can be adjusted for different systems)
-DEST_DIR_BASE="/userdata/system/game-downloaderV2"
+DEST_DIR_BASE="/userdata/system/game-downloaderV2/links"
 
 # Function to decode URL (ASCII decode)
 decode_url() {
