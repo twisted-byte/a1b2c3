@@ -65,13 +65,21 @@ get_manufacturer() {
 
 # Main loop for systems
 for SYSTEM in "${!SYSTEMS[@]}"; do
-        MANUFACTURER=$(get_manufacturer "$SYSTEM")
-        DEST_DIR="$DEST_DIR_BASE/$MANUFACTURER/$SYSTEM"
-        mkdir -p "$DEST_DIR"
+    MANUFACTURER=$(get_manufacturer "$SYSTEM")
+    DEST_DIR="$DEST_DIR_BASE/$MANUFACTURER/$SYSTEM"
+    mkdir -p "$DEST_DIR"
 
-        echo "Starting scrape for $SYSTEM..."
-        clear_all_files
+    echo "Starting scrape for $SYSTEM..."
+    clear_all_files
 
+    # Initialize variables to accumulate results
+    ALL_GAMES=""
+    A_TO_Z=""
+    NUMERIC="#.txt"
+    OTHER="other.txt"
+
+    # Start scraping in the background
+    {
         page_content=$(curl -s "${SYSTEMS[$SYSTEM]}")
         for EXT in "${FILE_EXTENSIONS[@]}"; do
             echo "$page_content" | grep -oP "(?<=href=\")[^\"]*$EXT" | while read -r game_url; do
@@ -79,19 +87,29 @@ for SYSTEM in "${!SYSTEMS[@]}"; do
                 first_char="${decoded_name:0:1}"
                 quoted_name="\`$decoded_name\`"
 
-                echo "$quoted_name|${SYSTEMS[$SYSTEM]}$game_url" >> "$DEST_DIR/AllGames.txt"
+                ALL_GAMES+="$quoted_name|${SYSTEMS[$SYSTEM]}$game_url"$'\n'
 
                 if [[ "$first_char" =~ [A-Za-z] ]]; then
                     first_char=$(echo "$first_char" | tr 'a-z' 'A-Z')
-                    echo "$quoted_name|${SYSTEMS[$SYSTEM]}$game_url" >> "$DEST_DIR/${first_char}.txt"
+                    A_TO_Z+="$quoted_name|${SYSTEMS[$SYSTEM]}$game_url"$'\n'
                 elif [[ "$first_char" =~ [0-9] ]]; then
-                    echo "$quoted_name|${SYSTEMS[$SYSTEM]}$game_url" >> "$DEST_DIR/#.txt"
+                    NUMERIC+="$quoted_name|${SYSTEMS[$SYSTEM]}$game_url"$'\n'
                 else
-                    echo "$quoted_name|${SYSTEMS[$SYSTEM]}$game_url" >> "$DEST_DIR/other.txt"
+                    OTHER+="$quoted_name|${SYSTEMS[$SYSTEM]}$game_url"$'\n'
                 fi
             done
         done
 
-        echo "Scraping complete for $SYSTEM!"
-    fi
+        # Write all results at once after scraping
+        echo "$ALL_GAMES" >> "$DEST_DIR/AllGames.txt"
+        echo "$A_TO_Z" >> "$DEST_DIR/${first_char}.txt"
+        echo "$NUMERIC" >> "$DEST_DIR/$NUMERIC"
+        echo "$OTHER" >> "$DEST_DIR/$OTHER"
+    } &  # This sends the block to run in the background
+
 done
+
+# Wait for all background jobs to finish before exiting the script
+wait
+
+echo "All scraping tasks are complete!"
