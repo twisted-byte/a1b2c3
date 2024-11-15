@@ -106,22 +106,22 @@ game_menu() {
     # Set variables based on the system
     case $system in
         PSX)
-            DEST_DIR="/userdata/system/game-downloader/psxlinks"
+            DEST_DIR="/userdata/system/game-downloaderV2/links/Sony/PSX"
             DOWNLOAD_DIR="/userdata/roms/psx"
             ALLGAMES_FILE="$DEST_DIR/AllGames.txt"
             ;;
         PS2)
-            DEST_DIR="/userdata/system/game-downloader/ps2links"
+            DEST_DIR="/userdata/system/game-downloaderV2/links/Sony/PS""
             DOWNLOAD_DIR="/userdata/roms/ps2"
             ALLGAMES_FILE="$DEST_DIR/AllGames.txt"
             ;;
         GBA)
-            DEST_DIR="/userdata/system/game-downloader/gbalinks"
+            DEST_DIR="/userdata/system/game-downloaderV2/links/Nintendo/Game Boy Advance"
             DOWNLOAD_DIR="/userdata/roms/gba"
             ALLGAMES_FILE="$DEST_DIR/AllGames.txt"
             ;;
         Xbox)
-            DEST_DIR="/userdata/system/game-downloader/xboxlinks"
+            DEST_DIR="/userdata/system/game-downloaderV2/links/Microsoft/Xbox"
             DOWNLOAD_DIR="/userdata/roms/xbox"
             ALLGAMES_FILE="$DEST_DIR/AllGames.txt"
             ;;
@@ -148,8 +148,8 @@ select_letter() {
         dialog --msgbox "No letter options available." 10 50
         return
     fi
-
-    selected_letter=$(dialog --title "Select a Letter" --menu "Choose a letter or select 'All Games'" 25 70 10 \
+# you are up to here!
+    selected_letter=$(dialog --title "Select a Letter" --menu "Choose a letter or select 'All Games'" 25 70 10 \ 
         "${menu_options[@]}" 3>&1 1>&2 2>&3)
 
     if [ -z "$selected_letter" ]; then
@@ -209,10 +209,6 @@ done
 # Function to download the selected game (add to queue)
 download_game() {
     local decoded_name="$1"
-    local DOWNLOAD_DIR="$2"
-    local game_url="$3"  # Pass the URL as a third argument
-
-    # Clean the game name
     decoded_name_cleaned=$(echo "$decoded_name" | sed 's/[\\\"`]//g' | sed 's/^[[:space:]]*//g' | sed 's/[[:space:]]*$//g')
 
     # Check if the game already exists in the download directory
@@ -227,10 +223,7 @@ download_game() {
         return
     fi
 
-    # Add the game name, URL, and final directory to the download queue
-    echo "$decoded_name_cleaned | $game_url | $DOWNLOAD_DIR" >> "/userdata/system/game-downloader/download.txt"
-    added_games+=("$decoded_name_cleaned")
- # Find the game URL from the AllGames.txt file
+    # Find the game URL from the AllGames.txt file
     game_url=$(grep -F "$decoded_name_cleaned" "$ALLGAMES_FILE" | cut -d '|' -f 2)
 
     if [ -z "$game_url" ]; then
