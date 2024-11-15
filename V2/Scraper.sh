@@ -17,15 +17,15 @@ DEST_DIR_BASE="/userdata/system/game-downloaderV2/links"
 # Extensions for web scraping systems
 FILE_EXTENSIONS=(".chd" ".zip" ".iso")
 
+# Define IA collection identifiers for PC
+PC_IDENTIFIERS=("collection1" "collection2" "collection3") # Add more as needed
+
 # Function for handling PC files via IA
 process_pc_files() {
     echo "Processing IA files for 'PC'..."
 
     DEST_DIR="$DEST_DIR_BASE/PC"
     mkdir -p "$DEST_DIR"
-
-    # Add IA identifiers to process
-    PC_IDENTIFIERS=("collection1" "collection2" "collection3") # Replace with actual IA collections
 
     # Loop through each identifier, categorize and save
     for identifier in "${PC_IDENTIFIERS[@]}"; do
