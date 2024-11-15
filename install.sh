@@ -24,14 +24,31 @@ display_controls() {
 download_file() {
     local url=$1
     local dest=$2
+
+    # Create the directory if it doesn't exist
+    mkdir -p "$(dirname "$dest")" >/dev/null 2>&1
+
+    # Attempt to download the file
     if ! curl -L "$url" -o "$dest" >/dev/null 2>&1; then
         dialog --msgbox "Error downloading $url. Please check your network connection or the URL." 7 50
         exit 1
     fi
 }
 
-# Create debug directory at the start
+# Create all necessary directories
 mkdir -p /userdata/system/game-downloader/debug >/dev/null 2>&1
+mkdir -p /userdata/roms/ports/images >/dev/null 2>&1
+mkdir -p /userdata/roms/ports/videos >/dev/null 2>&1
+mkdir -p /userdata/system/services >/dev/null 2>&1
+mkdir -p /userdata/roms/ports >/dev/null 2>&1
+
+# Define the path to the gamelist.xml
+GAMELIST="/userdata/roms/ports/gamelist.xml"
+
+# Ensure the gamelist.xml file exists with basic XML structure if it doesn't
+if [[ ! -f "$GAMELIST" ]]; then
+    echo "<?xml version=\"1.0\" encoding=\"UTF-8\"?><gameList></gameList>" > "$GAMELIST"
+fi
 
 # Main execution
 clear
@@ -101,9 +118,6 @@ fi
 
 # Download bkeys.txt and save it as GameDownloader.sh.keys in the Ports folder
 download_file "https://raw.githubusercontent.com/DTJW92/game-downloader/main/bkeys.txt" "/userdata/roms/ports/GameDownloader.sh.keys"
-
-# Define the path to the gamelist.xml
-GAMELIST="/userdata/roms/ports/gamelist.xml"
 
 # Create a new XML entry to add with additional fields
 NEW_ENTRY="<game>
