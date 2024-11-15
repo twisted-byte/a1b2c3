@@ -21,7 +21,7 @@ FILE_EXTENSIONS=(".chd" ".zip" ".iso")
 process_pc_files() {
     echo "Processing IA files for 'PC'..."
 
-    DEST_DIR="$DEST_DIR_BASE/PC/PC"
+    DEST_DIR="$DEST_DIR_BASE/PC"
     mkdir -p "$DEST_DIR"
 
     # Add IA identifiers to process
@@ -30,8 +30,9 @@ process_pc_files() {
     # Loop through each identifier, categorize and save
     for identifier in "${PC_IDENTIFIERS[@]}"; do
         ia list "$identifier" | while read -r file; do
-            first_letter=$(echo "$file" | cut -c1 | tr '[:lower:]' '[:upper:]')
-            entry="$file | ia download $identifier $file"
+            decoded_name="$file"  # Directly use the file as decoded name (IA identifier usually has readable names)
+            first_letter=$(echo "$decoded_name" | cut -c1 | tr '[:lower:]' '[:upper:]')
+            entry="$decoded_name | ia download $identifier $file"
 
             if [[ "$first_letter" =~ [A-Z] ]]; then
                 echo "$entry" >> "$DEST_DIR/${first_letter}.txt"
