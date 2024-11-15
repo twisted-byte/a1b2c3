@@ -4,7 +4,7 @@
 declare -A SYSTEMS
 SYSTEMS=(
     ["Nintendo Game Boy Advance"]="https://myrient.erista.me/files/No-Intro/Nintendo%20-%20Game%20Boy%20Advance/"
-    ["System2"]="https://example.com/system2/"
+    ["PSX"]="https://example.com/system2/"
 )
 
 # List of file extensions to scrape
