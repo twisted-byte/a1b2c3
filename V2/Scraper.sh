@@ -7,8 +7,31 @@ SYSTEMS=(
     ["PSX"]="https://myrient.erista.me/files/Internet%20Archive/chadmaster/chd_psx_eur/CHD-PSX-EUR/"
     ["PS2"]="https://myrient.erista.me/files/Redump/Sony%20-%20PlayStation%202/"
     ["Dreamcast"]="https://myrient.erista.me/files/Internet%20Archive/chadmaster/dc-chd-zstd-redump/dc-chd-zstd/"
-    ["Nintendo 64"]="https://myrient.erista.me/files/No-Intro/Nintendo%20-%20Nintendo%2064%20(BigEndian)/"
+    ["Nintendo 64"]="https://myrient.erista.me/files/No-Intro/Nintendo%20-%20Nintendo%2064%20(ByteSwapped)/"
     ["Game Cube"]="https://myrient.erista.me/files/Internet%20Archive/kodi_amp_spmc_canada/EuropeanGamecubeCollectionByGhostware/"
+    ["Game Boy Advance"]="https://myrient.erista.me/files/No-Intro/Nintendo%20-%20Game%20Boy%20Advance/"
+    ["Game Boy"]="https://myrient.erista.me/files/No-Intro/Nintendo%20-%20Game%20Boy/"
+    ["Game Boy Color"]="https://myrient.erista.me/files/No-Intro/Nintendo%20-%20Game%20Boy%20Color/"
+    ["NES"]="https://myrient.erista.me/files/No-Intro/Nintendo%20-%20Nintendo%20Entertainment%20System%20(Headerless)/"
+    ["SNES"]="https://myrient.erista.me/files/No-Intro/Nintendo%20-%20Super%20Nintendo%20Entertainment%20System/"
+    ["Nintendo DS"]="https://myrient.erista.me/files/No-Intro/Nintendo%20-%20Nintendo%20DS%20(Decrypted)/"
+    ["PSP"]="https://myrient.erista.me/files/Redump/Sony%20-%20PlayStation%20Portable/"
+    ["PS3"]="https://myrient.erista.me/files/No-Intro/Sony%20-%20PlayStation%203%20(PSN)%20(Content)/"
+    ["PS Vita"]="https://myrient.erista.me/files/No-Intro/Unofficial%20-%20Sony%20-%20PlayStation%20Vita%20(NoNpDrm)/"
+    ["Xbox"]="https://myrient.erista.me/files/Redump/Microsoft%20-%20Xbox/"
+    ["Xbox 360"]="https://myrient.erista.me/files/Redump/Microsoft%20-%20Xbox%20360/"
+    ["Game Gear"]="https://myrient.erista.me/files/No-Intro/Sega%20-%20Game%20Gear/"
+    ["Master System"]="https://myrient.erista.me/files/No-Intro/Sega%20-%20Master%20System%20-%20Mark%20III/"
+    ["Mega Drive"]="https://myrient.erista.me/files/No-Intro/Sega%20-%20Mega%20Drive%20-%20Genesis/"
+    ["Saturn"]="https://myrient.erista.me/files/Internet%20Archive/chadmaster/chd_saturn/CHD-Saturn/Europe/"
+    ["Atari 2600"]="https://myrient.erista.me/files/No-Intro/Atari%20-%202600/"
+    ["Atari 5200"]="https://myrient.erista.me/files/No-Intro/Atari%20-%205200/"
+    ["Atari 7800"]="https://myrient.erista.me/files/No-Intro/Atari%20-%207800/"
+    ["PC"]="https://myrient.erista.me/files/Redump/IBM%20-%20PC%20compatible/"
+    ["Apple Macintosh"]="https://myrient.erista.me/files/Redump/Apple%20-%20Macintosh/"
+    ["MS-DOS"]="https://myrient.erista.me/files/Internet%20Archive/sketch_the_cow/Total_DOS_Collection_Release_16_March_2019/Games/Images/CD/"
+    ["Wii"]="https://myrient.erista.me/files/Redump/Nintendo%20-%20Wii%20-%20NKit%20RVZ%20[zstd-19-128k]/"
+
 )
 
 # Destination base directory
@@ -16,34 +39,6 @@ DEST_DIR_BASE="/userdata/system/game-downloaderV2/links"
 
 # Extensions for web scraping systems
 FILE_EXTENSIONS=(".chd" ".zip" ".iso")
-
-# Define IA collection identifiers for PC
-PC_IDENTIFIERS=("collection1" "collection2" "collection3") # Add more as needed
-
-# Function for handling PC files via IA
-process_pc_files() {
-    echo "Processing IA files for 'PC'..."
-
-    DEST_DIR="$DEST_DIR_BASE/PC"
-    mkdir -p "$DEST_DIR"
-
-    # Loop through each identifier, categorize and save
-    for identifier in "${PC_IDENTIFIERS[@]}"; do
-        ia list "$identifier" | while read -r file; do
-            decoded_name="$file"  # Directly use the file as decoded name (IA identifier usually has readable names)
-            first_letter=$(echo "$decoded_name" | cut -c1 | tr '[:lower:]' '[:upper:]')
-            entry="$decoded_name | ia download $identifier $file"
-
-            if [[ "$first_letter" =~ [A-Z] ]]; then
-                echo "$entry" >> "$DEST_DIR/${first_letter}.txt"
-            elif [[ "$first_letter" =~ [0-9] ]]; then
-                echo "$entry" >> "$DEST_DIR/#.txt"
-            else
-                echo "$entry" >> "$DEST_DIR/other.txt"
-            fi
-        done
-    done
-}
 
 # Function to decode URL
 decode_url() {
@@ -61,18 +56,15 @@ get_manufacturer() {
     case "$1" in
         "PSX"|"PS2"|"PS3"|"PS4"|"PS5"|"PSP"|"PS Vita") echo "Sony" ;;
         "Xbox"|"Xbox 360"|"Xbox One"|"Xbox Series X"|"Xbox Series S") echo "Microsoft" ;;
-        "Dreamcast"|"Genesis"|"Saturn"|"Game Gear") echo "Sega" ;;
-        "Nintendo Game Boy Advance"|"Nintendo 64"|"Game Cube"|"Wii"|"Wii U"|"Switch"|"Nintendo DS"|"Nintendo 3DS"|"Game Boy"|"Game Boy Color") echo "Nintendo" ;;
-        "PC") echo "PC" ;;  # PC system
+        "Dreamcast"|"Genesis"|"Saturn"|"Game Gear"|"Master System") echo "Sega" ;;
+        "Nintendo Game Boy Advance"|"Nintendo 64"|"Game Cube"|"Wii"|"Wii U"|"Switch"|"Nintendo DS"|"Nintendo 3DS"|"Game Boy"|"Game Boy Color"|"NES"|"SNES") echo "Nintendo" ;;
+        "PC"|"MS DOS"|"Apple Macintosh") echo "PC" ;;  # PC system
         *) echo "Other" ;;
     esac
 }
 
 # Main loop for systems
 for SYSTEM in "${!SYSTEMS[@]}"; do
-    if [[ "$SYSTEM" == "PC" ]]; then
-        process_pc_files
-    else
         MANUFACTURER=$(get_manufacturer "$SYSTEM")
         DEST_DIR="$DEST_DIR_BASE/$MANUFACTURER/$SYSTEM"
         mkdir -p "$DEST_DIR"
