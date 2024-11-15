@@ -6,28 +6,24 @@ SYSTEM=$1
 # Ensure clear display
 clear
 
-# Define system-specific variables
+# Define system-specific variables (without BASE_URL)
 case $SYSTEM in
     PSX)
-        BASE_URL="https://myrient.erista.me/files/PSX/"
         DEST_DIR="/userdata/system/game-downloader/psxlinks"
         DOWNLOAD_DIR="/userdata/roms/psx"
         ALLGAMES_FILE="$DEST_DIR/AllGames.txt"
         ;;
     PS2)
-        BASE_URL="https://myrient.erista.me/files/PS2/"
         DEST_DIR="/userdata/system/game-downloader/ps2links"
         DOWNLOAD_DIR="/userdata/roms/ps2"
         ALLGAMES_FILE="$DEST_DIR/AllGames.txt"
         ;;
     Dreamcast)
-        BASE_URL="https://myrient.erista.me/files/Internet%20Archive/chadmaster/dc-chd-zstd-redump/dc-chd-zstd/"
         DEST_DIR="/userdata/system/game-downloader/dclinks"
         DOWNLOAD_DIR="/userdata/roms/dreamcast"
         ALLGAMES_FILE="$DEST_DIR/AllGames.txt"
         ;;
     GBA)
-        BASE_URL="https://myrient.erista.me/files/No-Intro/Nintendo%20-%20Game%20Boy%20Advance/"
         DEST_DIR="/userdata/system/game-downloader/gbalinks"
         DOWNLOAD_DIR="/userdata/roms/gba"
         ALLGAMES_FILE="$DEST_DIR/AllGames.txt"
@@ -57,7 +53,7 @@ select_games() {
 
     # Read the list of games and prepare the dialog input
     local game_list=()
-    while IFS="|" read -r decoded_name encoded_url; do
+    while IFS="|" read -r decoded_name game_url; do
         game_list+=("$decoded_name" "" off)
     done < "$file"
 
