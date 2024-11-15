@@ -45,18 +45,12 @@ scrape_game_system() {
     local system_dir="$DEST_DIR/$system"  # Create a subfolder for each system in the links directory
     local allgames_file="$system_dir/AllGames.txt"
 
-    # Ensure the destination directory for this system exists
-    mkdir -p "$system_dir"
+    # Delete the entire 'links' folder and recreate it
+    rm -rf "$DEST_DIR"
+    mkdir -p "$DEST_DIR"  # Ensure the destination directory exists
 
     # Initialize arrays to hold the game data for this system
     local game_data=()
-
-    # Clear old data files for this system
-    rm -f "$allgames_file"
-    for letter in {A..Z}; do
-        rm -f "$system_dir/$letter.txt"
-    done
-    rm -f "$system_dir/#.txt"
 
     # Scrape and collect game data
     curl -s "$base_url" | grep -oP "href=\"([^\"]+${file_extension})\"" | sed -E 's/href="(.*)"/\1/' | while read -r game_url; do
