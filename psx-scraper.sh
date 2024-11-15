@@ -2,6 +2,7 @@
 
 # Base URL and destination directory
 BASE_URL="https://myrient.erista.me/files/Internet%20Archive/chadmaster/chd_psx_eur/CHD-PSX-EUR/
+DEST_DIR="/userdata/system/game-downloader/gbalinks
 
 # Ensure the destination directory exists
 mkdir -p "$DEST_DIR"
