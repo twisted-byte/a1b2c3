@@ -21,7 +21,7 @@ declare -A FILTER_RULES=(
 declare -A FILE_EXTENSIONS=(
     ["psx"]='.chd'  # PSX games are in .chd format
     ["dc"]='.chd'   # DC games are in .chd format
-    ["ps2"]='.iso'  # PS2 games are in .iso format
+    ["ps2"]='.zip'  # PS2 games are in .iso format
     ["gba"]='.zip'  # GBA games are in .zip format
 )
 
