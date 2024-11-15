@@ -134,15 +134,9 @@ game_menu() {
     select_letter "$system" "$DEST_DIR" "$ALLGAMES_FILE" "$DOWNLOAD_DIR"
 }
 
-# Function to select a letter or "All Games" for a system
+# Function to show the letter selection menu with an "All Games" option
 select_letter() {
-    local system=$1
-    local DEST_DIR=$2
-    local ALLGAMES_FILE=$3
-    local DOWNLOAD_DIR=$4
-
     letter_list=$(ls "$DEST_DIR" | grep -oP '^[a-zA-Z#]' | sort | uniq)
-
     # Add "All" option to the menu
     menu_options=("All" "All Games")
 
@@ -198,25 +192,27 @@ select_games() {
         return
     fi
 
-    IFS=$'\n'
-    for game in $selected_games; do
-        game_items=$(echo "$game" | sed 's/\.chd/.chd\n/g')
-        while IFS= read -r game_item; do
-            if [[ -n "$game_item" ]]; then
-                game_item_cleaned=$(echo "$game_item" | sed 's/[\\\"`]//g' | sed 's/^[[:space:]]*//g' | sed 's/[[:space:]]*$//g')
-                if [[ -n "$game_item_cleaned" ]]; then
-                    download_game "$game_item_cleaned" "$DOWNLOAD_DIR"
-                fi
+IFS=$'\n'
+for game in $selected_games; do
+    game_items=$(echo "$game" | sed -E 's/\.(chd|zip|iso)/\.\1\n/g')
+    while IFS= read -r game_item; do
+        if [[ -n "$game_item" ]]; then
+            game_item_cleaned=$(echo "$game_item" | sed 's/[\\\"`]//g' | sed 's/^[[:space:]]*//g' | sed 's/[[:space:]]*$//g')
+            if [[ -n "$game_item_cleaned" ]]; then
+                download_game "$game_item_cleaned" "$DOWNLOAD_DIR"
             fi
-        done <<< "$game_items"
-    done
+        fi
+    done <<< "$game_items"
+done
 }
 
 # Function to download the selected game (add to queue)
 download_game() {
     local decoded_name="$1"
     local DOWNLOAD_DIR="$2"
+    local game_url="$3"  # Pass the URL as a third argument
 
+    # Clean the game name
     decoded_name_cleaned=$(echo "$decoded_name" | sed 's/[\\\"`]//g' | sed 's/^[[:space:]]*//g' | sed 's/[[:space:]]*$//g')
 
     # Check if the game already exists in the download directory
@@ -231,10 +227,81 @@ download_game() {
         return
     fi
 
-    # Add the game to the download queue
-    echo "$decoded_name_cleaned" >> "/userdata/system/game-downloader/download.txt"
+    # Add the game name, URL, and final directory to the download queue
+    echo "$decoded_name_cleaned | $game_url | $DOWNLOAD_DIR" >> "/userdata/system/game-downloader/download.txt"
+    added_games+=("$decoded_name_cleaned")
+ # Find the game URL from the AllGames.txt file
+    game_url=$(grep -F "$decoded_name_cleaned" "$ALLGAMES_FILE" | cut -d '|' -f 2)
+
+    if [ -z "$game_url" ]; then
+        dialog --infobox "Error: Could not find download URL for '$decoded_name_cleaned'." 5 40
+        sleep 2
+        return
+    fi
+
+    # Append the decoded name, URL, and folder to the DownloadManager.txt file
+    echo "$decoded_name_cleaned|$game_url|$DOWNLOAD_DIR" >> "/userdata/system/game-downloader/download.txt"
+    
+    # Collect the added game
     added_games+=("$decoded_name_cleaned")
 }
 
-# Run the main menu
+# Function to show the letter selection menu with an "All Games" option
+select_letter() {
+    letter_list=$(ls "$DEST_DIR" | grep -oP '^[a-zA-Z#]' | sort | uniq)
+
+    # Add "All" option to the menu
+    menu_options=("All" "All Games")
+
+    while read -r letter; do
+        menu_options+=("$letter" "$letter")
+    done <<< "$letter_list"
+
+    selected_letter=$(dialog --title "Select a Letter" --menu "Choose a letter or select 'All Games'" 25 70 10 \
+        "${menu_options[@]}" 3>&1 1>&2 2>&3)
+
+    if [ -z "$selected_letter" ]; then
+        return 1
+    elif [ "$selected_letter" == "All" ]; then
+        # If "All Games" is selected, link to AllGames.txt
+        select_games "AllGames"
+    else
+        # Otherwise, proceed with the selected letter
+        select_games "$selected_letter"
+    fi
+}
+
+
+# Initialize arrays to hold skipped and added games
+skipped_games=()
+added_games=()
+
+# Main loop to process selected games
+while true; do
+    select_letter
+
+    # Show a single message if any games were added to the download list
+    if [ ${#added_games[@]} -gt 0 ]; then
+        dialog --msgbox "Your selection has been added to the download list! Check download status and once it's complete, reload your games list to see the new games!" 10 50
+        # Clear the added games list
+        added_games=()
+    fi
+
+    # Display skipped games message if there are any skipped games
+    if [ ${#skipped_games[@]} -gt 0 ]; then
+        skipped_games_list=$(printf "%s\n" "${skipped_games[@]}" | sed 's/^/• /')
+        dialog --msgbox "The following games already exist in the system and are being skipped:\n\n$skipped_games_list" 15 60
+        skipped_games=()
+    fi
+
+    # Ask user if they want to continue after displaying skipped games
+    dialog --title "Continue?" --yesno "Would you like to select some more games?" 7 50
+    if [ $? -eq 1 ]; then
+        break
+    fi
+done
+
+# Goodbye message
+echo "Goodbye!"
+
 main_menu
