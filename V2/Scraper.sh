@@ -10,11 +10,12 @@ declare -A BASE_URLS=(
 
 # Define filtering rules for each system
 declare -A FILTER_RULES=(
-    ["psx"]='.*'  # No specific filtering for PSX (example, you can adjust it)
-    ["dc"]='.*'  # No specific filtering for DC
+    ["psx"]='.*'  # No specific filtering for PSX
+    ["dc"]='\(.*[Ee][Nn],?.*\).* && \(.*Europe.*\) && \(.*Europe,\ Australia.*\)'  # DC filter for (En) English, Europe, Australia
     ["ps2"]='.*'  # No specific filtering for PS2
-    ["gba"]='\(.*[Ee][Nn].*\).*'  # Filter for (En) English games in GBA (example)
+    ["gba"]='\(.*[Ee][Nn],?.*\).* && \(.*Europe.*\) && \(.*USA,\ Europe.*\)''  # Filter for (En) English games in GBA
 )
+
 
 # Define file extensions for each system
 declare -A FILE_EXTENSIONS=(
