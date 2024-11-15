@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # URLs for external scripts
-COMBINED_MENU_URL="https://raw.githubusercontent.com/DTJW92/game-downloader/main/Game-Menu.sh"
+COMBINED_MENU_URL="https://raw.githubusercontent.com/DTJW92/game-downloader/main/Main-Menu.sh"
 UPDATER_URL="https://raw.githubusercontent.com/DTJW92/game-downloader/main/Updater.sh"
 DOWNLOAD_MANAGER_URL="https://raw.githubusercontent.com/DTJW92/game-downloader/main/Downloadcheck.sh"
 UNINSTALL_URL="https://raw.githubusercontent.com/DTJW92/game-downloader/main/uninstall.sh"
@@ -48,82 +48,51 @@ main_menu() {
     esac
 }
 
-# Function to display the System Type Menu
+# Function to display the System Type Menu dynamically based on available folders
 system_type_menu() {
     local system_type
+    local system_types=()
+    
+    # Dynamically fetch system types from the game-downloader folder
+    system_types=($(ls -d /userdata/system/game-downloader/links/*/ | sed 's#.*/##'))
+
+    # Create menu options dynamically based on system types
+    menu_options=()
+    for system in "${system_types[@]}"; do
+        menu_options+=("$system" "$system")
+    done
+
     system_type=$(dialog --title "Select System Type" --menu "Choose a system type" 15 50 4 \
-        1 "Sony" \
-        2 "Nintendo" \
-        3 "Microsoft" \
-        4 "Back to Main Menu" \
-        3>&1 1>&2 2>&3)
+        "${menu_options[@]}" 3>&1 1>&2 2>&3)
 
     case $system_type in
-        1)
-            game_system_menu "Sony"
-            ;;
-        2)
-            game_system_menu "Nintendo"
-            ;;
-        3)
-            game_system_menu "Microsoft"
-            ;;
-        4)
-            main_menu
-            ;;
         *)
-            system_type_menu
+            game_system_menu "$system_type"
             ;;
     esac
 }
 
-# Function to display the Game System Menu for a specific system type
+# Function to display the Game System Menu dynamically based on available subdirectories
 game_system_menu() {
     local system_type=$1
-    local system
-    case $system_type in
-        "Sony")
-            system=$(dialog --title "Select a Sony Game System" --menu "Choose a system" 15 50 4 \
-                1 "PSX" \
-                2 "PS2" \
-                3 "Back to System Type Menu" \
-                3>&1 1>&2 2>&3)
-            ;;
-        "Nintendo")
-            system=$(dialog --title "Select a Nintendo Game System" --menu "Choose a system" 15 50 4 \
-                1 "GBA" \
-                2 "Back to System Type Menu" \
-                3>&1 1>&2 2>&3)
-            ;;
-        "Microsoft")
-            system=$(dialog --title "Select a Microsoft Game System" --menu "Choose a system" 15 50 4 \
-                1 "Xbox" \
-                2 "Back to System Type Menu" \
-                3>&1 1>&2 2>&3)
-            ;;
-        *)
-            system_type_menu
-            ;;
-    esac
+    local system_dir="/userdata/system/game-downloader/links/$system_type"  # Path to the system's folder
+    local game_systems=()
 
-    case $system in
-        1)
-            game_menu "$system_type" "$system"
-            ;;
-        2)
-            if [ "$system_type" == "Sony" ]; then
-                game_menu "$system_type" "PS2"
-            elif [ "$system_type" == "Nintendo" ]; then
-                main_menu
-            elif [ "$system_type" == "Microsoft" ]; then
-                game_menu "$system_type" "Xbox"
-            fi
-            ;;
-        3)
-            system_type_menu
-            ;;
+    # List the available game systems for the selected system type
+    game_systems=($(ls -d "$system_dir"/*/ | sed 's#.*/##'))
+
+    # Create menu options dynamically
+    menu_options=()
+    for system in "${game_systems[@]}"; do
+        menu_options+=("$system" "$system")
+    done
+
+    game_system=$(dialog --title "Select a $system_type Game System" --menu "Choose a system" 15 50 4 \
+        "${menu_options[@]}" 3>&1 1>&2 2>&3)
+
+    case $game_system in
         *)
-            game_system_menu "$system_type"
+            game_menu "$system_type" "$game_system"
             ;;
     esac
 }
