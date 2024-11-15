@@ -84,8 +84,8 @@ GAMELIST="/userdata/roms/ports/gamelist.xml"
 
 # Create a new XML entry to add with additional fields
 NEW_ENTRY="<game>
-    <path>./GameDownloader.sh</path>
-    <name>Game Downloader</name>
+    <path>./GameDownloaderV2.sh</path>
+    <name>Game Downloader V2</name>
     <image>./images/Game_Downloader_Icon.png</image>
     <video>./videos/GameDownloader-video.mp4</video>
     <marquee>./images/Game_Downloader_Wheel.png</marquee>
