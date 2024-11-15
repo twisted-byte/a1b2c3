@@ -11,7 +11,7 @@ SYSTEMS=(
 FILE_EXTENSIONS=(".chd" ".zip" ".iso")  # Add other extensions as needed
 
 # Destination directory (can be adjusted for different systems)
-DEST_DIR_BASE="/path/to/output"
+DEST_DIR_BASE="/userdata/system/game-downloaderV2"
 
 # Function to decode URL (ASCII decode)
 decode_url() {
@@ -48,8 +48,8 @@ for SYSTEM in "${!SYSTEMS[@]}"; do
             # Decode the URL and check for the region tags in decoded text
             decoded_name=$(decode_url "$game_url")
 
-            # Only process files that contain both "(En)" and "(Europe)" or "(USA, Europe)", and do not contain "(Demo)"
-            if [[ "$decoded_name" =~ \(.*[Ee][Nn].*\) && ("$decoded_name" =~ \(.*Europe.*\) || "$decoded_name" =~ \(.*USA,\ Europe.*\)) && ! "$decoded_name" =~ \(.*Demo.*\) ]]; then
+            # Check if decoded name contains "Europe" or "UK", and does not contain "Demo"
+            if [[ ("$decoded_name" =~ Europe || "$decoded_name" =~ UK) && ! "$decoded_name" =~ Demo ]]; then
 
                 # Format the entry with backticks around the decoded name
                 quoted_name="\`$decoded_name\`"
