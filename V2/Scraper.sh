@@ -7,6 +7,7 @@ SYSTEMS=(
     ["PSX"]="https://myrient.erista.me/files/Internet%20Archive/chadmaster/chd_psx_eur/CHD-PSX-EUR/"
     ["PS2"]="https://myrient.erista.me/files/Redump/Sony%20-%20PlayStation%202/"
     ["Dreamcast"]="https://myrient.erista.me/files/Internet%20Archive/chadmaster/dc-chd-zstd-redump/dc-chd-zstd/"
+["Nintendo 64"]="https://myrient.erista.me/files/No-Intro/Nintendo%20-%20Nintendo%2064%20(BigEndian)/"
 )
 
 # List of file extensions to scrape
