@@ -1,7 +1,6 @@
 #!/bin/bash
 
-# Base URL and destination directory
-BASE_URL="https://myrient.erista.me/files/Internet%20Archive/chadmaster/chd_psx_eur/CHD-PSX-EUR/
+BASE_URL="https://myrient.erista.me/files/Internet%20Archive/chadmaster/chd_psx_eur/CHD-PSX-EUR/"
 DEST_DIR="/userdata/system/game-downloader/psxlinks"
 
 # Ensure the destination directory exists
@@ -9,6 +8,7 @@ mkdir -p "$DEST_DIR"
 
 # Function to decode URL (ASCII decode)
 decode_url() {
+    # Decode percent-encoded string
     echo -n "$1" | sed 's/%/\\x/g' | xargs -0 printf "%b"
 }
 
@@ -21,33 +21,41 @@ clear_all_files() {
 # Clear all text files before starting
 clear_all_files
 
-# Fetch the page content
-page_content=$(curl -s "$BASE_URL")
+# Scrape the game list and save the file names (not full URLs)
+curl -s "$BASE_URL" | grep -oP 'href="([^"]+\.chd)"' | sed -E 's/href="(.*)"/\1/' | while read -r game_url; do
+    # Get the file name from the URL (e.g., AmazingGame.chd)
+    file_name=$(basename "$game_url")
 
-# Parse .chd links, decode them, and check for region tags and ignore "(Demo)"
-echo "$page_content" | grep -oP '(?<=href=")[^"]*\.chd' | while read -r game_url; do
-    # Decode the URL and check for the region tags in decoded text
-    decoded_name=$(decode_url "$game_url")
+    # Decode the file name (ASCII decode if needed)
+    decoded_name=$(decode_url "$file_name")
 
-        # Format the entry with backticks around the decoded name
-        quoted_name="\`$decoded_name\`"
+    # Encase the decoded name in backticks
+    quoted_name="\`$decoded_name\`"
 
-        # Get the first character of the decoded file name
-        first_char="${decoded_name:0:1}"
-        
-        # Append to AllGames.txt with both quoted decoded name and original URL
-        echo "$quoted_name|$BASE_URL$game_url" >> "$DEST_DIR/AllGames.txt"
-        
-        # Save to the appropriate letter-based file
-        if [[ "$first_char" =~ [a-zA-Z] ]]; then
-            first_char=$(echo "$first_char" | tr 'a-z' 'A-Z')
-            echo "$quoted_name|$BASE_URL$game_url" >> "$DEST_DIR/${first_char}.txt"
-        elif [[ "$first_char" =~ [0-9] ]]; then
-            echo "$quoted_name|$BASE_URL$game_url" >> "$DEST_DIR/#.txt"
-        else
-            echo "$quoted_name|$BASE_URL$game_url" >> "$DEST_DIR/other.txt"
-        fi
+    # Get the first character of the decoded file name
+    first_char="${decoded_name:0:1}"
+
+    # Always append to AllGames.txt with both quoted decoded name and original URL
+    echo "$quoted_name|$BASE_URL$game_url" >> "$DEST_DIR/AllGames.txt"
+
+    # Ensure letter files are capitalized and save them to the appropriate letter-based file
+    if [[ "$first_char" =~ [a-zA-Z] ]]; then
+        first_char=$(echo "$first_char" | tr 'a-z' 'A-Z')  # Capitalize if it's a letter
+        # Save to the capitalized letter-based text file (e.g., A.txt, B.txt)
+        echo "$quoted_name|$BASE_URL$game_url" >> "$DEST_DIR/${first_char}.txt"
+    elif [[ "$first_char" =~ [0-9] ]]; then
+        # Save all number-prefixed files to a single #.txt (e.g., 1.txt, 2.txt)
+        echo "$quoted_name|$BASE_URL$game_url" >> "$DEST_DIR/#.txt"
+    else
+        # Handle other cases (if needed) – for now, ignoring symbols, etc.
+        echo "$quoted_name|$BASE_URL$game_url" >> "$DEST_DIR/other.txt"
     fi
 done
 
-echo "Scraping complete for files with (En), (Europe), or (Europe, Australia), and excluding (Demo) files!"
+echo "Scraping complete!"
+0 commit comments
+Comments
+0
+ (0)
+Comment
+You're receiving notifications because you're subscribed to this thread.
