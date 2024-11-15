@@ -4,7 +4,9 @@
 declare -A SYSTEMS
 SYSTEMS=(
     ["Nintendo Game Boy Advance"]="https://myrient.erista.me/files/No-Intro/Nintendo%20-%20Game%20Boy%20Advance/"
-    ["PSX"]="https://example.com/system2/"
+    ["PSX"]="https://myrient.erista.me/files/Internet%20Archive/chadmaster/chd_psx_eur/CHD-PSX-EUR/"
+    ["PS2"]="https://myrient.erista.me/files/Redump/Sony%20-%20PlayStation%202/"
+    ["Dreamcast"]="https://myrient.erista.me/files/Internet%20Archive/chadmaster/dc-chd-zstd-redump/dc-chd-zstd/"
 )
 
 # List of file extensions to scrape
