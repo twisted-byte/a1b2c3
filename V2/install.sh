@@ -2,7 +2,7 @@
 
 # Display animated title for installer
 animate_title() {
-    local text="GAME DOWNLOADER V2 INSTALLER"
+    local text="GAME DOWNLOADER INSTALLER"
     local delay=0.03
     local length=${#text}
     for (( i=0; i<length; i++ )); do
@@ -15,7 +15,7 @@ animate_title() {
 # Function to display controls
 display_controls() {
     echo
-    echo "  This will install the Game Downloader V2 app in Ports."
+    echo "  This will install the Game Downloader app in Ports."
     echo
     sleep 3  # Delay for 3 seconds
 }
@@ -45,7 +45,7 @@ download_file "https://raw.githubusercontent.com/DTJW92/game-downloader/main/ima
 download_file "https://raw.githubusercontent.com/DTJW92/game-downloader/main/images/Game%20Download%20Box%20Art.png" "/userdata/roms/ports/images/Game_Downloader_Box_Art.png"
 
 # Download and save download.sh locally (always replace)
-download_file "https://raw.githubusercontent.com/DTJW92/game-downloader/main/V2/download.sh" "/userdata/system/services/download.sh"
+download_file "https://raw.githubusercontent.com/DTJW92/game-downloader/main/V2/BackgroundDownloader.sh" "/userdata/system/services/download.sh"
 
 # Convert download.sh to Unix format and set proper permissions
 dos2unix /userdata/system/services/download.sh >/dev/null 2>&1
@@ -60,11 +60,11 @@ mv /userdata/system/services/download.sh /userdata/system/services/Background_Ga
 batocera-services enable Background_Game_Downloader >/dev/null 2>&1
 batocera-services start Background_Game_Downloader &>/dev/null &
 
-# Download GMD.sh and save it as GameDownloader.sh in Ports folder
-download_file "https://raw.githubusercontent.com/DTJW92/game-downloader/main/V2/Display.sh" "/userdata/roms/ports/GameDownloader.sh"
+# Download Launcher and save it as GameDownloader.sh in Ports folder
+download_file "https://raw.githubusercontent.com/DTJW92/game-downloader/main/V2/Launcher.sh" "/userdata/roms/ports/GameDownloaderV2.sh"
 
 # Make the downloaded GameDownloader.sh executable
-chmod +x /userdata/roms/ports/GameDownloader.sh >/dev/null 2>&1
+chmod +x /userdata/roms/ports/GameDownloaderV2.sh >/dev/null 2>&1
 
 # Define URLs for the scraper scripts
 SCRAPER="https://raw.githubusercontent.com/DTJW92/game-downloader/main/V2/Scraper.sh"
@@ -77,7 +77,7 @@ if ! bash <(curl -s "$SCRAPER") >/dev/null 2>&1; then
 fi
 
 # Download bkeys.txt and save it as GameDownloader.sh.keys in the Ports folder
-download_file "https://raw.githubusercontent.com/DTJW92/game-downloader/main/bkeys.txt" "/userdata/roms/ports/GameDownloader.sh.keys"
+download_file "https://raw.githubusercontent.com/DTJW92/game-downloader/main/V2/keys.txt" "/userdata/roms/ports/GameDownloaderV2.sh.keys"
 
 # Define the path to the gamelist.xml
 GAMELIST="/userdata/roms/ports/gamelist.xml"
