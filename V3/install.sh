@@ -62,7 +62,7 @@ download_file "https://raw.githubusercontent.com/DTJW92/game-downloader/main/ima
 download_file "https://raw.githubusercontent.com/DTJW92/game-downloader/main/images/Game%20Download%20Box%20Art.png" "/userdata/roms/ports/images/Game_Downloader_Box_Art.png"
 
 # Download and save download.sh locally (always replace)
-download_file "https://raw.githubusercontent.com/DTJW92/game-downloader/main/download.sh" "/userdata/system/services/download.sh"
+download_file "https://raw.githubusercontent.com/DTJW92/game-downloader/main/V3/download.sh" "/userdata/system/services/download.sh"
 
 # Convert download.sh to Unix format and set proper permissions
 dos2unix /userdata/system/services/download.sh >/dev/null 2>&1
@@ -80,41 +80,10 @@ batocera-services enable Background_Game_Downloader >/dev/null 2>&1
 batocera-services start Background_Game_Downloader &>/dev/null &
 
 # Download GMD.sh and save it as GameDownloader.sh in Ports folder
-download_file "https://raw.githubusercontent.com/DTJW92/game-downloader/main/GMD.sh" "/userdata/roms/ports/GameDownloader.sh"
+download_file "https://raw.githubusercontent.com/DTJW92/game-downloader/main/V3/Display.sh" "/userdata/roms/ports/GameDownloader.sh"
 
 # Make the downloaded GameDownloader.sh executable
 chmod +x /userdata/roms/ports/GameDownloader.sh >/dev/null 2>&1
-
-# Define URLs for the scraper scripts
-PSX_SCRAPER="https://raw.githubusercontent.com/DTJW92/game-downloader/main/psx-scraper.sh"
-DC_SCRAPER="https://raw.githubusercontent.com/DTJW92/game-downloader/main/dc-scraper.sh"
-PS2_SCRAPER="https://raw.githubusercontent.com/DTJW92/game-downloader/main/ps2-scraper.sh"
-GBA_SCRAPER="https://raw.githubusercontent.com/DTJW92/game-downloader/main/gba-scraper.sh"
-
-# Run scraper scripts directly from GitHub
-echo "Running PSX scraper..."
-if ! bash <(curl -s "$PSX_SCRAPER") >/dev/null 2>&1; then
-    dialog --msgbox "Error running PSX scraper." 7 50
-    exit 1
-fi
-
-echo "Running Dreamcast scraper..."
-if ! bash <(curl -s "$DC_SCRAPER") >/dev/null 2>&1; then
-    dialog --msgbox "Error running Dreamcast scraper." 7 50
-    exit 1
-fi
-
-echo "Running PS2 scraper..."
-if ! bash <(curl -s "$PS2_SCRAPER") >/dev/null 2>&1; then
-    dialog --msgbox "Error running PS2 scraper." 7 50
-    exit 1
-fi
-
-echo "Running GBA scraper..."
-if ! bash <(curl -s "$GBA_SCRAPER") >/dev/null 2>&1; then
-    dialog --msgbox "Error running GBA scraper." 7 50
-    exit 1
-fi
 
 # Download bkeys.txt and save it as GameDownloader.sh.keys in the Ports folder
 download_file "https://raw.githubusercontent.com/DTJW92/game-downloader/main/bkeys.txt" "/userdata/roms/ports/GameDownloader.sh.keys"
