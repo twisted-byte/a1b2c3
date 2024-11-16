@@ -59,7 +59,7 @@ while true; do
     case $choice in
         1)
             log_debug "Running Install Game Systems script."
-            bash <(curl -s "$INSTALL_GAME_SYSTEMS_URL")  # Downloads and runs the installation script
+            bash <(curl -s "$INSTALL_GAME_SYSTEMS")  # Downloads and runs the installation script
             log_debug "Install Game Systems script completed."
             break  # Exit the loop after action is completed
             ;;
