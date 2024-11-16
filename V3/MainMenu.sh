@@ -7,7 +7,7 @@ clear
 UPDATER_URL="https://raw.githubusercontent.com/DTJW92/game-downloader/main/Updater.sh"
 DOWNLOAD_MANAGER_URL="https://raw.githubusercontent.com/DTJW92/game-downloader/main/Downloadcheck.sh"
 UNINSTALL_URL="https://raw.githubusercontent.com/DTJW92/game-downloader/main/uninstall.sh"
-INSTALL_GAME_SYSTEMS_URL="https://raw.githubusercontent.com/DTJW92/game-downloader/main/install.sh"  # New URL for install script
+INSTALL_GAME_SYSTEMS_URL="https://raw.githubusercontent.com/DTJW92/game-downloader/main/installsystem.sh"  # New URL for install script
 
 # Main dialog menu with loop to keep the menu active until a valid choice is selected
 dialog --clear --backtitle "Game Downloader" \
