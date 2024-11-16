@@ -85,9 +85,3 @@ show_progress() {
 ) | dialog --title "Scraping Games" --gauge "Please wait while scraping..." 10 70 0
 
 echo "Scraping complete!"
-
-
-    echo "100"  # End at 100%
-) | dialog --title "Scraping Dreamcast Games" --gauge "Please wait while scraping..." 10 70 0
-
-echo "Scraping complete!"
