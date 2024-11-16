@@ -82,7 +82,7 @@ for SYSTEM in "${!SYSTEMS[@]}"; do
     {
         page_content=$(curl -s "${SYSTEMS[$SYSTEM]}")
         for EXT in "${FILE_EXTENSIONS[@]}"; do
-            echo "$page_content" | grep -oP "(?<=href=\")[^\"]*$EXT" | while read -r game_url; do
+            curl -s "${SYSTEMS[$SYSTEM]}" | grep -oP 'href="([^"]+\.(chd|zip|iso))"' | sed -E 's/href="(.*)"/\1/' | while read -r game_url; do
                 decoded_name=$(decode_url "$game_url")
                 first_char="${decoded_name:0:1}"
                 quoted_name="\`$decoded_name\`"
