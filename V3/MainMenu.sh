@@ -101,4 +101,4 @@ done
 log_debug "Script completed."
 
 # Clear screen at the end
-clear
+
