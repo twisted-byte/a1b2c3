@@ -40,8 +40,7 @@ process_download() {
     fi
 
     echo "Starting download for $game_name..."
-    wget -c "$url" -O "$temp_path" >/dev/null 2>&1 &
-    wait $!
+    wget -c "$url" -O "$temp_path" >/dev/null 2>&1
     if [ $? -ne 0 ]; then
         echo "Download failed for $game_name"
         return
@@ -49,6 +48,9 @@ process_download() {
 
     echo "Download succeeded for $game_name"
     process_unzip "$game_name" "$temp_path" "$folder"
+
+    # Remove the processed line from the queue
+    sed -i "\|$game_name|$url|$folder|d" "$DOWNLOAD_QUEUE"
 }
 
 process_unzip() {
@@ -66,7 +68,7 @@ process_unzip() {
     mkdir -p "$game_folder"
 
     echo "Unzipping $game_name..."
-    unzip -q "$temp_path" -d "$game_folder"
+    unzip -q "$temp_path" -d "$game_folder" 
     if [ $? -ne 0 ]; then
         echo "Unzip failed for $game_name"
         return
@@ -75,7 +77,6 @@ process_unzip() {
     mv "$game_folder" "$folder"
     echo "Moved unzipped files for $game_name to $folder"
 }
-
 
 # Check for internet connection before proceeding
 check_internet
@@ -92,10 +93,11 @@ while true; do
     if [[ -f "$DOWNLOAD_QUEUE" ]]; then
         while IFS='|' read -r game_name url folder; do
             echo "Reading download entry: $game_name | $url | $folder"
-            
-            # Start the download and unzip in parallel (background processes)
+
+            # Process the download (sequentially)
             process_download "$game_name" "$url" "$folder" &
-        done < "$DOWNLOAD_QUEUE"
+
+        done < <(cat "$DOWNLOAD_QUEUE")  # Use a subshell to safely handle the file while reading
     else
         echo "No downloads found in queue."
     fi
