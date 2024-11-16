@@ -2,6 +2,7 @@
 
 BASE_URL="https://myrient.erista.me/files/Internet%20Archive/chadmaster/chd_psx_eur/CHD-PSX-EUR/"
 DEST_DIR="/userdata/system/game-downloader/link/PSX"
+ROM_DIR="/userdata/roms/psx"
 
 # Ensure the destination directory exists
 mkdir -p "$DEST_DIR"
@@ -42,13 +43,13 @@ curl -s "$BASE_URL" | grep -oP 'href="([^"]+\.chd)"' | sed -E 's/href="(.*)"/\1/
     if [[ "$first_char" =~ [a-zA-Z] ]]; then
         first_char=$(echo "$first_char" | tr 'a-z' 'A-Z')  # Capitalize if it's a letter
         # Save to the capitalized letter-based text file (e.g., A.txt, B.txt)
-        echo "$quoted_name|$BASE_URL$game_url" >> "$DEST_DIR/${first_char}.txt"
+        echo "$quoted_name|$BASE_URL$game_url|$ROM_DIR" >> "$DEST_DIR/${first_char}.txt"
     elif [[ "$first_char" =~ [0-9] ]]; then
         # Save all number-prefixed files to a single #.txt (e.g., 1.txt, 2.txt)
-        echo "$quoted_name|$BASE_URL$game_url" >> "$DEST_DIR/#.txt"
+        echo "$quoted_name|$BASE_URL$game_url|$ROM_DIR" >> "$DEST_DIR/#.txt"
     else
         # Handle other cases (if needed) – for now, ignoring symbols, etc.
-        echo "$quoted_name|$BASE_URL$game_url" >> "$DEST_DIR/other.txt"
+        echo "$quoted_name|$BASE_URL$game_url|$ROM_DIR" >> "$DEST_DIR/other.txt"
     fi
 done
 
