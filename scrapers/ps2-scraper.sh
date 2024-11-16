@@ -2,7 +2,7 @@
 
 # Base URL and destination directory
 BASE_URL="https://myrient.erista.me/files/Redump/Sony%20-%20PlayStation%202/"
-DEST_DIR="/userdata/system/game-downloader/ps2links"
+DEST_DIR="/userdata/system/game-downloader/links/PS2"
 
 # Ensure the destination directory exists
 mkdir -p "$DEST_DIR"
