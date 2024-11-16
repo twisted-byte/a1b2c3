@@ -72,40 +72,40 @@ for SYSTEM in "${!SYSTEMS[@]}"; do
     echo "Starting scrape for $SYSTEM..."
     clear_all_files
 
-    # Initialize variables to accumulate results
-    ALL_GAMES=""
-    A_TO_Z=""
-    NUMERIC="#.txt"
-    OTHER="other.txt"
-
     # Start scraping in the background
-    {
-        page_content=$(curl -s "${SYSTEMS[$SYSTEM]}")
-        for EXT in "${FILE_EXTENSIONS[@]}"; do
-            curl -s "${SYSTEMS[$SYSTEM]}" | grep -oP 'href="([^"]+\.(chd|zip|iso))"' | sed -E 's/href="(.*)"/\1/' | while read -r game_url; do
-                decoded_name=$(decode_url "$game_url")
-                first_char="${decoded_name:0:1}"
-                quoted_name="\`$decoded_name\`"
+   {
+    # Fetch the page content once
+    page_content=$(curl -s "${SYSTEMS[$SYSTEM]}")
 
-                ALL_GAMES+="$quoted_name|${SYSTEMS[$SYSTEM]}$game_url"$'\n'
+    # Extract and store all matching URLs in temp_urls.txt
+    echo "$page_content" | grep -oP 'href="([^"]+\.(chd|zip|iso))"' | sed -E 's/href="(.*)"/\1/' > temp_urls.txt
 
-                if [[ "$first_char" =~ [A-Za-z] ]]; then
-                    first_char=$(echo "$first_char" | tr 'a-z' 'A-Z')
-                    A_TO_Z+="$quoted_name|${SYSTEMS[$SYSTEM]}$game_url"$'\n'
-                elif [[ "$first_char" =~ [0-9] ]]; then
-                    NUMERIC+="$quoted_name|${SYSTEMS[$SYSTEM]}$game_url"$'\n'
-                else
-                    OTHER+="$quoted_name|${SYSTEMS[$SYSTEM]}$game_url"$'\n'
-                fi
-            done
-        done
+    # Process each URL from the temp_urls.txt file
+    while read -r game_url; do
+        # Decode the file name (basename of the URL)
+        decoded_name=$(decode_url "$(basename "$game_url")")
+        first_char="${decoded_name:0:1}"
+        first_char=${first_char^^}  # Convert to uppercase
 
-        # Write all results at once after scraping
-        echo "$ALL_GAMES" >> "$DEST_DIR/AllGames.txt"
-        echo "$A_TO_Z" >> "$DEST_DIR/${first_char}.txt"
-        echo "$NUMERIC" >> "$DEST_DIR/$NUMERIC"
-        echo "$OTHER" >> "$DEST_DIR/$OTHER"
-    }   # This sends the block to run in the background
+        quoted_name="\`$decoded_name\`"
+        full_url="${SYSTEMS[$SYSTEM]}$game_url"
+
+        # Write to AllGames.txt
+        echo "$quoted_name|$full_url" >> "$DEST_DIR/AllGames.txt"
+
+        # Write to letter-specific files
+        if [[ "$first_char" =~ [A-Z] ]]; then
+            echo "$quoted_name|$full_url" >> "$DEST_DIR/${first_char}.txt"
+        elif [[ "$first_char" =~ [0-9] ]]; then
+            echo "$quoted_name|$full_url" >> "$DEST_DIR/#.txt"
+        else
+            echo "$quoted_name|$full_url" >> "$DEST_DIR/other.txt"
+        fi
+    done < temp_urls.txt
+
+    # Clean up the temporary file
+    rm -f temp_urls.txt
+}
 
 done
 
