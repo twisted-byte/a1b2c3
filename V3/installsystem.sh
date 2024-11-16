@@ -1,7 +1,16 @@
 #!/bin/bash
 
-# Ensure clear display
+# Define the debug log location
+DEBUG_LOG="/userdata/system/game-downloader/debug/install_debug.txt"
 
+# Create the debug directory if it doesn't exist
+mkdir -p "$(dirname "$DEBUG_LOG")"
+
+# Redirect all output (stdout and stderr) to the debug log
+exec >"$DEBUG_LOG" 2>&1
+
+# Ensure clear display
+clear
 
 # Check dependencies
 for cmd in dialog curl bash; do
@@ -17,8 +26,8 @@ declare -A SCRAPERS
 SCRAPERS["PSX"]="https://raw.githubusercontent.com/DTJW92/game-downloader/main/scrapers/psx-scraper.sh"
 SCRAPERS["PS2"]="https://raw.githubusercontent.com/DTJW92/game-downloader/main/scrapers/ps2-scraper.sh"
 SCRAPERS["Xbox"]="https://raw.githubusercontent.com/DTJW92/game-downloader/main/scrapers/xbox-scraper.sh"
-SCRAPERS["Dreamcast"]="https://raw.githubusercontent.com/DTJW92/game-downloader/main/scrapers/dc-scraper.sh"
-SCRAPERS["GBA"]="https://raw.githubusercontent.com/DTJW92/game-downloader/main/scrapers/gba-scraper.sh"
+SCRAPERS["Dreamcast"]="https://raw.githubusercontent.com/DTJW92/game-downloader/refs/heads/main/scrapers/dc-scraper.sh"
+SCRAPERS["GBA"]="https://raw.githubusercontent.com/DTJW92/game-downloader/refs/heads/main/scrapers/gba-scraper.sh"
 
 # Create the menu dynamically based on the associative array
 MENU_OPTIONS=()
@@ -85,4 +94,4 @@ else
 fi
 
 # Clear screen at the end
-
+clear
