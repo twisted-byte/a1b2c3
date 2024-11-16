@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Ensure clear display
-clear
+
 
 # Check dependencies
 for cmd in dialog curl bash; do
@@ -85,4 +85,4 @@ else
 fi
 
 # Clear screen at the end
-clear
+
