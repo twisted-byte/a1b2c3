@@ -45,7 +45,46 @@ selected_system=$(echo "${!SCRAPERS[@]}" | cut -d' ' -f$choice)
 if [ -n "$selected_system" ]; then
     # Get the URL for the selected system
     scraper_url="${SCRAPERS[$selected_system]}"
-    bash <(curl -s "$scraper_url")  # Downloads and runs the scraper script
+
+    # Function to show the download and execution gauge
+    show_download_gauge() {
+        local scraper_url="$1"
+
+        (
+            # Show initial 0% progress
+            echo "0"
+            sleep 1
+
+            # Download scraper and show download progress
+            curl -Ls --progress-bar "$scraper_url" -o /tmp/scraper.sh | \
+            while read -r line; do
+                if [[ "$line" =~ ^[0-9]+$ ]]; then
+                    # Update gauge with curl progress
+                    echo $line
+                fi
+            done
+            sleep 1
+
+            # Show 50% progress once download is complete
+            echo "50"
+            sleep 1
+
+            # Run the scraper
+            bash /tmp/scraper.sh | \
+            while read -r line; do
+                # Capture progress markers from the scraper output
+                if [[ "$line" =~ "Starting scrape" ]]; then
+                    echo "60"  # Indicating scraping started
+                elif [[ "$line" =~ "Scraping complete" ]]; then
+                    echo "100"  # Scraping complete
+                fi
+            done
+        ) | dialog --title "Scraping $selected_system" --gauge "Please wait while scraping..." 10 70 0
+    }
+
+    # Show the download and scraping gauge
+    show_download_gauge "$scraper_url"
+    
 else
     # Handle invalid choices
     dialog --msgbox "Invalid option selected. Please try again." 10 50
@@ -55,5 +94,6 @@ fi
 
 # Clear screen at the end
 clear
+
 
 bash /tmp/GameDownloader.sh
