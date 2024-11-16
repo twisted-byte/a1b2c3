@@ -21,7 +21,7 @@ for system in "${!SCRAPERS[@]}"; do
 done
 
 # Main dialog menu with dynamically generated options
-dialog --clear --backtitle "Game Downloader" \
+dialog --clear --backtitle "Game System Installer" \
        --title "Select a Game System" \
        --menu "Choose an option:" 15 50 9 \
        "${MENU_OPTIONS[@]}" \
