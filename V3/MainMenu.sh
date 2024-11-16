@@ -34,7 +34,7 @@ while true; do
            --title "Select a System" \
            --menu "Choose an option:" 15 50 9 \
            1 "Install Game Systems" \
-           2 "Selecct a Game System" \
+           2 "Select a Game System" \
            2 "Run Updater" \
            3 "Status Checker" \
            4 "Uninstall Game Downloader" \
