@@ -52,11 +52,24 @@ process_download() {
     fi
 
     echo "Download succeeded for $game_name"
-    process_unzip "$game_name" "$temp_path" "$folder"
+    
+    # Check the file extension before unzipping
+    if [[ "$game_name" == *.zip ]]; then
+        # Call the process_unzip function for .zip files only
+        process_unzip "$game_name" "$temp_path" "$folder"
+    elif [[ "$game_name" == *.chd || "$game_name" == *.iso ]]; then
+        # Handle .chd or .iso files without unzipping
+        echo "Skipping extraction for $game_name, moving file to destination."
+        mv "$temp_path" "$folder"
+    else
+        # If it's an unsupported file type, print a message and skip
+        echo "Unsupported file type for $game_name. Skipping."
+    fi
 
     # Remove the processed line from the queue
     sed -i "\|$game_name|$url|$folder|d" "$DOWNLOAD_QUEUE"
 }
+
 
 process_unzip() {
     local game_name="$1"
