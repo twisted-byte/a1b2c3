@@ -122,7 +122,6 @@ select_games() {
 }
 
 # Function to download the selected game and send the link to the DownloadManager
-# Function to download the selected game and send the link to the DownloadManager
 download_game() {
     local decoded_name="$1"
     decoded_name_cleaned=$(echo "$decoded_name" | sed 's/[\\\"`]//g' | sed 's/^[[:space:]]*//g' | sed 's/[[:space:]]*$//g')
@@ -166,18 +165,22 @@ download_game() {
 
 # Function to show the letter selection menu with an "All Games" option
 select_letter() {
-    letter_list=$(ls "$DEST_DIR" | grep -oP '^[a-zA-Z#]' | sort | uniq)
+    # Get a sorted list of the .txt files (A.txt, B.txt, etc.) in the selected game system
+    letter_list=$(ls "$DEST_DIR/$SELECTED_SYSTEM"/*.txt | sed -E 's/\.txt$//' | sed 's/.*\///' | sort)
 
     # Add "All" option to the menu
     menu_options=("All" "All Games")
 
+    # Add each letter to the menu
     while read -r letter; do
         menu_options+=("$letter" "$letter")
     done <<< "$letter_list"
 
+    # Show the menu and capture the user's choice
     selected_letter=$(dialog --title "Select a Letter" --menu "Choose a letter or select 'All Games'" 25 70 10 \
         "${menu_options[@]}" 3>&1 1>&2 2>&3)
 
+    # If a selection is made, proceed accordingly
     if [ -z "$selected_letter" ]; then
         return 1
     elif [ "$selected_letter" == "All" ]; then
