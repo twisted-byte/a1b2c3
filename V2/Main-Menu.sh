@@ -2,7 +2,7 @@
 
 # URLs for external scripts
 COMBINED_MENU_URL="https://raw.githubusercontent.com/DTJW92/game-downloader/main/Main-Menu.sh"
-UPDATER_URL="https://raw.githubusercontent.com/DTJW92/game-downloader/main/Updater.sh"
+UPDATER_URL="https://raw.githubusercontent.com/DTJW92/game-downloader/main/V2/Updater.sh"
 DOWNLOAD_MANAGER_URL="https://raw.githubusercontent.com/DTJW92/game-downloader/main/Downloadcheck.sh"
 UNINSTALL_URL="https://raw.githubusercontent.com/DTJW92/game-downloader/main/uninstall.sh"
 
