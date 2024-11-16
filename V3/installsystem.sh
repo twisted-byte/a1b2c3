@@ -3,6 +3,14 @@
 # Ensure clear display
 clear
 
+# Check dependencies
+for cmd in dialog curl bash; do
+    if ! command -v $cmd &>/dev/null; then
+        echo "Error: $cmd is not installed. Please install it and try again."
+        exit 1
+    fi
+done
+
 # URLs for game system scrapers (store the URLs in an associative array)
 declare -A SCRAPERS
 
@@ -28,7 +36,7 @@ dialog --clear --backtitle "Game System Installer" \
        2>/tmp/game-downloader-choice
 
 choice=$(< /tmp/game-downloader-choice)
-rm /tmp/game-downloader-choice
+rm -f /tmp/game-downloader-choice
 
 # Check if the user canceled the dialog (no choice selected)
 if [ -z "$choice" ]; then
@@ -39,7 +47,7 @@ if [ -z "$choice" ]; then
 fi
 
 # Find the system name corresponding to the user's choice
-selected_system=$(echo "${!SCRAPERS[@]}" | cut -d' ' -f$choice)
+selected_system=$(for system in "${!SCRAPERS[@]}"; do echo "$system"; done | sed -n "${choice}p")
 
 # Execute the corresponding scraper based on the user's choice
 if [ -n "$selected_system" ]; then
@@ -52,7 +60,18 @@ if [ -n "$selected_system" ]; then
 
     # Download and execute the scraper script
     curl -Ls "$scraper_url" -o /tmp/scraper.sh
+    if [[ $? -ne 0 ]]; then
+        dialog --msgbox "Error: Failed to download the script for $selected_system." 10 50
+        clear
+        exit 1
+    fi
+
     bash /tmp/scraper.sh  # Run the downloaded scraper
+    if [[ $? -ne 0 ]]; then
+        dialog --msgbox "Error: Failed to execute the scraper script for $selected_system." 10 50
+        clear
+        exit 1
+    fi
 
     # Show completion message once the process is done
     dialog --infobox "Installation complete!" 10 50
@@ -62,11 +81,8 @@ else
     # Handle invalid choices
     dialog --msgbox "Invalid option selected. Please try again." 10 50
     clear
-    exit 0  # Exit the script if an invalid option is selected
+    exit 1  # Exit the script if an invalid option is selected
 fi
 
 # Clear screen at the end
 clear
-
-# Optionally, return to the main menu or run another script after the process
-# bash /tmp/GameDownloader.sh
