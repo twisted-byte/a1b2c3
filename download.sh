@@ -7,6 +7,11 @@ DEBUG_LOG="/userdata/system/game-downloader/debug/debug.txt"
 # Ensure the debug directory exists
 mkdir -p "$(dirname "$DEBUG_LOG")"
 
+if [ -f "$DEBUG_LOG" ]; then
+    echo "Clearing debug log for the new session."
+    > "$DEBUG_LOG"  # This will clear the file
+fi
+
 # Redirect all stdout and stderr to the debug log file
 exec > >(tee -a "$DEBUG_LOG") 2>&1
 
