@@ -39,6 +39,7 @@ process_download() {
     game_name=$(echo "$game_name" | sed 's/["]//g')
     local temp_path="/userdata/system/game-downloader/$game_name"
 
+    # Check if the file already exists before starting the download
     if [ -f "$temp_path" ]; then
         echo "$game_name is already downloaded. Skipping download."
         return
@@ -53,17 +54,16 @@ process_download() {
 
     echo "Download succeeded for $game_name"
     
-    # Check the file extension before unzipping
+    # Check the file extension before unzipping or moving
     if [[ "$game_name" == *.zip ]]; then
-        # Call the process_unzip function for .zip files only
         process_unzip "$game_name" "$temp_path" "$folder"
     elif [[ "$game_name" == *.chd || "$game_name" == *.iso ]]; then
-        # Handle .chd or .iso files without unzipping
         echo "Skipping extraction for $game_name, moving file to destination."
         mv "$temp_path" "$folder"
     else
-        # If it's an unsupported file type, print a message and skip
+        # Unsupported file type
         echo "Unsupported file type for $game_name. Skipping."
+        rm "$temp_path"  # Clean up the downloaded file
     fi
 
     # Remove the processed line from the queue
@@ -79,6 +79,7 @@ process_unzip() {
     local game_name_no_ext="${game_name%.zip}"
     local game_folder="/userdata/system/game-downloader/$game_name_no_ext"
 
+    # Check if the directory exists and clean up if necessary
     if [ -d "$game_folder" ]; then
         echo "Directory $game_folder exists. Cleaning up."
         rm -rf "$game_folder"
@@ -92,9 +93,15 @@ process_unzip() {
         return
     fi
 
+    # Move the unzipped files to the target folder
     mv "$game_folder" "$folder"
     echo "Moved unzipped files for $game_name to $folder"
+
+    # Remove the .zip file after successful extraction
+    rm "$temp_path"
+    echo "Removed .zip file: $temp_path"
 }
+
 
 # Check for internet connection before proceeding
 check_internet
