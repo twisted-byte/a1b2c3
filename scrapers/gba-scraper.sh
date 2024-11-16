@@ -3,6 +3,7 @@
 # Base URL and destination directory
 BASE_URL="https://myrient.erista.me/files/No-Intro/Nintendo%20-%20Game%20Boy%20Advance/"
 DEST_DIR="/userdata/system/game-downloader/links/Game Boy Advance"
+ROM_DIR="/userdata/roms/gba"
 
 # Ensure the destination directory exists
 mkdir -p "$DEST_DIR"
