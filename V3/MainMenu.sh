@@ -21,7 +21,7 @@ dialog --clear --backtitle "Game Downloader" \
        2>/tmp/game-downloader-choice
 
 choice=$(< /tmp/game-downloader-choice)
-@@ -31,31 +38,70 @@
+
     exit 0  # Exit the script when Cancel is clicked or no option is selected
 fi
 
