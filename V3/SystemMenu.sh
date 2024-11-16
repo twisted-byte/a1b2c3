@@ -1,5 +1,4 @@
 #!/bin/bash
-# first part of the code
 # Ensure clear display
 clear
 
@@ -62,25 +61,19 @@ if [ "$choice" -eq 0 ]; then
 else
     # Get the selected game system
     SELECTED_SYSTEM="${GAME_SYSTEMS[$((choice - 1))]}"
-
-    # Here, you can add the logic to run the appropriate script based on the selected system
-    # For example, assuming each system has its own script in the `links` folder
-    SYSTEM_SCRIPT="$BASE_DIR/$SELECTED_SYSTEM/$SELECTED_SYSTEM-menu.sh"
-
-    if [ -f "$SYSTEM_SCRIPT" ]; then
-        bash "$SYSTEM_SCRIPT"
-    else
-        dialog --msgbox "No menu script found for $SELECTED_SYSTEM!" 10 50
-    fi
 fi
 
-# second part of the code that I need integrating with the first
-
-DEST_DIR="/userdata/system/game-downloader/links" # Update this to your desired download directory
+# Define directories and files
+DEST_DIR="/userdata/system/game-downloader/links"
 ALLGAMES_FILE="$DEST_DIR/$SELECTED_SYSTEM/AllGames.txt"  # File containing the full list of games with URLs
+DOWNLOAD_DIR="$DEST_DIR/$SELECTED_SYSTEM"  # Download directory
 
 # Ensure the download directory exists
 mkdir -p "$DOWNLOAD_DIR"
+
+# Initialize arrays to hold skipped and added games
+skipped_games=()
+added_games=()
 
 # Function to display the game list and allow selection
 select_games() {
@@ -116,7 +109,7 @@ select_games() {
     IFS=$'\n'
     for game in $selected_games; do
         # Split game by .chd to treat each game as a separate item
-        game_items=$(echo "$game" | sed 's/\.chd/.chd\n/g')
+        game_items=$(echo "$game" | sed -E 's/\.(chd|zip|iso)/\.\1\n/g')
         while IFS= read -r game_item; do
             if [[ -n "$game_item" ]]; then
                 game_item_cleaned=$(echo "$game_item" | sed 's/[\\\"`]//g' | sed 's/^[[:space:]]*//g' | sed 's/[[:space:]]*$//g')
@@ -128,7 +121,7 @@ select_games() {
     done
 }
 
-
+# Function to download the selected game and send the link to the DownloadManager
 # Function to download the selected game and send the link to the DownloadManager
 download_game() {
     local decoded_name="$1"
@@ -146,21 +139,30 @@ download_game() {
         return
     fi
 
-    # Find the game URL from the AllGames.txt file
-    game_url=$(grep -F "$decoded_name_cleaned" "$ALLGAMES_FILE" | cut -d '|' -f 2)
+    # Find the full line from the AllGames.txt file based on the cleaned game name
+    game_info=$(grep -F "$decoded_name_cleaned" "$ALLGAMES_FILE")
 
-    if [ -z "$game_url" ]; then
+    if [ -z "$game_info" ]; then
         dialog --infobox "Error: Could not find download URL for '$decoded_name_cleaned'." 5 40
         sleep 2
         return
     fi
 
-    # Append the decoded name, URL, and folder to the DownloadManager.txt file
-    echo "$decoded_name_cleaned|$game_url|$DOWNLOAD_DIR" >> "/userdata/system/game-downloader/download.txt"
+    # Parse the game information (Name|URL|Destination)
+    game_name=$(echo "$game_info" | cut -d '|' -f 1)
+    game_url=$(echo "$game_info" | cut -d '|' -f 2)
+    game_dest_dir=$(echo "$game_info" | cut -d '|' -f 3)
+
+    # Ensure the destination directory exists
+    mkdir -p "$game_dest_dir"
+
+    # Append the full line (Game Name|Download URL|Destination) to the DownloadManager.txt file
+    echo "$game_info" >> "/userdata/system/game-downloader/download.txt"
     
     # Collect the added game
     added_games+=("$decoded_name_cleaned")
 }
+
 
 # Function to show the letter selection menu with an "All Games" option
 select_letter() {
@@ -186,11 +188,6 @@ select_letter() {
         select_games "$selected_letter"
     fi
 }
-
-
-# Initialize arrays to hold skipped and added games
-skipped_games=()
-added_games=()
 
 # Main loop to process selected games
 while true; do
@@ -219,7 +216,4 @@ done
 
 # Goodbye message
 echo "Goodbye!"
-
-bash /tmp/GameDownloader.sh
-# Clear screen at the end
 clear
