@@ -84,44 +84,44 @@ if [ -n "$selected_system" ]; then
         # Initialize variables for progress
         download_progress=0
         scrape_progress=0
+        overall_progress=0
 
-        (
-            # Download the scraper and track the progress
-            curl -Ls --progress-bar "$scraper_url" -o /tmp/scraper.sh | \
-            while read -r line; do
-                # Capture download percentage from curl's progress bar
-                if [[ "$line" =~ ^[0-9]+$ ]]; then
-                    download_progress=$line
-                    # Calculate the overall progress (50% for download)
-                    overall_progress=$((download_progress / 2))
-                    log_debug "Download progress: $download_progress%"
-                    echo $overall_progress  # Update the gauge with the download progress
-                fi
-            done
+        # Download the scraper and track the progress
+        curl -Ls --progress-bar "$scraper_url" -o /tmp/scraper.sh | \
+        while read -r line; do
+            # Capture download percentage from curl's progress bar
+            if [[ "$line" =~ ^[0-9]+$ ]]; then
+                download_progress=$line
+                # Calculate the overall progress (50% for download)
+                overall_progress=$((download_progress / 2))
+                log_debug "Download progress: $download_progress%"
+                echo $overall_progress  # Update the gauge with the download progress
+            fi
+        done
 
-            sleep 1
+        sleep 1
 
-            # Once download is complete, set progress to 50%
-            download_progress=100
-            overall_progress=50
-            log_debug "Download completed, setting progress to 50%"
-            echo $overall_progress
-            sleep 1
+        # Once download is complete, set progress to 50%
+        download_progress=100
+        overall_progress=50
+        log_debug "Download completed, setting progress to 50%."
+        echo $overall_progress
+        sleep 1
 
-            # Now, start the scraping process
-            bash /tmp/scraper.sh | \
-            while read -r line; do
-                # Capture scraper progress from the emitted progress
-                if [[ "$line" =~ ^[0-9]+$ ]]; then
-                    scrape_progress=$line
-                fi
+        # Now, start the scraping process
+        bash /tmp/scraper.sh | \
+        while read -r line; do
+            # Capture scraper progress from the emitted progress (if any)
+            if [[ "$line" =~ ^[0-9]+$ ]]; then
+                scrape_progress=$line
+                log_debug "Scraping progress: $scrape_progress%"
+            fi
 
-                # Combine download progress (50%) and scrape progress (50%)
-                overall_progress=$(( (download_progress * 50 + scrape_progress * 50) / 100 ))
-                log_debug "Combined progress: $overall_progress%"
-                echo $overall_progress  # Update the gauge with combined progress
-            done
-        ) | dialog --title "Installing $selected_system downloader" --gauge "Please wait while installing..." 10 70 0
+            # Combine download progress (50%) and scrape progress (50%)
+            overall_progress=$(( (download_progress * 50 + scrape_progress * 50) / 100 ))
+            log_debug "Combined progress: $overall_progress%"
+            echo $overall_progress  # Update the gauge with combined progress
+        done
     }
 
     # Show the download and scraping gauge
