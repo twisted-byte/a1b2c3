@@ -6,6 +6,33 @@ DEST_DIR="/userdata/system/game-downloader/links/Dreamcast"
 ROM_DIR="/userdata/roms/dreamcast"  # Fixed missing closing quote
 EXT=".chd"
 
+# Ensure the destination directory exists
+mkdir -p "$DEST_DIR"
+
+# Function to decode URL (ASCII decode)
+decode_url() {
+    echo -n "$1" | sed 's/%/\\x/g' | xargs -0 printf "%b"
+}
+
+# Clear all the text files before writing new data
+clear_all_files() {
+    rm -f "$DEST_DIR"/*.txt
+    echo "All game list files have been cleared."
+}
+
+# Clear all text files before starting
+clear_all_files
+
+# Fetch the page content
+page_content=$(curl -s "$BASE_URL")
+
+# Parse .chd links and decode them
+game_urls=($(echo "$page_content" | grep -oP "(?<=href=\")[^\"]*${EXT}"))
+
+# Get the total number of links
+total_links=${#game_urls[@]}
+
+# Function to show progress
 show_progress() {
     local processed=$1
     local total=$2
@@ -56,6 +83,6 @@ show_progress() {
     done
 
     echo "100"  # End at 100%
-) | dialog --title "Scraping Dreamcast Games" --gauge "Please wait while scraping..." 10 70 0
+) | dialog --title "Scraping Games" --gauge "Please wait while scraping..." 10 70 0
 
 echo "Scraping complete!"
