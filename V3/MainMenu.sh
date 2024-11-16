@@ -22,10 +22,6 @@ dialog --clear --backtitle "Game Downloader" \
 
 choice=$(< /tmp/game-downloader-choice)
 
-    exit 0  # Exit the script when Cancel is clicked or no option is selected
-fi
-
-# Execute the corresponding action based on user choice
 case $choice in
     1)
         # Run the install game systems script
