@@ -6,16 +6,13 @@ DEBUG_LOG="/userdata/system/game-downloader/debug/install_debug.txt"
 # Create the debug directory if it doesn't exist
 mkdir -p "$(dirname "$DEBUG_LOG")"
 
-# Redirect all output (stdout and stderr) to the debug log
-exec >"$DEBUG_LOG" 2>&1
-
-# Ensure clear display
-clear
+# Redirect all output (stdout and stderr) to the debug log and terminal
+exec > >(tee -a "$DEBUG_LOG") 2>&1
 
 # Check for necessary tools
-for cmd in dialog curl bash; do
+for cmd in curl bash; do
     if ! command -v $cmd &>/dev/null; then
-        dialog --msgbox "Error: $cmd is not installed. Please install it and try again." 10 50
+        echo "Error: $cmd is not installed. Please install it and try again."
         exit 1
     fi
 done
@@ -31,61 +28,48 @@ declare -A SCRAPERS=(
 
 # Validate scrapers
 if [ ${#SCRAPERS[@]} -eq 0 ]; then
-    dialog --msgbox "Error: No scrapers found. Check the script configuration." 10 50
+    echo "Error: No scrapers found. Check the script configuration."
     exit 1
 fi
 
-# Construct menu dynamically
-MENU_OPTIONS=()
+# Display menu options
+echo "Select a Game System to install:"
 i=1
+MENU_OPTIONS=()
 for system in "${!SCRAPERS[@]}"; do
-    MENU_OPTIONS+=("$i" "$system")
+    echo "[$i] $system"
+    MENU_OPTIONS+=("$system")
     ((i++))
 done
 
-# Main dialog menu
-dialog --clear --backtitle "Game System Installer" \
-       --title "Select a Game System" \
-       --menu "Choose an option:" 15 50 9 \
-       "${MENU_OPTIONS[@]}" \
-       2>/tmp/game-downloader-choice
+# Get user choice
+read -p "Enter the number of your choice: " choice
 
-choice=$(< /tmp/game-downloader-choice)
-rm -f /tmp/game-downloader-choice
-
-# Exit if no choice is made
-if [ -z "$choice" ]; then
-    dialog --msgbox "No option selected. Exiting." 10 50
-    clear
-    exit 0
-fi
-
-# Map the choice to the selected system
-selected_system=$(for key in "${!SCRAPERS[@]}"; do echo "$key"; done | sed -n "${choice}p")
-
-# Validate the selected system
-if [ -z "$selected_system" ]; then
-    dialog --msgbox "Invalid selection. Please try again." 10 50
+# Validate user input
+if ! [[ "$choice" =~ ^[0-9]+$ ]] || [ "$choice" -lt 1 ] || [ "$choice" -gt "${#MENU_OPTIONS[@]}" ]; then
+    echo "Invalid choice. Exiting."
     exit 1
 fi
 
-# Get the corresponding scraper URL
+# Map choice to selected system
+selected_system="${MENU_OPTIONS[$((choice - 1))]}"
 scraper_url="${SCRAPERS[$selected_system]}"
 
-# Download and run the selected scraper
-dialog --infobox "Downloading and running $selected_system scraper..." 10 50
+echo "You selected: $selected_system"
+echo "Downloading and running the scraper for $selected_system..."
+
+# Download and execute the scraper
 curl -Ls "$scraper_url" -o /tmp/scraper.sh
 if [ $? -ne 0 ]; then
-    dialog --msgbox "Error: Failed to download the scraper for $selected_system." 10 50
+    echo "Error: Failed to download the scraper for $selected_system."
     exit 1
 fi
 
 bash /tmp/scraper.sh
 if [ $? -ne 0 ]; then
-    dialog --msgbox "Error: Failed to execute the scraper for $selected_system." 10 50
+    echo "Error: Failed to execute the scraper for $selected_system."
     exit 1
 fi
 
 # Success message
-dialog --msgbox "Installation complete for $selected_system!" 10 50
-clear
+echo "Installation complete for $selected_system!"
