@@ -111,7 +111,7 @@ game_menu() {
             ALLGAMES_FILE="$DEST_DIR/AllGames.txt"
             ;;
         PS2)
-            DEST_DIR="/userdata/system/game-downloaderV2/links/Sony/PS""
+            DEST_DIR="/userdata/system/game-downloaderV2/links/Sony/PS"
             DOWNLOAD_DIR="/userdata/roms/ps2"
             ALLGAMES_FILE="$DEST_DIR/AllGames.txt"
             ;;
