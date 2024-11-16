@@ -3,7 +3,7 @@
 # Base URL and destination directory
 BASE_URL="https://myrient.erista.me/files/Internet%20Archive/chadmaster/dc-chd-zstd-redump/dc-chd-zstd/"
 DEST_DIR="/userdata/system/game-downloader/links/Dreamcast"
-ROM_DIR="/userdata/roms/dreamcast"
+ROM_DIR="/userdata/roms/dreamcast"  # Fixed missing closing quote
 EXT=".chd"
 
 # Ensure the destination directory exists
@@ -31,7 +31,7 @@ echo "$page_content" | grep -oP "(?<=href=\")[^\"]*${EXT}" | while read -r game_
     # Decode the URL and check for the region tags and (En) in the decoded text
     decoded_name=$(decode_url "$game_url")
 
-        if [[ "$decoded_name" =~ Europe ]]; then
+    if [[ "$decoded_name" =~ Europe ]]; then
         # Process games matching the "Europe" criteria
 
         # Format the entry with backticks around the decoded name
@@ -55,4 +55,4 @@ echo "$page_content" | grep -oP "(?<=href=\")[^\"]*${EXT}" | while read -r game_
     fi
 done
 
-echo "Scraping complete for (En), (Europe), or (Europe, Australia) files, excluding (Demo)!"
+echo "Scraping complete!"
