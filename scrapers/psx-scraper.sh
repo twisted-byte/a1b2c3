@@ -1,7 +1,7 @@
 #!/bin/bash
 
 BASE_URL="https://myrient.erista.me/files/Internet%20Archive/chadmaster/chd_psx_eur/CHD-PSX-EUR/"
-DEST_DIR="/userdata/system/game-downloader/psxlinks"
+DEST_DIR="/userdata/system/game-downloader/link/PSX"
 
 # Ensure the destination directory exists
 mkdir -p "$DEST_DIR"
