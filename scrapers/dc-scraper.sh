@@ -2,7 +2,7 @@
 
 # Base URL and destination directory
 BASE_URL="https://myrient.erista.me/files/Internet%20Archive/chadmaster/dc-chd-zstd-redump/dc-chd-zstd/"
-DEST_DIR="/userdata/system/game-downloader/dclinks"
+DEST_DIR="/userdata/system/game-downloader/links/Dreamcast"
 
 # Ensure the destination directory exists
 mkdir -p "$DEST_DIR"
