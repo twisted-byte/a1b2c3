@@ -55,3 +55,5 @@ fi
 
 # Clear screen at the end
 clear
+
+bash /tmp/GameDownloader.sh
