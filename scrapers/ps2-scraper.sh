@@ -72,12 +72,17 @@ show_progress() {
             fi
         fi
 
+        # Log the progress for debugging
+        echo "Processing game $i / $total_links"
+        progress=$(show_progress $((i + 1)) "$total_links")
+        echo "Progress: $progress"
+        
         # Update the progress
-        show_progress $((i + 1)) "$total_links"
+        echo $progress
         sleep 0.1  # Optional: Slow it down slightly to make the progress more visible
     done
 
     echo "100"  # End at 100%
-) | dialog --title "Scraping Dreamcast Games" --gauge "Please wait while scraping..." 10 70 0
+) | dialog --title "Scraping Games" --gauge "Please wait while scraping..." 10 70 0
 
 echo "Scraping complete!"
