@@ -21,10 +21,10 @@ log_debug() {
 log_debug "Script started."
 
 # URLs for external scripts
-UPDATER="https://raw.githubusercontent.com/DTJW92/game-downloader/main/Updater.sh"
-DOWNLOAD_MANAGER="https://raw.githubusercontent.com/DTJW92/game-downloader/main/Downloadcheck.sh"
-UNINSTALL="https://raw.githubusercontent.com/DTJW92/game-downloader/main/uninstall.sh"
-INSTALL_GAME_SYSTEMS="https://raw.githubusercontent.com/DTJW92/game-downloader/main/installsystem.sh"  # New URL for install script
+UPDATER="https://raw.githubusercontent.com/DTJW92/game-downloader/main/V3/Updater.sh"
+DOWNLOAD_MANAGER="https://raw.githubusercontent.com/DTJW92/game-downloader/main/V3/Downloadcheck.sh"
+UNINSTALL="https://raw.githubusercontent.com/DTJW92/game-downloader/main/V3/uninstall.sh"
+INSTALL_GAME_SYSTEMS="https://raw.githubusercontent.com/DTJW92/game-downloader/main/V3/installsystem.sh"  # New URL for install script
 SELECT_SYSTEM="https://raw.githubusercontent.com/DTJW92/game-downloader/main/V3/SystemMenu.sh"
 # Main dialog menu loop
 while true; do
