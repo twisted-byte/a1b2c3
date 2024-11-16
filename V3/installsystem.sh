@@ -87,7 +87,7 @@ if [ -n "$selected_system" ]; then
                 overall_progress=$(( (download_progress * 50 + scrape_progress * 50) / 100 ))
                 echo $overall_progress  # Update the gauge with combined progress
             done
-        ) | dialog --title "Scraping $selected_system" --gauge "Please wait while scraping..." 10 70 0
+        ) | dialog --title "Installing $selected_system downloader" --gauge "Please wait while installing..." 10 70 0
     }
 
     # Show the download and scraping gauge
