@@ -46,9 +46,9 @@ process_download() {
     fi
 
     echo "Starting download for $game_name..."
-    wget -c "$url" -O "$temp_path" >/dev/null 2>&1
+    wget -c "$url" -O "$temp_path" >> "$DEBUG_LOG" 2>&1
     if [ $? -ne 0 ]; then
-        echo "Download failed for $game_name"
+        echo "Download failed for $game_name. Check debug log for details."
         return
     fi
 
@@ -69,6 +69,7 @@ process_download() {
     # Remove the processed line from the queue
     sed -i "\|$game_name|$url|$folder|d" "$DOWNLOAD_QUEUE"
 }
+
 
 
 process_unzip() {
