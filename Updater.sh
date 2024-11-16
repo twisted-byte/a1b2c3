@@ -26,5 +26,6 @@ DISPLAY=:0.0 xterm -fs 30 -maximized -fg white -bg black -fa "DejaVuSansMono" -e
     wait
 
     # Notify user when update is complete
-    dialog --msgbox 'Update Complete!' 10 50
+    dialog --msgbox 'Update Complete! System will now reboot to take effect!' 10 50
+    sleep 3
 "
