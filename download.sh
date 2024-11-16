@@ -31,52 +31,51 @@ process_download() {
     local url="$2"
     local folder="$3"
 
-    # Remove double quotes from $game_name
     game_name=$(echo "$game_name" | sed 's/["]//g')
-
     local temp_path="/userdata/system/game-downloader/$game_name"
-    echo "Starting download for $game_name..."
 
-    # Start the download in the background
-    wget -c "$url" -O "$temp_path" >/dev/null 2>&1 &
-    wget_pid=$!
-
-    # Wait for wget to finish
-    wait $wget_pid
-    wget_exit_code=$?
-    echo "wget exit code: $wget_exit_code"
-
-    if [ $wget_exit_code -ne 0 ]; then
-        echo "Download failed for $game_name"
-    else
-        echo "Download succeeded for $game_name"
-        # Start the unzip process for this file immediately
-        process_unzip "$game_name" "$temp_path" "$folder" &
+    if [ -f "$temp_path" ]; then
+        echo "$game_name is already downloaded. Skipping download."
+        return
     fi
+
+    echo "Starting download for $game_name..."
+    wget -c "$url" -O "$temp_path" >/dev/null 2>&1 &
+    wait $!
+    if [ $? -ne 0 ]; then
+        echo "Download failed for $game_name"
+        return
+    fi
+
+    echo "Download succeeded for $game_name"
+    process_unzip "$game_name" "$temp_path" "$folder"
 }
 
-# Function to unzip downloaded files
 process_unzip() {
     local game_name="$1"
     local temp_path="$2"
     local folder="$3"
 
-    echo "Processing unzip for $game_name..."
-
-    # Remove .zip extension from game_name for folder creation
-    game_name_no_ext="${game_name%.zip}"
+    local game_name_no_ext="${game_name%.zip}"
     local game_folder="/userdata/system/game-downloader/$game_name_no_ext"
+
+    if [ -d "$game_folder" ]; then
+        echo "Directory $game_folder exists. Cleaning up."
+        rm -rf "$game_folder"
+    fi
     mkdir -p "$game_folder"
 
-    # Unzip the downloaded file into the temporary folder
+    echo "Unzipping $game_name..."
     unzip -q "$temp_path" -d "$game_folder"
     if [ $? -ne 0 ]; then
         echo "Unzip failed for $game_name"
-    else
-        mv "$game_folder" "$folder"
-        echo "Moved unzipped files for $game_name to $folder"
+        return
     fi
+
+    mv "$game_folder" "$folder"
+    echo "Moved unzipped files for $game_name to $folder"
 }
+
 
 # Check for internet connection before proceeding
 check_internet
