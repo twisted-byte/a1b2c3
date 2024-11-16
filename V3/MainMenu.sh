@@ -37,7 +37,7 @@ case $choice in
         bash <(curl -s "$DOWNLOAD_MANAGER")
         ;;
     5)
-        bash <(curl -s "$UNINSTALL_URL")
+        bash <(curl -s "$UNINSTALL")
         ;;
     *)
         # Handle invalid choices
