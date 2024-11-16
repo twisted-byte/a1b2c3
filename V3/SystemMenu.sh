@@ -166,7 +166,8 @@ download_game() {
 # Function to show the letter selection menu with an "All Games" option
 select_letter() {
     # Get a sorted list of the .txt files (A.txt, B.txt, etc.) in the selected game system
-    letter_list=$(ls "$DEST_DIR/$SELECTED_SYSTEM"/*.txt | sed -E 's/\.txt$//' | sed 's/.*\///' | sort)
+    # Get a sorted list of the .txt files (A.txt, B.txt, etc.), excluding AllGames.txt
+letter_list=$(ls "$DEST_DIR/$SELECTED_SYSTEM"/*.txt | grep -v "AllGames.txt" | sed -E 's/\.txt$//' | sed 's/.*\///' | sort)
 
     # Add "All" option to the menu
     menu_options=("All" "All Games")
