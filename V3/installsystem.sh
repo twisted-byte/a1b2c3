@@ -50,41 +50,49 @@ if [ -n "$selected_system" ]; then
     show_download_gauge() {
         local scraper_url="$1"
 
-        (
-            # Show initial 0% progress
-            echo "0"
-            sleep 1
+        # Initialize variables for progress
+        download_progress=0
+        scrape_progress=0
 
-            # Download scraper and show download progress
+        (
+            # Download the scraper and track the progress
             curl -Ls --progress-bar "$scraper_url" -o /tmp/scraper.sh | \
             while read -r line; do
+                # Capture download percentage from curl's progress bar
                 if [[ "$line" =~ ^[0-9]+$ ]]; then
-                    # Update gauge with curl progress
-                    echo $line
+                    download_progress=$line
+                    # Calculate the overall progress (50% for download)
+                    overall_progress=$((download_progress / 2))
+                    echo $overall_progress  # Update the gauge with the download progress
                 fi
             done
+
             sleep 1
 
-            # Show 50% progress once download is complete
-            echo "50"
+            # Once download is complete, set progress to 50%
+            download_progress=100
+            overall_progress=50
+            echo $overall_progress
             sleep 1
 
-            # Run the scraper
+            # Now, start the scraping process
             bash /tmp/scraper.sh | \
             while read -r line; do
-                # Capture progress markers from the scraper output
-                if [[ "$line" =~ "Starting scrape" ]]; then
-                    echo "60"  # Indicating scraping started
-                elif [[ "$line" =~ "Scraping complete" ]]; then
-                    echo "100"  # Scraping complete
+                # Capture scraper progress from the emitted progress
+                if [[ "$line" =~ ^[0-9]+$ ]]; then
+                    scrape_progress=$line
                 fi
+
+                # Combine download progress (50%) and scrape progress (50%)
+                overall_progress=$(( (download_progress * 50 + scrape_progress * 50) / 100 ))
+                echo $overall_progress  # Update the gauge with combined progress
             done
         ) | dialog --title "Scraping $selected_system" --gauge "Please wait while scraping..." 10 70 0
     }
 
     # Show the download and scraping gauge
     show_download_gauge "$scraper_url"
-    
+
 else
     # Handle invalid choices
     dialog --msgbox "Invalid option selected. Please try again." 10 50
@@ -95,5 +103,5 @@ fi
 # Clear screen at the end
 clear
 
-
+# Optionally, run another script after the process
 bash /tmp/GameDownloader.sh
