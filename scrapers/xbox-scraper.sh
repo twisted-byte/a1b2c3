@@ -3,6 +3,7 @@
 # Base URL and destination directory
 BASE_URL="https://myrient.erista.me/files/Redump/Microsoft%20-%20Xbox/"
 DEST_DIR="/userdata/system/game-downloader/links/Xbox"
+ROM_DIR="/userdata/roms/xbox"
 
 # Ensure the destination directory exists
 mkdir -p "$DEST_DIR"
