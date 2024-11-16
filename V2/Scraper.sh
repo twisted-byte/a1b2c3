@@ -105,7 +105,7 @@ for SYSTEM in "${!SYSTEMS[@]}"; do
         echo "$A_TO_Z" >> "$DEST_DIR/${first_char}.txt"
         echo "$NUMERIC" >> "$DEST_DIR/$NUMERIC"
         echo "$OTHER" >> "$DEST_DIR/$OTHER"
-    } &  # This sends the block to run in the background
+    }   # This sends the block to run in the background
 
 done
 
