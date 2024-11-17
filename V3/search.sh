@@ -57,7 +57,7 @@ while true; do
                     done <<< "$results"
 
                     # Add the Return option at the end of the menu
-                    menu_items+=("$index" "Return")
+                    menu_items+=("Return" "$index")
 
                     # Loop to allow repeated selection
                     while true; do
