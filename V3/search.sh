@@ -42,24 +42,24 @@ while true; do
 
                 if [ -n "$results" ]; then
                     # Create an array of results for the menu
-menu_items=()
-menu_items+=("$index" "Return")  # Add Return option first
-index=$((index + 1))
+                    menu_items=()
+                    index=1
 
-while IFS= read -r line; do
-    # Extract file path and game name
-    file_path=$(echo "$line" | awk -F':' '{print $1}')
-    game_name=$(echo "$line" | awk -F':' '{print $3}' | awk -F'|' '{print $1}')
-    subfolder_name=$(dirname "$file_path" | awk -F'/' '{print $(NF)}')
+                    # Add Return option first
+                    menu_items+=("$index" "Return")
+                    index=$((index + 1))
 
-    # Combine subfolder and game name
-    display_text="$subfolder_name - $game_name"
-    menu_items+=("$index" "$display_text")
-    ((index++))
-done <<< "$results"
+                    while IFS= read -r line; do
+                        # Extract file path and game name
+                        file_path=$(echo "$line" | awk -F':' '{print $1}')
+                        game_name=$(echo "$line" | awk -F':' '{print $3}' | awk -F'|' '{print $1}')
+                        subfolder_name=$(dirname "$file_path" | awk -F'/' '{print $(NF)}')
 
-                    # Add the Return option at the end of the menu
-                    menu_items+=("Return" "$index")
+                        # Combine subfolder and game name
+                        display_text="$subfolder_name - $game_name"
+                        menu_items+=("$index" "$display_text")
+                        index=$((index + 1))
+                    done <<< "$results"
 
                     # Loop to allow repeated selection
                     while true; do
@@ -75,7 +75,7 @@ done <<< "$results"
                         fi
 
                         # Process the selection
-                        if [ "$selected" -eq "$index" ]; then
+                        if [ "$selected" -eq "1" ]; then
                             # Return to the search bar menu
                             break
                         elif [ -n "$selected" ]; then
