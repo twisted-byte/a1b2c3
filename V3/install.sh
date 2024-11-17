@@ -88,6 +88,10 @@ chmod +x /userdata/roms/ports/GameDownloader.sh >/dev/null 2>&1
 # Download bkeys.txt and save it as GameDownloader.sh.keys in the Ports folder
 download_file "https://raw.githubusercontent.com/DTJW92/game-downloader/main/bkeys.txt" "/userdata/roms/ports/GameDownloader.sh.keys"
 
+# Refresh Batocera games list via localhost
+echo "Refreshing Batocera games list using localhost..."
+curl -X POST http://localhost:1234/reloadgames >/dev/null 2>&1
+
 # Create a new XML entry to add with additional fields
 NEW_ENTRY="<game>
     <path>./GameDownloader.sh</path>
@@ -99,9 +103,19 @@ NEW_ENTRY="<game>
     <lang>en</lang>
 </game>"
 
-# Append the new entry to the gamelist.xml
-echo "$NEW_ENTRY" >> "$GAMELIST" >/dev/null 2>&1
+# Replace the existing entry by path, or append the new one if it doesn't exist
+if grep -q "<path>./GameDownloader.sh</path>" "$GAMELIST"; then
+    # Replace the existing entry based on path
+    sed -i "/<path>./GameDownloader.sh<\/path>/,/<\/game>/c\\
+$NEW_ENTRY" "$GAMELIST"
+    echo "Replaced existing entry for Game Downloader based on path."
+else
+    # Append the new entry if it doesn't exist
+    echo "$NEW_ENTRY" >> "$GAMELIST"
+    echo "Appended new 'Game Downloader' entry."
+fi
 
+curl -X POST http://localhost:1234/reloadgames >/dev/null 2>&1
 echo "Gamelist.xml has been updated."
 
 echo "Installation complete. Game Downloader should now be available in Ports."
