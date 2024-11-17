@@ -115,7 +115,8 @@ while true; do
             exit 0
             ;;
         *)
-            # No Exit message box anymore, just break from the loop
+            # Handle ESC or unexpected input
+            dialog --title "Exit" --msgbox "Exiting the program..." 10 50
             break
             ;;
     esac
