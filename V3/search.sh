@@ -93,11 +93,14 @@ while true; do
                             # Retrieve the full line corresponding to the selected option
                             selected_line=$(echo "$results" | sed -n "${selected}p")
 
-                            # Append the full game info (Game Name|Download Link|Download Location) to download.txt
-                            echo "$selected_line" >> "$output_file"
+                            # Clean the entire line (remove backticks, quotes, and other unwanted characters)
+                            cleaned_line=$(echo "$selected_line" | sed 's/[\\\"`]//g' | sed 's/^[[:space:]]*//g' | sed 's/[[:space:]]*$//g')
+
+                            # Append the cleaned line to download.txt
+                            echo "$cleaned_line" >> "$output_file"
 
                             # Notify the user
-                            dialog --title "Success" --ok-label "OK" --msgbox "Added to the download queue:\n\n$selected_line" 10 50
+                            dialog --title "Success" --ok-label "OK" --msgbox "Added to the download queue:\n\n$decoded_name_cleaned" 10 50
                         fi
                     done
                 else
