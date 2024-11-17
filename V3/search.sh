@@ -99,7 +99,10 @@ while true; do
                             break
                         elif [ -n "$selected" ]; then
                             # The selected index corresponds to the correct result line in the array
-                            result_line=${result_lines[$((selected - 1))]}  # Correct the index by subtracting 1
+                            selected_index=$((selected - 1))  # Adjust the index for the result_lines array
+
+                            # Get the corresponding result line
+                            result_line=${result_lines[$selected_index]} 
 
                             # Clean the entire line (remove backticks, quotes, file path, and line number)
                             cleaned_line=$(echo "$result_line" | sed 's/[\\\"`]//g' | sed 's/^[[:space:]]*//g' | sed 's/[[:space:]]*$//g' | sed 's|^[^:]*:[0-9]*:||')
