@@ -105,7 +105,4 @@ echo "$NEW_ENTRY" >> "$GAMELIST" >/dev/null 2>&1
 echo "Gamelist.xml has been updated."
 
 echo "Installation complete. Game Downloader should now be available in Ports."
-echo "Batocera will initiate the background downloader automatically, you should find a toggle switch for it within Main Menu -> System Settings -> Services."
-echo "Rebooting the system for the changes to take effect."
-sleep 5
-reboot
+echo "Batocera will initiate the background downloader automatically, you should find a toggle switch for it within Main Menu -> System Settings -> Services. Ensure this is toggled to ON."
