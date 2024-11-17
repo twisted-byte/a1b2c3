@@ -40,6 +40,7 @@ while true; do
            4 "Run Updater" \
            5 "Status Checker" \
            6 "Uninstall Game Downloader" \
+           7 "Exit" \
            2>/tmp/game-downloader-choice
 
     choice=$(< /tmp/game-downloader-choice)
@@ -61,51 +62,44 @@ while true; do
     case $choice in
         1)
             log_debug "Running Install Game Systems script."
-            bash <(curl -s "$INSTALL_GAME_SYSTEMS")  # Downloads and runs the installation script
+            bash <(curl -s "$INSTALL_GAME_SYSTEMS")
             log_debug "Install Game Systems script completed."
-            break  # Exit the loop after action is completed
             ;;
         2)
             log_debug "Running system select script."
             bash <(curl -s "$SELECT_SYSTEM")
-            log_debug " script completed."
-            break  # Exit the loop after action is completed
+            log_debug "System select script completed."
             ;;
         3)
             log_debug "Running SEARCH script."
             bash <(curl -s "$SEARCH")
-            log_debug " script completed."
-            break  # Exit the loop after action is completed
+            log_debug "Search script completed."
             ;;
         4)
             log_debug "Running UPDATE script."
             bash <(curl -s "$UPDATER")
-            log_debug " script completed."
-            break  # Exit the loop after action is completed
+            log_debug "Update script completed."
             ;;
         5)
             log_debug "Running DOWNLOAD MANAGER script."
             bash <(curl -s "$DOWNLOAD_MANAGER")
-            log_debug " script completed."
-            break  # Exit the loop after action is completed
+            log_debug "Download Manager script completed."
             ;;
-         5)
+        6)
             log_debug "Running Uninstall script."
             bash <(curl -s "$UNINSTALL")
-            log_debug " script completed."
-            break  # Exit the loop after action is completed
+            log_debug "Uninstall script completed."
+            ;;
+        7)
+            log_debug "Exit selected. Ending script."
+            clear
+            dialog --infobox "Thank you for using Game Downloader! Any issues, please reach out to DTJW92 on Discord!" 10 50
+            sleep 3
+            exit 0
             ;;
         *)
             log_debug "Invalid option selected."
-            # Handle invalid choices
             dialog --msgbox "Invalid option selected. Please try again." 10 50
-            clear
             ;;
     esac
 done
-
-# Log the end of the script
-log_debug "Script completed."
-
-# Clear screen at the end
-
