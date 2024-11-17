@@ -5,6 +5,11 @@ main_directory="/userdata/system/game-downloader/links"
 output_file="/userdata/system/game-downloader/download.txt"
 main_menu_script="/tmp/GameDownloader.sh"
 
+# Ensure the output file exists, create it if it doesn't
+if [ ! -f "$output_file" ]; then
+    touch "$output_file"
+fi
+
 # Function to perform the search
 perform_search() {
     local query=$1
@@ -82,19 +87,14 @@ while true; do
                             # Retrieve the full line corresponding to the selected option
                             selected_line=$(echo "$results" | sed -n "${selected}p")
 
-                            # Extract the full game name and subfolder
-                            file_path=$(echo "$selected_line" | awk -F':' '{print $1}')
-                            game_name=$(echo "$selected_line" | awk -F':' '{print $3}' | awk -F'|' '{print $1}')
-                            subfolder_name=$(dirname "$file_path" | awk -F'/' '{print $(NF)}')
+                            # Extract the part of the line after the file path and line number
+                            game_info=$(echo "$selected_line" | sed 's|^.*AllGames.txt:[0-9]*:||')
 
-                            # Combine subfolder and game name for confirmation
-                            confirmation_name="$subfolder_name - $game_name"
-
-                            # Append the full line to download.txt
-                            echo "$selected_line" >> "$output_file"
+                            # Append the game info (Game Name|Download Link|Download Location) to download.txt
+                            echo "$game_info" >> "$output_file"
 
                             # Notify the user
-                            dialog --title "Success" --ok-label "OK" --msgbox "Added to the download queue:\n\n$confirmation_name" 10 50
+                            dialog --title "Success" --ok-label "OK" --msgbox "Added to the download queue:\n\n$game_info" 10 50
                         fi
                     done
                 else
