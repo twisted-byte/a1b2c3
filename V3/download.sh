@@ -66,11 +66,14 @@ process_download() {
         rm "$temp_path"  # Clean up the downloaded file
     fi
 
-    # Remove the processed line from the queue
-    sed -i "\|$game_name|$url|$folder|d" "$DOWNLOAD_QUEUE"
+    # Escape special characters in the variables
+    safe_game_name=$(echo "$game_name" | sed 's/[&/\]/\\&/g')
+    safe_url=$(echo "$url" | sed 's/[&/\]/\\&/g')
+    safe_folder=$(echo "$folder" | sed 's/[&/\]/\\&/g')
+
+    # Remove the processed line from the queue using the escaped variables
+    sed -i "\|$safe_game_name|$safe_url|$safe_folder|d" "$DOWNLOAD_QUEUE"
 }
-
-
 
 process_unzip() {
     local game_name="$1"
@@ -102,7 +105,6 @@ process_unzip() {
     rm "$temp_path"
     echo "Removed .zip file: $temp_path"
 }
-
 
 # Check for internet connection before proceeding
 check_internet
