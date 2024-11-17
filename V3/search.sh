@@ -47,7 +47,7 @@ while true; do
                     while IFS= read -r line; do
                         # Extract file path and game name
                         file_path=$(echo "$line" | awk -F':' '{print $1}')
-                        game_name=$(echo "$line" | awk -F'|' '{print $1}' | awk -F':' '{print $2}')
+                        game_name=$(echo "$line" | awk -F':' '{print $3}' | awk -F'|' '{print $1}')
                         subfolder_name=$(dirname "$file_path" | awk -F'/' '{print $(NF)}')
 
                         # Combine subfolder and game name
@@ -81,13 +81,12 @@ while true; do
                             selected_line=$(echo "$results" | sed -n "${selected}p")
 
                             # Extract the full game name and subfolder
-                            file_path=$(echo "$line" | awk -F':' '{print $1}')
-                            game_name=$(echo "$line" | awk -F':' '{print $3}' | awk -F'|' '{print $1}')
+                            file_path=$(echo "$selected_line" | awk -F':' '{print $1}')
+                            game_name=$(echo "$selected_line" | awk -F':' '{print $3}' | awk -F'|' '{print $1}')
                             subfolder_name=$(dirname "$file_path" | awk -F'/' '{print $(NF)}')
 
-                            display_text="$subfolder_name - $game_name"
                             # Combine subfolder and game name for confirmation
-                            confirmation_name="$subfolder_name - $full_game_name"
+                            confirmation_name="$subfolder_name - $game_name"
 
                             # Append the full line to download.txt
                             echo "$selected_line" >> "$output_file"
