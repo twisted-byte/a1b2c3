@@ -64,7 +64,7 @@ done <<< "$results"
                     # Loop to allow repeated selection
                     while true; do
                         # Display results in a menu with an additional Return option
-                        dialog --title "Search Results" --menu "Select a result to add to download.txt or return:" 20 70 10 "${menu_items[@]}" 2> "$resultfile"
+                        dialog --title "Search Results" --menu "Select a result to add to the download queue or return:" 20 70 10 "${menu_items[@]}" 2> "$resultfile"
 
                         # Get the selected option
                         selected=$(<"$resultfile")
@@ -94,7 +94,7 @@ done <<< "$results"
                             echo "$selected_line" >> "$output_file"
 
                             # Notify the user
-                            dialog --title "Success" --ok-label "OK" --msgbox "Added to download.txt:\n\n$confirmation_name" 10 50
+                            dialog --title "Success" --ok-label "OK" --msgbox "Added to the download queue:\n\n$confirmation_name" 10 50
                         fi
                     done
                 else
