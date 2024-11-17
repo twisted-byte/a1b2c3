@@ -33,7 +33,7 @@ if [ ${#GAME_SYSTEMS[@]} -eq 0 ]; then
 fi
 
 # Add the option for the user to exit
-MENU_OPTIONS+=("0" "Return")
+MENU_OPTIONS=("0" "Return" "${MENU_OPTIONS[@]}")
 
 # Main dialog menu with loop to keep the menu active until a valid choice is selected
 dialog --clear --backtitle "Game Downloader" \
@@ -107,10 +107,11 @@ select_games() {
     selected_games=$(dialog --title "Select Games" --checklist "Choose games to download" 25 70 10 \
         "${game_list[@]}" 3>&1 1>&2 2>&3)
 
-    # If "Return" is selected, return to the letter selection menu
-    if [ "$selected_games" == "Return" ]; then
-        return 1  # Return to the letter selection menu
-    fi
+# If "Return" is selected or no games are selected, exit without continuing
+if [[ "$selected_games" == "Return" || -z "$selected_games" ]]; then
+    return 1  # Return to the letter selection menu
+fi
+
 
     # Proceed with downloading the selected games
     IFS=$'\n'
@@ -219,7 +220,7 @@ while true; do
         skipped_games=()
     fi
 
-    # Ask user if they want to continue after displaying skipped games
+if [ ${#added_games[@]} -gt 0 ]; then
     dialog --title "Continue?" --yesno "Would you like to select some more games?" 7 50
     if [ $? -eq 1 ]; then
         break
