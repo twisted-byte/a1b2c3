@@ -91,12 +91,24 @@ while true; do
             log_debug "Uninstall script completed."
             ;;
         7)
-            log_debug "Exit selected. Ending script."
-            clear
-            dialog --infobox "Thank you for using Game Downloader! Any issues, please reach out to DTJW92 on Discord!" 10 50
-            sleep 3
-            exit 0
-            ;;
+    log_debug "Exit selected. Ending script."
+    clear
+    dialog --infobox "Thank you for using Game Downloader! Any issues, please reach out to DTJW92 on Discord!" 10 50
+    sleep 3
+    
+    # Get the PID of the xterm process running this script
+    TERMINAL_PID=$(ps -ef | grep '[x]term' | awk '{print $2}')
+    
+    # If a terminal PID is found, kill it
+    if [ -n "$TERMINAL_PID" ]; then
+        log_debug "Killing xterm process with PID $TERMINAL_PID."
+        kill -9 "$TERMINAL_PID"
+    else
+        log_debug "No xterm process found."
+    fi
+
+    exit 0
+    ;;
         *)
             log_debug "Invalid option selected."
             dialog --msgbox "Invalid option selected. Please try again." 10 50
