@@ -10,10 +10,10 @@ SCRAPERS["PSX"]="https://raw.githubusercontent.com/DTJW92/game-downloader/main/s
 SCRAPERS["PS2"]="https://raw.githubusercontent.com/DTJW92/game-downloader/main/scrapers/ps2-scraper.sh"
 SCRAPERS["Xbox"]="https://raw.githubusercontent.com/DTJW92/game-downloader/main/scrapers/xbox-scraper.sh"
 SCRAPERS["Dreamcast"]="https://raw.githubusercontent.com/DTJW92/game-downloader/refs/heads/main/scrapers/dc-scraper.sh"
-SCRAPERS["GBA"]="https://raw.githubusercontent.com/DTJW92/game-downloader/refs/heads/main/scrapers/gba-scraper.sh"
+SCRAPERS["Game Boy Advance"]="https://raw.githubusercontent.com/DTJW92/game-downloader/refs/heads/main/scrapers/gba-scraper.sh"
 
 # Create the menu dynamically based on the associative array
-MENU_OPTIONS=()
+MENU_OPTIONS=("0" "Return to Main Menu")  # Add "Return to Main Menu" as the first option
 i=1
 for system in "${!SCRAPERS[@]}"; do
     MENU_OPTIONS+=("$i" "$system")  # Add option number and system name
@@ -36,6 +36,15 @@ if [ -z "$choice" ]; then
     dialog --infobox "Thank you for using Game Downloader! Any issues, message DTJW92 on Discord!" 10 50
     sleep 3
     exit 0  # Exit the script when Cancel is clicked or no option is selected
+fi
+
+# If user selects "Return to Main Menu"
+if [ "$choice" -eq 0 ]; then
+    clear
+    dialog --infobox "Returning to the main menu..." 10 50
+    sleep 2
+    exec /tmp/GameDownloader.sh  # Execute the main menu script
+    exit 0  # In case exec fails, exit the script
 fi
 
 # Find the system name corresponding to the user's choice
