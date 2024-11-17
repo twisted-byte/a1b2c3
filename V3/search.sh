@@ -10,20 +10,12 @@ if [ ! -f "$output_file" ]; then
     touch "$output_file"
 fi
 
-# Function to perform the search and return results with file paths and line numbers
+# Function to perform the search
 perform_search() {
     local query=$1
-    # Search recursively for the query in AllGames.txt files and capture results with file path and line numbers
-    grep -inH "$query" "$main_directory"/**/AllGames.txt 2>/dev/null
+    # Search recursively for the query in AllGames.txt files
+    grep -iHn "$query" "$main_directory"/**/AllGames.txt 2>/dev/null
 }
-
-# Function to clean up the game name (remove backticks)
-# Only remove backticks
-clean_game_name() {
-    local game_name=$1
-    echo "$game_name" | sed 's/[\\`]//g'  # Removes only backticks and backslashes
-}
-
 
 # Temporary files
 tempfile=$(mktemp)
@@ -72,15 +64,13 @@ while true; do
 
                         # Extract the game name (first part of game_info before the first '|')
                         game_name=$(echo "$game_info" | awk -F'|' '{print $1}')
-
-                        # Clean the game name
-                        cleaned_game_name=$(clean_game_name "$game_name")
-
-                        # Extract subfolder name from file path
                         subfolder_name=$(dirname "$file_path" | awk -F'/' '{print $(NF)}')
 
-                        # Prepare display text: show subfolder and cleaned game name
-                        display_text="$subfolder_name - $cleaned_game_name"
+                        # Clean the game name by removing backticks only
+                        cleaned_name=$(echo "$game_name" | sed 's/[\\`]//g')
+
+                        # Combine subfolder and cleaned game name for display purposes
+                        display_text="$subfolder_name - $cleaned_name"
                         menu_items+=("$index" "$display_text")
                         index=$((index + 1))
                     done
@@ -93,9 +83,6 @@ while true; do
                         # Get the selected option
                         selected=$(<"$resultfile")
 
-                        # Clean up the resultfile after reading the selection
-                        rm -f "$resultfile"
-
                         # Detect ESC key or cancellation
                         if [ $? -ne 0 ]; then
                             break
@@ -107,25 +94,19 @@ while true; do
                             break
                         elif [ -n "$selected" ]; then
                             # The selected index corresponds to the correct result line in the array
-                            selected_index=$((selected - 1))  # Adjust the index for the result_lines array
+                            result_line=${result_lines[$((selected - 1))]}  # Correct the index by subtracting 1
 
-                            # Get the corresponding result line
-                            result_line=${result_lines[$selected_index]} 
+                            # Remove the file path and line number from the start of the line
+                            cleaned_line=$(echo "$result_line" | sed 's|^[^:]*:[0-9]*:||')
 
-                            # Extract the full file path (from the result line)
-                            full_file_path=$(echo "$result_line" | awk -F':' '{print $1}')
+                            # Clean the entire line (remove backticks only, keeping the rest)
+                            cleaned_line=$(echo "$cleaned_line" | sed 's/[\\`]//g')
 
-                            # Clean the entire line (remove backticks, quotes, file path, and line number)
-                            cleaned_line=$(echo "$result_line" | sed 's/[\\\"`]//g' | sed 's/^[[:space:]]*//g' | sed 's/[[:space:]]*$//g' | sed 's|^[^:]*:[0-9]*:||')
-
-                            # Clean up the line by removing the file path and line number, leaving only game info
-                            game_info=$(echo "$cleaned_line" | sed 's|^[^|]*||')
-
-                            # Append the cleaned line to download.txt (without file path or line number)
-                            echo "$game_info" >> "$output_file"
+                            # Append the cleaned line to download.txt (with the download path included)
+                            echo "$cleaned_line" >> "$output_file"
 
                             # Notify the user
-                            dialog --title "Success" --ok-label "OK" --msgbox "Added to the download queue:\n\n$cleaned_game_name" 10 50
+                            dialog --title "Success" --ok-label "OK" --msgbox "Added to the download queue:\n\n$cleaned_line" 10 50
                         fi
                     done
                 else
