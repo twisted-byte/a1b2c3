@@ -39,16 +39,21 @@ process_download() {
     game_name=$(echo "$game_name" | sed 's/["]//g')
     local temp_path="/userdata/system/game-downloader/$game_name"
 
-    # Check if the file already exists before starting the download
-    if [ -f "$temp_path" ]; then
-        echo "$game_name is already downloaded. Skipping download."
+    # Skip if the download has already started (marker present)
+    if [[ "$game_name" == *"#DOWNLOADING"* ]]; then
+        echo "$game_name download is already in progress. Skipping."
         return
     fi
+
+    # Add a marker to the line to indicate the download has started
+    sed -i "/$game_name|$url|$folder/ s|$|#DOWNLOADING|" "$DOWNLOAD_QUEUE"
 
     echo "Starting download for $game_name..."
     wget -c "$url" -O "$temp_path" >> "$DEBUG_LOG" 2>&1
     if [ $? -ne 0 ]; then
         echo "Download failed for $game_name. Check debug log for details."
+        # Remove marker if download fails
+        sed -i "/$game_name|$url|$folder/ s|#DOWNLOADING||" "$DOWNLOAD_QUEUE"
         return
     fi
 
@@ -66,13 +71,8 @@ process_download() {
         rm "$temp_path"  # Clean up the downloaded file
     fi
 
-    # Escape special characters in the variables
-    safe_game_name=$(echo "$game_name" | sed 's/[&/\]/\\&/g')
-    safe_url=$(echo "$url" | sed 's/[&/\]/\\&/g')
-    safe_folder=$(echo "$folder" | sed 's/[&/\]/\\&/g')
-
     # Remove the processed line from the queue using the escaped variables
-    sed -i "\|$safe_game_name|$safe_url|$safe_folder|d" "$DOWNLOAD_QUEUE"
+    sed -i "\|$game_name|$url|$folder|d" "$DOWNLOAD_QUEUE"
 }
 
 process_unzip() {
