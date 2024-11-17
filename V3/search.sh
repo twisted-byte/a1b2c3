@@ -1,134 +1,111 @@
 #!/bin/bash
 
-# Main directory containing AllGames.txt files in subfolders
-main_directory="/userdata/system/game-downloader/links"
-output_file="/userdata/system/game-downloader/download.txt"
-main_menu_script="/tmp/GameDownloader.sh"
+DEST_DIR="/userdata/system/game-downloader/links"
+  # Update this to your desired download directory
+ALLGAMES_FILE="$DEST_DIR/AllGames.txt"  # File containing the full list of games with URLs
 
-# Ensure the output file exists, create it if it doesn't
-if [ ! -f "$output_file" ]; then
-    touch "$output_file"
-fi
+# Ensure the download directory exists
+mkdir -p "$DOWNLOAD_DIR"
 
-# Function to perform the search
-perform_search() {
-    local query=$1
-    # Search recursively for the query in AllGames.txt files
-    grep -iHn "$query" "$main_directory"/**/AllGames.txt 2>/dev/null
+# Function to download the selected game and send the link to the DownloadManager
+download_game() {
+    local decoded_name="$1"
+    decoded_name_cleaned=$(echo "$decoded_name" | sed 's/[\\\"`]//g' | sed 's/^[[:space:]]*//g' | sed 's/[[:space:]]*$//g')
+
+    # Check if the game already exists in the download directory
+    if [[ -f "$DOWNLOAD_DIR/$decoded_name_cleaned" ]]; then
+        skipped_games+=("$decoded_name_cleaned")
+        return
+    fi
+
+    # Check if the game is already in the download queue (download.txt)
+    if grep -q "$decoded_name_cleaned" "/userdata/system/game-downloader/download.txt"; then
+        skipped_games+=("$decoded_name_cleaned")
+        return
+    fi
+
+    # Find the game URL from the AllGames.txt file and the correct download directory
+    game_info=$(grep -F "$decoded_name_cleaned" "$ALLGAMES_FILE")
+    game_url=$(echo "$game_info" | cut -d '|' -f 2)
+    game_download_dir=$(echo "$game_info" | cut -d '|' -f 3)
+
+    if [ -z "$game_url" ]; then
+        dialog --infobox "Error: Could not find download URL for '$decoded_name_cleaned'." 5 40
+        sleep 2
+        return
+    fi
+
+    # Append the decoded name, URL, and folder to the DownloadManager.txt file
+    echo "$decoded_name_cleaned|$game_url|$game_download_dir" >> "/userdata/system/game-downloader/download.txt"
+    
+    # Collect the added game
+    added_games+=("$decoded_name_cleaned")
 }
 
-# Temporary files
-tempfile=$(mktemp)
-resultfile=$(mktemp)
+# Function to search through AllGames.txt in subdirectories and return results
+search_games() {
+    local search_term="$1"
+    local results=()
 
+    # Search through subfolders and AllGames.txt files
+    find "$DEST_DIR" -type f -name "AllGames.txt" | while read -r file; do
+        folder_name=$(dirname "$file")  # Get the folder name (subfolder)
+        
+        # Search for the term in AllGames.txt
+        grep -i "$search_term" "$file" | while IFS="|" read -r decoded_name encoded_url game_download_dir; do
+            # Clean the game name and display it with the subfolder name
+            game_name_cleaned=$(echo "$decoded_name" | sed 's/[\\\"`]//g' | sed 's/^[[:space:]]*//g' | sed 's/[[:space:]]*$//g')
+            results+=("$folder_name - $game_name_cleaned")
+        done
+    done
+
+    # Display results in dialog
+    if [ ${#results[@]} -gt 0 ]; then
+        selected_games=$(dialog --title "Search Results" --checklist "Choose games to download" 25 70 10 \
+            "${results[@]}" 3>&1 1>&2 2>&3)
+
+        if [ -n "$selected_games" ]; then
+            IFS=$'\n'
+            for game in $selected_games; do
+                game_cleaned=$(echo "$game" | sed 's/^[[:space:]]*//g' | sed 's/[[:space:]]*$//g')
+                download_game "$game_cleaned"
+            done
+        fi
+    else
+        dialog --infobox "No games found for '$search_term'." 5 40
+        sleep 2
+    fi
+}
+
+# Main search loop
 while true; do
-    # Display the search bar
-    dialog --title "Search Bar" --menu "Choose an option:" 15 50 3 \
-        1 "Enter Search Query" \
-        2 "Return to Main Menu" 2> "$tempfile"
+    search_term=$(dialog --inputbox "Enter search term" 10 50 3>&1 1>&2 2>&3)
+    
+    if [ -z "$search_term" ]; then
+        break
+    fi
 
-    # Get the user's choice
-    choice=$(<"$tempfile")
+    search_games "$search_term"
 
-    # Clean up temporary file
-    rm -f "$tempfile"
+    # Show a single message if any games were added to the download list
+    if [ ${#added_games[@]} -gt 0 ]; then
+        dialog --msgbox "Your selection has been added to the download list! Check download status and once it's complete, reload your games list to see the new games!" 10 50
+        added_games=()  # Clear the added games list
+    fi
 
-    case $choice in
-        1)
-            # Ask for the search query
-            dialog --title "Search Query" --inputbox "Enter your search query:" 10 50 2> "$tempfile"
-            search_query=$(<"$tempfile")
-            rm -f "$tempfile"
+    # Display skipped games message if there are any skipped games
+    if [ ${#skipped_games[@]} -gt 0 ]; then
+        skipped_games_list=$(printf "%s\n" "${skipped_games[@]}" | sed 's/^/• /')
+        dialog --msgbox "The following games already exist in the system and are being skipped:\n\n$skipped_games_list" 15 60
+        skipped_games=()  # Clear the skipped games list
+    fi
 
-            # Check if a query was provided
-            if [ -n "$search_query" ]; then
-                # Perform the search and capture results
-                results=$(perform_search "$search_query")
-
-                if [ -n "$results" ]; then
-                    # Create an array of results for the menu
-                    menu_items=()
-                    index=1
-
-                    # Add Return option first
-                    menu_items+=("$index" "Return")
-                    index=$((index + 1))
-
-                    # Store the lines in an array to maintain their order
-                    IFS=$'\n' read -d '' -r -a result_lines <<< "$results"
-
-                    for line in "${result_lines[@]}"; do
-                        # Extract file path and game info from AllGames.txt line
-                        file_path=$(echo "$line" | awk -F':' '{print $1}')
-                        game_info=$(echo "$line" | awk -F':' '{print $3}')
-
-                        # Extract the game name (first part of game_info before the first '|')
-                        game_name=$(echo "$game_info" | awk -F'|' '{print $1}')
-                        subfolder_name=$(dirname "$file_path" | awk -F'/' '{print $(NF)}')
-
-                        # Clean the game name (remove unwanted characters and spaces)
-                        decoded_name_cleaned=$(echo "$game_name" | sed 's/[\\\"]//g' | sed 's/^[[:space:]]*//g' | sed 's/[[:space:]]*$//g')
-
-                        # Combine subfolder and cleaned game name for display purposes
-                        display_text="$subfolder_name - $decoded_name_cleaned"
-                        menu_items+=("$index" "$display_text")
-                        index=$((index + 1))
-                    done
-
-                    # Loop to allow repeated selection
-                    while true; do
-                        # Display results in a menu with an additional Return option
-                        dialog --title "Search Results" --menu "Select a result to add to the download queue or return:" 20 70 10 "${menu_items[@]}" 2> "$resultfile"
-
-                        # Get the selected option
-                        selected=$(<"$resultfile")
-
-                        # Detect ESC key or cancellation
-                        if [ $? -ne 0 ]; then
-                            break
-                        fi
-
-                        # Process the selection
-                        if [ "$selected" -eq "1" ]; then
-                            # Return to the search bar menu
-                            break
-                        elif [ -n "$selected" ]; then
-                            # The selected index corresponds to the correct result line in the array
-                            result_line=${result_lines[$((selected - 1))]}  # Correct the index by subtracting 1
-
-                            # Clean the entire line (remove backticks, quotes, file path, and line number)
-                            cleaned_line=$(echo "$result_line" | sed 's/[\\\"`]//g' | sed 's/^[[:space:]]*//g' | sed 's/[[:space:]]*$//g' | sed 's|^[^:]*:[0-9]*:||')
-
-                            # Append the cleaned line to download.txt (without file path or line number)
-                            echo "$cleaned_line" >> "$output_file"
-
-                            # Notify the user
-                            dialog --title "Success" --ok-label "OK" --msgbox "Added to the download queue:\n\n$decoded_name_cleaned" 10 50
-                        fi
-                    done
-                else
-                    # No results found
-                    dialog --title "No Results" --msgbox "No matches found for '$search_query'." 10 50
-                fi
-            else
-                dialog --title "Error" --msgbox "No search query entered!" 10 50
-            fi
-            ;;
-        2)
-            # Execute the main menu script
-            clear
-            bash "$main_menu_script"
-            exit 0
-            ;;
-        *)
-            # No Exit message box anymore, just break from the loop
-            break
-            ;;
-    esac
+    # Ask user if they want to continue after displaying skipped games
+    dialog --title "Continue?" --yesno "Would you like to search for more games?" 7 50
+    if [ $? -eq 1 ]; then
+        break
+    fi
 done
 
-# Clean up temporary files
-rm -f "$resultfile"
-
-# End the dialog session
-clear
+# Goodbye message
+echo "Goodbye!"
