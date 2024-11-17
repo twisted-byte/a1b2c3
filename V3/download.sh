@@ -7,8 +7,10 @@ DEBUG_LOG="/userdata/system/game-downloader/debug/debug.txt"
 # Ensure the debug directory exists
 mkdir -p "$(dirname "$DEBUG_LOG")"
 
-# Start fresh session
-echo "Starting new session at $(date)" > "$DEBUG_LOG"
+if [ -f "$DEBUG_LOG" ]; then
+    echo "Clearing debug log for the new session."
+    > "$DEBUG_LOG"  # This will clear the file
+fi
 
 # Redirect all stdout and stderr to the debug log file
 exec > >(tee -a "$DEBUG_LOG") 2>&1
@@ -21,10 +23,10 @@ check_internet() {
     echo "Checking internet connection..."
     if ping -c 1 -W 5 8.8.8.8 >/dev/null 2>&1; then
         echo "Internet connection is active."
-        return 0
+        return 0  # Return 0 if connection is successful
     else
         echo "No internet connection found."
-        return 1
+        return 1  # Return 1 if connection fails
     fi
 }
 
@@ -44,24 +46,25 @@ process_download() {
     fi
 
     # Add a marker to the line to indicate the download has started
-    sed -i "s~$game_name|$url|$folder~&|#DOWNLOADING~" "$DOWNLOAD_QUEUE"
+    sed -i "/$game_name|$url|$folder/ s|$|#DOWNLOADING|" "$DOWNLOAD_QUEUE"
 
     echo "Starting download for $game_name..."
-    wget -c "$url" -O "$temp_path" >> "$DEBUG_LOG" 2>&1 && echo "Download succeeded for $game_name" || { echo "Download failed for $game_name"; sed -i "s~$game_name|$url|$folder~&|#DOWNLOADING~" "$DOWNLOAD_QUEUE"; return; }
+    wget -c "$url" -O "$temp_path" >> "$DEBUG_LOG" 2>&1
+    if [ $? -ne 0 ]; then
+        echo "Download failed for $game_name. Check debug log for details."
+        # Remove marker if download fails
+        sed -i "/$game_name|$url|$folder/ s|#DOWNLOADING||" "$DOWNLOAD_QUEUE"
+        return
+    fi
 
+    echo "Download succeeded for $game_name"
+    
     # Check the file extension before unzipping or moving
     if [[ "$game_name" == *.zip ]]; then
         process_unzip "$game_name" "$temp_path" "$folder"
     elif [[ "$game_name" == *.chd || "$game_name" == *.iso ]]; then
         echo "Skipping extraction for $game_name, moving file to destination."
-        
-        # Ensure target is a directory before moving
-        if [ -d "$folder" ]; then
-            mv "$temp_path" "$folder"
-            echo "Moved $game_name to $folder"
-        else
-            echo "Error: $folder is not a valid directory. Skipping move operation."
-        fi
+        mv "$temp_path" "$folder"
     else
         # Unsupported file type
         echo "Unsupported file type for $game_name. Skipping."
@@ -69,7 +72,7 @@ process_download() {
     fi
 
     # Remove the processed line from the queue using the escaped variables
-    sed -i "s~$game_name|$url|$folder~&~" "$DOWNLOAD_QUEUE"
+    sed -i "\|$game_name|$url|$folder|d" "$DOWNLOAD_QUEUE"
 }
 
 process_unzip() {
@@ -88,7 +91,7 @@ process_unzip() {
     mkdir -p "$game_folder"
 
     echo "Unzipping $game_name..."
-    unzip -q "$temp_path" -d "$game_folder"
+    unzip -q "$temp_path" -d "$game_folder" 
     if [ $? -ne 0 ]; then
         echo "Unzip failed for $game_name"
         return
@@ -118,9 +121,11 @@ while true; do
     if [[ -f "$DOWNLOAD_QUEUE" ]]; then
         while IFS='|' read -r game_name url folder; do
             echo "Reading download entry: $game_name | $url | $folder"
+
+            # Process the download (sequentially)
             process_download "$game_name" "$url" "$folder" &
-        done < "$DOWNLOAD_QUEUE"
-        wait
+
+        done < <(cat "$DOWNLOAD_QUEUE")  # Use a subshell to safely handle the file while reading
     else
         echo "No downloads found in queue."
     fi
