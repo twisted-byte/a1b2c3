@@ -64,13 +64,18 @@ while true; do
 
                         # Extract the game name (first part of game_info before the first '|')
                         game_name=$(echo "$game_info" | awk -F'|' '{print $1}')
+
+                        # Get the portion of the path after the second '|'
+                        path_after_second_pipe=$(echo "$game_info" | awk -F'|' '{print $2}' | sed 's/^[[:space:]]*//g')
+
+                        # Extract subfolder name from file path
                         subfolder_name=$(dirname "$file_path" | awk -F'/' '{print $(NF)}')
 
                         # Clean the game name (remove unwanted characters and spaces)
                         decoded_name_cleaned=$(echo "$game_name" | sed 's/[\\\"`]//g' | sed 's/^[[:space:]]*//g' | sed 's/[[:space:]]*$//g')
 
-                        # Combine subfolder and cleaned game name for display purposes
-                        display_text="$subfolder_name - $decoded_name_cleaned"
+                        # Combine subfolder, cleaned game name, and the path after the second '|'
+                        display_text="$subfolder_name - $decoded_name_cleaned $path_after_second_pipe"
                         menu_items+=("$index" "$display_text")
                         index=$((index + 1))
                     done
