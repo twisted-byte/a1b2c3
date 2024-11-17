@@ -3,6 +3,7 @@
 # Main directory containing AllGames.txt files in subfolders
 main_directory="/userdata/system/game-downloader/links"
 output_file="/userdata/system/game-downloader/download.txt"
+main_menu_script="/tmp/GameDownloader.sh"
 
 # Function to perform the search
 perform_search() {
@@ -15,73 +16,106 @@ perform_search() {
 tempfile=$(mktemp)
 resultfile=$(mktemp)
 
-# Display the search bar
-dialog --title "Search Bar" --inputbox "Enter your search query:" 10 50 2> "$tempfile"
+while true; do
+    # Display the search bar
+    dialog --title "Search Bar" --menu "Choose an option:" 15 50 3 \
+        1 "Enter Search Query" \
+        2 "Return to Main Menu" 2> "$tempfile"
 
-# Get the user input
-search_query=$(<"$tempfile")
+    # Get the user's choice
+    choice=$(<"$tempfile")
 
-# Clean up temporary file
-rm -f "$tempfile"
+    # Clean up temporary file
+    rm -f "$tempfile"
 
-# Check if input was provided
-if [ -n "$search_query" ]; then
-    # Perform the search and capture results
-    results=$(perform_search "$search_query")
+    case $choice in
+        1)
+            # Ask for the search query
+            dialog --title "Search Query" --inputbox "Enter your search query:" 10 50 2> "$tempfile"
+            search_query=$(<"$tempfile")
+            rm -f "$tempfile"
 
-    if [ -n "$results" ]; then
-        # Create an array of results for the menu
-        menu_items=()
-        index=1
-        while IFS= read -r line; do
-            # Extract file path and game name
-            file_path=$(echo "$line" | awk -F':' '{print $1}')
-            game_name=$(echo "$line" | awk -F'|' '{print $1}' | awk -F':' '{print $2}')
-            subfolder_name=$(dirname "$file_path" | awk -F'/' '{print $(NF)}')
+            # Check if a query was provided
+            if [ -n "$search_query" ]; then
+                # Perform the search and capture results
+                results=$(perform_search "$search_query")
 
-            # Combine subfolder and game name
-            display_text="$subfolder_name - $game_name"
-            menu_items+=("$index" "$display_text")
-            ((index++))
-        done <<< "$results"
+                if [ -n "$results" ]; then
+                    # Create an array of results for the menu
+                    menu_items=()
+                    index=1
+                    while IFS= read -r line; do
+                        # Extract file path and game name
+                        file_path=$(echo "$line" | awk -F':' '{print $1}')
+                        game_name=$(echo "$line" | awk -F'|' '{print $1}' | awk -F':' '{print $2}')
+                        subfolder_name=$(dirname "$file_path" | awk -F'/' '{print $(NF)}')
 
-        # Loop to allow repeated selection
-        while true; do
-            # Display results in a menu
-            dialog --title "Search Results" --menu "Select a result to add to download.txt:\n(Press ESC to exit)" 20 70 10 "${menu_items[@]}" 2> "$resultfile"
+                        # Combine subfolder and game name
+                        display_text="$subfolder_name - $game_name"
+                        menu_items+=("$index" "$display_text")
+                        ((index++))
+                    done <<< "$results"
 
-            # Get the selected option
-            selected=$(<"$resultfile")
+                    # Add the Return option at the end of the menu
+                    menu_items+=("$index" "Return")
 
-            # Break the loop if no selection (e.g., ESC or Cancel)
-            if [ -z "$selected" ]; then
-                break
+                    # Loop to allow repeated selection
+                    while true; do
+                        # Display results in a menu with an additional Return option
+                        dialog --title "Search Results" --menu "Select a result to add to download.txt or return:" 20 70 10 "${menu_items[@]}" 2> "$resultfile"
+
+                        # Get the selected option
+                        selected=$(<"$resultfile")
+
+                        # Detect ESC key or cancellation
+                        if [ $? -ne 0 ]; then
+                            break
+                        fi
+
+                        # Process the selection
+                        if [ "$selected" -eq "$index" ]; then
+                            # Return to the search bar menu
+                            break
+                        elif [ -n "$selected" ]; then
+                            # Retrieve the full line corresponding to the selected option
+                            selected_line=$(echo "$results" | sed -n "${selected}p")
+
+                            # Extract the full game name and subfolder
+                            file_path=$(echo "$selected_line" | awk -F':' '{print $1}')
+                            full_game_name=$(echo "$selected_line" | awk -F'|' '{print $1}')
+                            subfolder_name=$(dirname "$file_path" | awk -F'/' '{print $(NF)}')
+
+                            # Combine subfolder and game name for confirmation
+                            confirmation_name="$subfolder_name - $full_game_name"
+
+                            # Append the full line to download.txt
+                            echo "$selected_line" >> "$output_file"
+
+                            # Notify the user
+                            dialog --title "Success" --ok-label "OK" --msgbox "Added to download.txt:\n\n$confirmation_name" 10 50
+                        fi
+                    done
+                else
+                    # No results found
+                    dialog --title "No Results" --msgbox "No matches found for '$search_query'." 10 50
+                fi
+            else
+                dialog --title "Error" --msgbox "No search query entered!" 10 50
             fi
-
-            # Retrieve the full line corresponding to the selected option
-            selected_line=$(echo "$results" | sed -n "${selected}p")
-
-            # Extract the full game name and subfolder
-            file_path=$(echo "$selected_line" | awk -F':' '{print $1}')
-            full_game_name=$(echo "$selected_line" | awk -F'|' '{print $1}')
-            subfolder_name=$(dirname "$file_path" | awk -F'/' '{print $(NF)}')
-
-            # Combine subfolder and game name for confirmation
-            confirmation_name="$subfolder_name - $full_game_name"
-
-            # Append the full line to download.txt
-            echo "$selected_line" >> "$output_file"
-
-            # Notify the user
-            dialog --title "Success" --msgbox "Added to download.txt:\n\n$confirmation_name" 10 50
-        done
-    else
-        # No results found
-        dialog --title "No Results" --msgbox "No matches found for '$search_query'." 10 50
-    fi
-else
-    dialog --title "Error" --msgbox "No search query entered!" 10 50
-fi
+            ;;
+        2)
+            # Execute the main menu script
+            clear
+            bash "$main_menu_script"
+            exit 0
+            ;;
+        *)
+            # Handle ESC or unexpected input
+            dialog --title "Exit" --msgbox "Exiting the program..." 10 50
+            break
+            ;;
+    esac
+done
 
 # Clean up temporary files
 rm -f "$resultfile"
