@@ -93,10 +93,10 @@ while true; do
                             # Retrieve the full line corresponding to the selected option
                             selected_line=$(echo "$results" | sed -n "${selected}p")
 
-                            # Clean the entire line (remove backticks, quotes, and other unwanted characters)
-                            cleaned_line=$(echo "$selected_line" | sed 's/[\\\"`]//g' | sed 's/^[[:space:]]*//g' | sed 's/[[:space:]]*$//g')
+                            # Clean the entire line (remove backticks, quotes, file path, and line number)
+                            cleaned_line=$(echo "$selected_line" | sed 's/[\\\"`]//g' | sed 's/^[[:space:]]*//g' | sed 's/[[:space:]]*$//g' | sed 's|^[^:]*:[0-9]*:||')
 
-                            # Append the cleaned line to download.txt
+                            # Append the cleaned line to download.txt (without file path or line number)
                             echo "$cleaned_line" >> "$output_file"
 
                             # Notify the user
