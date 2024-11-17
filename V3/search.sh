@@ -55,12 +55,15 @@ while true; do
                     index=$((index + 1))
 
                     while IFS= read -r line; do
-                        # Extract file path and game name
+                        # Extract file path and game info from AllGames.txt line
                         file_path=$(echo "$line" | awk -F':' '{print $1}')
-                        game_name=$(echo "$line" | awk -F':' '{print $3}' | awk -F'|' '{print $1}')
+                        game_info=$(echo "$line" | awk -F':' '{print $3}')
+
+                        # Extract the game name (first part of game_info before the first '|')
+                        game_name=$(echo "$game_info" | awk -F'|' '{print $1}')
                         subfolder_name=$(dirname "$file_path" | awk -F'/' '{print $(NF)}')
 
-                        # Clean the game name
+                        # Clean the game name (remove unwanted characters and spaces)
                         decoded_name_cleaned=$(echo "$game_name" | sed 's/[\\\"`]//g' | sed 's/^[[:space:]]*//g' | sed 's/[[:space:]]*$//g')
 
                         # Combine subfolder and cleaned game name for display purposes
@@ -90,14 +93,11 @@ while true; do
                             # Retrieve the full line corresponding to the selected option
                             selected_line=$(echo "$results" | sed -n "${selected}p")
 
-                            # Extract the part of the line after the file path and line number
-                            game_info=$(echo "$selected_line" | sed 's|^.*AllGames.txt:[0-9]*:||')
-
-                            # Append the cleaned game info (Game Name|Download Link|Download Location) to download.txt
-                            echo "$decoded_name_cleaned|$game_info" >> "$output_file"
+                            # Append the full game info (Game Name|Download Link|Download Location) to download.txt
+                            echo "$selected_line" >> "$output_file"
 
                             # Notify the user
-                            dialog --title "Success" --ok-label "OK" --msgbox "Added to the download queue:\n\n$decoded_name_cleaned|$game_info" 10 50
+                            dialog --title "Success" --ok-label "OK" --msgbox "Added to the download queue:\n\n$selected_line" 10 50
                         fi
                     done
                 else
@@ -115,8 +115,7 @@ while true; do
             exit 0
             ;;
         *)
-            # Handle ESC or unexpected input
-            dialog --title "Exit" --msgbox "Exiting the program..." 10 50
+            # No Exit message box anymore, just break from the loop
             break
             ;;
     esac
