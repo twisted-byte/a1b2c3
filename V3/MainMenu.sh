@@ -10,9 +10,7 @@ DEBUG=true
 log_debug() {
     if [ "$DEBUG" = true ]; then
         local message="$1"
-        # Ensure the directory exists
-        mkdir -p /userdata/system/game-downloader/debug
-        # Append the message with timestamp to the log file
+        mkdir -p /userdata/system/game-downloader/debug  # Ensure the directory exists
         echo "$(date '+%Y-%m-%d %H:%M:%S') - $message" >> /userdata/system/game-downloader/debug/menu_debug.txt
     fi
 }
@@ -21,26 +19,41 @@ log_debug() {
 log_debug "Script started."
 
 # URLs for external scripts
-UPDATER="https://raw.githubusercontent.com/DTJW92/game-downloader/main/V3/Updater.sh"
-DOWNLOAD_MANAGER="https://raw.githubusercontent.com/DTJW92/game-downloader/main/V3/Downloadcheck.sh"
-UNINSTALL="https://raw.githubusercontent.com/DTJW92/game-downloader/main/V3/uninstall.sh"
-INSTALL_GAME_SYSTEMS="https://raw.githubusercontent.com/DTJW92/game-downloader/main/V3/installsystem.sh"  # New URL for install script
-SELECT_SYSTEM="https://raw.githubusercontent.com/DTJW92/game-downloader/main/V3/SystemMenu.sh"
-SEARCH="https://raw.githubusercontent.com/DTJW92/game-downloader/main/V3/search.sh"
+declare -A MENU_ITEMS=(
+    [1]="https://raw.githubusercontent.com/DTJW92/game-downloader/main/V3/installsystem.sh"  # Install Game Systems
+    [2]="https://raw.githubusercontent.com/DTJW92/game-downloader/main/V3/SystemMenu.sh"      # Select a Game System
+    [3]="https://raw.githubusercontent.com/DTJW92/game-downloader/main/V3/search.sh"          # Search for a Game
+    [4]="https://raw.githubusercontent.com/DTJW92/game-downloader/main/V3/Updater.sh"         # Run Updater
+    [5]="https://raw.githubusercontent.com/DTJW92/game-downloader/main/V3/Downloadcheck.sh"   # Status Checker
+    [6]="https://raw.githubusercontent.com/DTJW92/game-downloader/main/V3/uninstall.sh"       # Uninstall Game Downloader
+)
+
+# Menu items description
+declare -A MENU_DESCRIPTIONS=(
+    [1]="Install Game Systems"
+    [2]="Select a Game System"
+    [3]="Search for a Game"
+    [4]="Run Updater"
+    [5]="Status Checker"
+    [6]="Uninstall Game Downloader"
+)
+
 # Main dialog menu loop
 while true; do
     log_debug "Displaying menu."
-    
+
+    # Dynamically build menu options
+    MENU_OPTIONS=()
+    for key in "${!MENU_DESCRIPTIONS[@]}"; do
+        MENU_OPTIONS+=("$key" "${MENU_DESCRIPTIONS[$key]}")
+    done
+    MENU_OPTIONS+=("7" "Exit")  # Add Exit option
+
+    # Display menu
     dialog --clear --backtitle "Game Downloader" \
            --title "Select a System" \
            --menu "Choose an option:" 15 50 9 \
-           1 "Install Game Systems" \
-           2 "Select a Game System" \
-           3 "Search for a Game" \
-           4 "Run Updater" \
-           5 "Status Checker" \
-           6 "Uninstall Game Downloader" \
-           7 "Exit" \
+           "${MENU_OPTIONS[@]}" \
            2>/tmp/game-downloader-choice
 
     choice=$(< /tmp/game-downloader-choice)
@@ -58,60 +71,32 @@ while true; do
         exit 0  # Exit the script when Cancel is clicked or no option is selected
     fi
 
-    # Execute the corresponding action based on user choice
-    case $choice in
-        1)
-            log_debug "Running Install Game Systems script."
-            bash <(curl -s "$INSTALL_GAME_SYSTEMS")
-            log_debug "Install Game Systems script completed."
-            ;;
-        2)
-            log_debug "Running system select script."
-            bash <(curl -s "$SELECT_SYSTEM")
-            log_debug "System select script completed."
-            ;;
-        3)
-            log_debug "Running SEARCH script."
-            bash <(curl -s "$SEARCH")
-            log_debug "Search script completed."
-            ;;
-        4)
-            log_debug "Running UPDATE script."
-            bash <(curl -s "$UPDATER")
-            log_debug "Update script completed."
-            ;;
-        5)
-            log_debug "Running DOWNLOAD MANAGER script."
-            bash <(curl -s "$DOWNLOAD_MANAGER")
-            log_debug "Download Manager script completed."
-            ;;
-        6)
-            log_debug "Running Uninstall script."
-            bash <(curl -s "$UNINSTALL")
-            log_debug "Uninstall script completed."
-            ;;
-        7)
-    log_debug "Exit selected. Ending script."
-    clear
-    dialog --infobox "Thank you for using Game Downloader! Any issues, please reach out to DTJW92 on Discord!" 10 50
-    sleep 3
-    
-    # Get the PID of the xterm process running this script
-    TERMINAL_PID=$(ps -ef | grep '[x]term' | awk '{print $2}')
-    
-    # If a terminal PID is found, kill it
-    if [ -n "$TERMINAL_PID" ]; then
-        log_debug "Killing xterm process with PID $TERMINAL_PID."
-        kill -9 "$TERMINAL_PID"
-    else
-        log_debug "No xterm process found."
+    # Exit logic for option 7
+    if [ "$choice" -eq 7 ]; then
+        log_debug "Exit selected. Ending script."
+        clear
+        dialog --infobox "Thank you for using Game Downloader! Any issues, please reach out to DTJW92 on Discord!" 10 50
+        sleep 3
+        
+        # Get the parent terminal emulator and close it if applicable
+        TERMINAL_EMULATOR=$(ps -o comm= -p $PPID)
+        if [[ "$TERMINAL_EMULATOR" == "xterm" ]]; then
+            log_debug "Closing xterm terminal."
+            kill -9 "$PPID"
+        else
+            log_debug "No xterm process found or another terminal emulator detected."
+        fi
+
+        exit 0
     fi
 
-    exit 0
-    ;;
-        *)
-            log_debug "Invalid option selected."
-            dialog --msgbox "Invalid option selected. Please try again." 10 50
-            ;;
-    esac
+    # Execute the corresponding script for the selected option
+    if [[ -n "${MENU_ITEMS[$choice]}" ]]; then
+        log_debug "Running script for option $choice."
+        bash <(curl -s "${MENU_ITEMS[$choice]}")
+        log_debug "Script for option $choice completed."
+    else
+        log_debug "Invalid option selected: $choice."
+        dialog --msgbox "Invalid option selected. Please try again." 10 50
+    fi
 done
