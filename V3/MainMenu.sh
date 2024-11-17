@@ -26,6 +26,7 @@ DOWNLOAD_MANAGER="https://raw.githubusercontent.com/DTJW92/game-downloader/main/
 UNINSTALL="https://raw.githubusercontent.com/DTJW92/game-downloader/main/V3/uninstall.sh"
 INSTALL_GAME_SYSTEMS="https://raw.githubusercontent.com/DTJW92/game-downloader/main/V3/installsystem.sh"  # New URL for install script
 SELECT_SYSTEM="https://raw.githubusercontent.com/DTJW92/game-downloader/main/V3/SystemMenu.sh"
+SEARCH="https://raw.githubusercontent.com/DTJW92/game-downloader/main/V3/search.sh"
 # Main dialog menu loop
 while true; do
     log_debug "Displaying menu."
@@ -35,9 +36,10 @@ while true; do
            --menu "Choose an option:" 15 50 9 \
            1 "Install Game Systems" \
            2 "Select a Game System" \
-           2 "Run Updater" \
-           3 "Status Checker" \
-           4 "Uninstall Game Downloader" \
+           3 "Search for a Game" \
+           4 "Run Updater" \
+           5 "Status Checker" \
+           6 "Uninstall Game Downloader" \
            2>/tmp/game-downloader-choice
 
     choice=$(< /tmp/game-downloader-choice)
@@ -70,24 +72,29 @@ while true; do
             break  # Exit the loop after action is completed
             ;;
         3)
-            log_debug "Running updater script."
-            bash <(curl -s "$UPDATER")
+            log_debug "Running SEARCH script."
+            bash <(curl -s "$SEARCH")
             log_debug " script completed."
             break  # Exit the loop after action is completed
             ;;
         4)
-            log_debug "Running download manager script."
-            bash <(curl -s "$DOWNLOAD_MANAGER")
+            log_debug "Running UPDATE script."
+            bash <(curl -s "$UPDATER")
             log_debug " script completed."
             break  # Exit the loop after action is completed
             ;;
         5)
+            log_debug "Running DOWNLOAD MANAGER script."
+            bash <(curl -s "$DOWNLOAD_MANAGER")
+            log_debug " script completed."
+            break  # Exit the loop after action is completed
+            ;;
+         5)
             log_debug "Running Uninstall script."
             bash <(curl -s "$UNINSTALL")
             log_debug " script completed."
             break  # Exit the loop after action is completed
             ;;
-            
         *)
             log_debug "Invalid option selected."
             # Handle invalid choices
