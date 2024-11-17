@@ -54,7 +54,10 @@ while true; do
                     menu_items+=("$index" "Return")
                     index=$((index + 1))
 
-                    while IFS= read -r line; do
+                    # Store the lines in an array to maintain their order
+                    IFS=$'\n' read -d '' -r -a result_lines <<< "$results"
+
+                    for line in "${result_lines[@]}"; do
                         # Extract file path and game info from AllGames.txt line
                         file_path=$(echo "$line" | awk -F':' '{print $1}')
                         game_info=$(echo "$line" | awk -F':' '{print $3}')
@@ -70,7 +73,7 @@ while true; do
                         display_text="$subfolder_name - $decoded_name_cleaned"
                         menu_items+=("$index" "$display_text")
                         index=$((index + 1))
-                    done <<< "$results"
+                    done
 
                     # Loop to allow repeated selection
                     while true; do
@@ -90,11 +93,11 @@ while true; do
                             # Return to the search bar menu
                             break
                         elif [ -n "$selected" ]; then
-                            # Retrieve the full line corresponding to the selected option
-                            selected_line=$(echo "$results" | sed -n "${selected}p")
+                            # The selected index corresponds to the correct result line in the array
+                            result_line=${result_lines[$((selected - 1))]}  # Correct the index by subtracting 1
 
                             # Clean the entire line (remove backticks, quotes, file path, and line number)
-                            cleaned_line=$(echo "$selected_line" | sed 's/[\\\"`]//g' | sed 's/^[[:space:]]*//g' | sed 's/[[:space:]]*$//g' | sed 's|^[^:]*:[0-9]*:||')
+                            cleaned_line=$(echo "$result_line" | sed 's/[\\\"`]//g' | sed 's/^[[:space:]]*//g' | sed 's/[[:space:]]*$//g' | sed 's|^[^:]*:[0-9]*:||')
 
                             # Append the cleaned line to download.txt (without file path or line number)
                             echo "$cleaned_line" >> "$output_file"
