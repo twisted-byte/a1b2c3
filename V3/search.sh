@@ -66,11 +66,11 @@ while true; do
                         game_name=$(echo "$game_info" | awk -F'|' '{print $1}')
                         subfolder_name=$(dirname "$file_path" | awk -F'/' '{print $(NF)}')
 
-                        # Clean the game name by removing backticks only
-                        cleaned_name=$(echo "$game_name" | sed 's/[\\`]//g')
+                        # Clean the game name (remove unwanted characters and spaces)
+                        decoded_name_cleaned=$(echo "$game_name" | sed 's/[\\\"]//g' | sed 's/^[[:space:]]*//g' | sed 's/[[:space:]]*$//g')
 
                         # Combine subfolder and cleaned game name for display purposes
-                        display_text="$subfolder_name - $cleaned_name"
+                        display_text="$subfolder_name - $decoded_name_cleaned"
                         menu_items+=("$index" "$display_text")
                         index=$((index + 1))
                     done
@@ -96,17 +96,14 @@ while true; do
                             # The selected index corresponds to the correct result line in the array
                             result_line=${result_lines[$((selected - 1))]}  # Correct the index by subtracting 1
 
-                            # Remove the file path and line number from the start of the line
-                            cleaned_line=$(echo "$result_line" | sed 's|^[^:]*:[0-9]*:||')
+                            # Clean the entire line (remove backticks, quotes, file path, and line number)
+                            cleaned_line=$(echo "$result_line" | sed 's/[\\\"`]//g' | sed 's/^[[:space:]]*//g' | sed 's/[[:space:]]*$//g' | sed 's|^[^:]*:[0-9]*:||')
 
-                            # Clean the entire line (remove backticks only, keeping the rest)
-                            cleaned_line=$(echo "$cleaned_line" | sed 's/[\\`]//g')
-
-                            # Append the cleaned line to download.txt (with the download path included)
+                            # Append the cleaned line to download.txt (without file path or line number)
                             echo "$cleaned_line" >> "$output_file"
 
                             # Notify the user
-                            dialog --title "Success" --ok-label "OK" --msgbox "Added to the download queue:\n\n$cleaned_line" 10 50
+                            dialog --title "Success" --ok-label "OK" --msgbox "Added to the download queue:\n\n$decoded_name_cleaned" 10 50
                         fi
                     done
                 else
