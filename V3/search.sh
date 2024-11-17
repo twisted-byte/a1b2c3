@@ -63,7 +63,7 @@ while true; do
                         # Clean the game name
                         decoded_name_cleaned=$(echo "$game_name" | sed 's/[\\\"`]//g' | sed 's/^[[:space:]]*//g' | sed 's/[[:space:]]*$//g')
 
-                        # Combine subfolder and cleaned game name
+                        # Combine subfolder and cleaned game name for display purposes
                         display_text="$subfolder_name - $decoded_name_cleaned"
                         menu_items+=("$index" "$display_text")
                         index=$((index + 1))
@@ -115,8 +115,7 @@ while true; do
             exit 0
             ;;
         *)
-            # Handle ESC or unexpected input
-            dialog --title "Exit" --msgbox "Exiting the program..." 10 50
+            # No Exit message box anymore, just break from the loop
             break
             ;;
     esac
