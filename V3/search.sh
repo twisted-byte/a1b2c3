@@ -60,8 +60,11 @@ while true; do
                         game_name=$(echo "$line" | awk -F':' '{print $3}' | awk -F'|' '{print $1}')
                         subfolder_name=$(dirname "$file_path" | awk -F'/' '{print $(NF)}')
 
-                        # Combine subfolder and game name
-                        display_text="$subfolder_name - $game_name"
+                        # Clean the game name
+                        decoded_name_cleaned=$(echo "$game_name" | sed 's/[\\\"`]//g' | sed 's/^[[:space:]]*//g' | sed 's/[[:space:]]*$//g')
+
+                        # Combine subfolder and cleaned game name
+                        display_text="$subfolder_name - $decoded_name_cleaned"
                         menu_items+=("$index" "$display_text")
                         index=$((index + 1))
                     done <<< "$results"
@@ -90,11 +93,11 @@ while true; do
                             # Extract the part of the line after the file path and line number
                             game_info=$(echo "$selected_line" | sed 's|^.*AllGames.txt:[0-9]*:||')
 
-                            # Append the game info (Game Name|Download Link|Download Location) to download.txt
-                            echo "$game_info" >> "$output_file"
+                            # Append the cleaned game info (Game Name|Download Link|Download Location) to download.txt
+                            echo "$decoded_name_cleaned|$game_info" >> "$output_file"
 
                             # Notify the user
-                            dialog --title "Success" --ok-label "OK" --msgbox "Added to the download queue:\n\n$game_info" 10 50
+                            dialog --title "Success" --ok-label "OK" --msgbox "Added to the download queue:\n\n$decoded_name_cleaned|$game_info" 10 50
                         fi
                     done
                 else
