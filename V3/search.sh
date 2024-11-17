@@ -10,11 +10,17 @@ if [ ! -f "$output_file" ]; then
     touch "$output_file"
 fi
 
-# Function to perform the search
+# Function to perform the search and return results with line numbers
 perform_search() {
     local query=$1
-    # Search recursively for the query in AllGames.txt files
-    grep -iHn "$query" "$main_directory"/**/AllGames.txt 2>/dev/null
+    # Search recursively for the query in AllGames.txt files and capture results with file path and line numbers
+    grep -inH "$query" "$main_directory"/**/AllGames.txt 2>/dev/null
+}
+
+# Function to clean the game name (remove unwanted characters and spaces)
+clean_game_name() {
+    local game_name=$1
+    echo "$game_name" | sed 's/[\\\"`]//g' | sed 's/^[[:space:]]*//g' | sed 's/[[:space:]]*$//g'
 }
 
 # Temporary files
@@ -64,18 +70,14 @@ while true; do
 
                         # Extract the game name (first part of game_info before the first '|')
                         game_name=$(echo "$game_info" | awk -F'|' '{print $1}')
-
-                        # Get the portion of the path after the second '|'
-                        path_after_second_pipe=$(echo "$game_info" | awk -F'|' '{print $2}' | sed 's/^[[:space:]]*//g')
+                        # Clean the game name
+                        decoded_name_cleaned=$(clean_game_name "$game_name")
 
                         # Extract subfolder name from file path
                         subfolder_name=$(dirname "$file_path" | awk -F'/' '{print $(NF)}')
 
-                        # Clean the game name (remove unwanted characters and spaces)
-                        decoded_name_cleaned=$(echo "$game_name" | sed 's/[\\\"`]//g' | sed 's/^[[:space:]]*//g' | sed 's/[[:space:]]*$//g')
-
-                        # Combine subfolder, cleaned game name, and the path after the second '|'
-                        display_text="$subfolder_name - $decoded_name_cleaned $path_after_second_pipe"
+                        # Display text with subfolder and cleaned game name
+                        display_text="$subfolder_name - $decoded_name_cleaned"
                         menu_items+=("$index" "$display_text")
                         index=$((index + 1))
                     done
@@ -104,11 +106,14 @@ while true; do
                             # Get the corresponding result line
                             result_line=${result_lines[$selected_index]} 
 
+                            # Extract the full file path (from the result line)
+                            full_file_path=$(echo "$result_line" | awk -F':' '{print $1}')
+
                             # Clean the entire line (remove backticks, quotes, file path, and line number)
                             cleaned_line=$(echo "$result_line" | sed 's/[\\\"`]//g' | sed 's/^[[:space:]]*//g' | sed 's/[[:space:]]*$//g' | sed 's|^[^:]*:[0-9]*:||')
 
-                            # Append the cleaned line to download.txt (without file path or line number)
-                            echo "$cleaned_line" >> "$output_file"
+                            # Append the cleaned line to download.txt (including the full file path)
+                            echo "$full_file_path $cleaned_line" >> "$output_file"
 
                             # Notify the user
                             dialog --title "Success" --ok-label "OK" --msgbox "Added to the download queue:\n\n$decoded_name_cleaned" 10 50
