@@ -55,8 +55,6 @@ fi
 # Execute the corresponding action based on user choice
 if [ "$choice" -eq 0 ]; then
     clear
-    dialog --infobox "Returning to the main menu..." 10 50
-    sleep 2
     exec /tmp/GameDownloader.sh  # Execute the main menu script
     exit 0  # In case exec fails, exit the script
 else
