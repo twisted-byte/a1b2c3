@@ -10,18 +10,20 @@ if [ ! -f "$output_file" ]; then
     touch "$output_file"
 fi
 
-# Function to perform the search and return results with line numbers
+# Function to perform the search and return results with file paths and line numbers
 perform_search() {
     local query=$1
     # Search recursively for the query in AllGames.txt files and capture results with file path and line numbers
     grep -inH "$query" "$main_directory"/**/AllGames.txt 2>/dev/null
 }
 
-# Function to clean the game name (remove unwanted characters and spaces)
+# Function to clean up the game name (remove backticks)
+# Only remove backticks
 clean_game_name() {
     local game_name=$1
-    echo "$game_name" | sed 's/[\\\"`]//g' | sed 's/^[[:space:]]*//g' | sed 's/[[:space:]]*$//g'
+    echo "$game_name" | sed 's/[\\`]//g'  # Removes only backticks and backslashes
 }
+
 
 # Temporary files
 tempfile=$(mktemp)
@@ -70,14 +72,15 @@ while true; do
 
                         # Extract the game name (first part of game_info before the first '|')
                         game_name=$(echo "$game_info" | awk -F'|' '{print $1}')
+
                         # Clean the game name
-                        decoded_name_cleaned=$(clean_game_name "$game_name")
+                        cleaned_game_name=$(clean_game_name "$game_name")
 
                         # Extract subfolder name from file path
                         subfolder_name=$(dirname "$file_path" | awk -F'/' '{print $(NF)}')
 
-                        # Display text with subfolder and cleaned game name
-                        display_text="$subfolder_name - $decoded_name_cleaned"
+                        # Prepare display text: show subfolder and cleaned game name
+                        display_text="$subfolder_name - $cleaned_game_name"
                         menu_items+=("$index" "$display_text")
                         index=$((index + 1))
                     done
@@ -89,6 +92,9 @@ while true; do
 
                         # Get the selected option
                         selected=$(<"$resultfile")
+
+                        # Clean up the resultfile after reading the selection
+                        rm -f "$resultfile"
 
                         # Detect ESC key or cancellation
                         if [ $? -ne 0 ]; then
@@ -112,11 +118,14 @@ while true; do
                             # Clean the entire line (remove backticks, quotes, file path, and line number)
                             cleaned_line=$(echo "$result_line" | sed 's/[\\\"`]//g' | sed 's/^[[:space:]]*//g' | sed 's/[[:space:]]*$//g' | sed 's|^[^:]*:[0-9]*:||')
 
-                            # Append the cleaned line to download.txt (including the full file path)
-                            echo "$full_file_path $cleaned_line" >> "$output_file"
+                            # Clean up the line by removing the file path and line number, leaving only game info
+                            game_info=$(echo "$cleaned_line" | sed 's|^[^|]*||')
+
+                            # Append the cleaned line to download.txt (without file path or line number)
+                            echo "$game_info" >> "$output_file"
 
                             # Notify the user
-                            dialog --title "Success" --ok-label "OK" --msgbox "Added to the download queue:\n\n$decoded_name_cleaned" 10 50
+                            dialog --title "Success" --ok-label "OK" --msgbox "Added to the download queue:\n\n$cleaned_game_name" 10 50
                         fi
                     done
                 else
