@@ -42,13 +42,18 @@ declare -A MENU_DESCRIPTIONS=(
 while true; do
     log_debug "Displaying menu."
 
-    # Dynamically build menu options
-    MENU_OPTIONS=()
-    for key in "${!MENU_DESCRIPTIONS[@]}"; do
-        MENU_OPTIONS+=("$key" "${MENU_DESCRIPTIONS[$key]}")
-    done
-    MENU_OPTIONS+=("7" "Exit")  # Add Exit option
+ # Define the order explicitly
+MENU_ORDER=(1 2 3 4 5 6 7)  # Add 7 (Exit) at the end explicitly
 
+# Dynamically build menu options in the correct order
+MENU_OPTIONS=()
+for key in "${MENU_ORDER[@]}"; do
+    if [ "$key" -eq 7 ]; then
+        MENU_OPTIONS+=("$key" "Exit")  # Add Exit option
+    else
+        MENU_OPTIONS+=("$key" "${MENU_DESCRIPTIONS[$key]}")
+    fi
+done
     # Display menu
     dialog --clear --backtitle "Game Downloader" \
            --title "Select a System" \
