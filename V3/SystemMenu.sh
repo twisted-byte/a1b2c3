@@ -3,7 +3,7 @@
 clear
 
 # Toggle for dialog (1 = enabled, 0 = disabled)
-USE_DIALOG=0  # Set to 0 to disable dialog, 1 to enable it
+USE_DIALOG=1  # Set to 0 to disable dialog, 1 to enable it
 
 # Define the base directory for game systems
 BASE_DIR="/userdata/system/game-downloader/links"
