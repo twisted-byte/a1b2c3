@@ -68,18 +68,19 @@ search_games() {
     search_term=$(echo "$search_term" | tr '[:upper:]' '[:lower:]')
     echo "Searching for term: $search_term" &
 
-    for file in $(find "$DEST_DIR" -type f -name "AllGames.txt"); do
-        folder_name=$(basename "$(dirname "$file")")
-        echo "Searching in file: $file" &
-        while IFS="|" read -r decoded_name encoded_url game_download_dir; do
-            decoded_name_lower=$(echo "$decoded_name" | tr '[:upper:]' '[:lower:]')
-            if [[ "$decoded_name_lower" =~ $search_term ]]; then
-                game_name_cleaned=$(clean_name "$decoded_name")
-                echo "Found game: $folder_name - $game_name_cleaned" &
-                results+=("$folder_name - $game_name_cleaned" "$decoded_name" off)
-            fi
-        done < <(grep -i "$search_term" "$file")
-    done
+   for file in $(find "$DEST_DIR" -type f -name "AllGames.txt"); do
+    folder_name=$(basename "$(dirname "$file")")
+    echo "Searching in file: $file" &
+    while IFS="|" read -r decoded_name encoded_url game_download_dir; do
+        decoded_name_lower=$(echo "$decoded_name" | tr '[:upper:]' '[:lower:]')
+        if [[ "$decoded_name_lower" =~ $search_term ]]; then
+            game_name_cleaned=$(clean_name "$decoded_name")
+            echo "Found game: $folder_name - $game_name_cleaned" &
+            results+=("$folder_name - $game_name_cleaned" "$decoded_name" off)
+        fi
+    done < <(grep -i "$search_term" "$file")
+done
+
 
     wait
 
