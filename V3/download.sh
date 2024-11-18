@@ -13,12 +13,12 @@ mkdir -p "$(dirname "$DEBUG_LOG")"
 
 # Clear debug log for a fresh session
 if [ -f "$DEBUG_LOG" ]; then
-    echo "Clearing debug log for the new session."
+    echo "Clearing debug log for the new session." >> "$DEBUG_LOG"
     > "$DEBUG_LOG"
 fi
 
 # Redirect stdout and stderr to debug log
-exec > >(tee -a "$DEBUG_LOG") 2>&1
+exec > "$DEBUG_LOG" 2>&1
 
 # Log script start
 echo "Starting game downloader script at $(date)"
@@ -48,16 +48,20 @@ process_download() {
     local url="$2"
     local folder="$3"
 
-    game_name=$(echo "$game_name" | sed 's/["]//g')
+    game_name=$(echo "$game_name" | sed 's/[\"]//g')
     local temp_path="/userdata/system/game-downloader/$game_name"
 
-    # Move the line to processing.txt
-    echo "$game_name|$url|$folder" >> "$DOWNLOAD_PROCESSING"
-    echo "Started download for $game_name... Logging to processing.txt"
-    update_queue_file "$DOWNLOAD_QUEUE" "$game_name|$url|$folder"
+    # Check for existing partial download
+    if [ -f "$temp_path" ]; then
+        echo "Resuming partial download for $game_name..."
+    else
+        echo "$game_name|$url|$folder" >> "$DOWNLOAD_PROCESSING"
+        echo "Started download for $game_name... Logging to processing.txt"
+        update_queue_file "$DOWNLOAD_QUEUE" "$game_name|$url|$folder"
+        echo "Starting new download for $game_name..."
+    fi
 
-    # Download with retry logic
-    echo "Starting download for $game_name..."
+    # Download with retry and resume logic
     wget --tries=5 -c "$url" -O "$temp_path" >> "$DEBUG_LOG" 2>&1
     if [ $? -ne 0 ]; then
         echo "Download failed for $game_name. Check debug log for details."
