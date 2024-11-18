@@ -10,12 +10,12 @@ mkdir -p "$(dirname "$DEBUG_LOG")"
 
 # Clear debug log for a fresh session
 if [ -f "$DEBUG_LOG" ]; then
-    echo "Clearing debug log for the new session."
+    echo "Clearing debug log for the new session." >> "$DEBUG_LOG"
     > "$DEBUG_LOG"
 fi
 
 # Redirect stdout and stderr to debug log
-exec > >(tee -a "$DEBUG_LOG") 2>&1
+exec > "$DEBUG_LOG" 2>&1
 
 # Log script start
 echo "Starting search script at $(date)"
