@@ -29,6 +29,7 @@ dialog --clear --backtitle "Game System Installer" \
        --menu "Choose an option:" 15 50 9 \
        "${MENU_OPTIONS[@]}" \
        2>/tmp/game-downloader-choice
+
 choice=$(< /tmp/game-downloader-choice)
 rm /tmp/game-downloader-choice
 
@@ -47,6 +48,7 @@ fi
 
 # Get the selected system based on the user choice
 selected_system="${MENU_ORDER[$choice-1]}"  # Adjust for 0-based indexing
+
 # Check if a valid system was selected
 if [ -z "$selected_system" ]; then
     dialog --msgbox "Invalid option selected. Please try again." 10 50
@@ -54,13 +56,17 @@ if [ -z "$selected_system" ]; then
     bash /tmp/GameDownloader.sh  # Return to the main menu
     exit 1
 fi
+
 # Get the URL for the selected system
 scraper_url="${SCRAPERS[$selected_system]}"
+
 # Inform the user that the installation is starting
 dialog --infobox "Installing $selected_system downloader. Please wait..." 10 50
+
 # Download and execute the scraper script
 curl -Ls "$scraper_url" -o /tmp/scraper.sh 
 bash /tmp/scraper.sh  # Run the downloaded scraper and wait for it to complete
+
 # Show completion message once the process is done (after the script finishes)
 dialog --infobox "Installation complete!" 10 50
 sleep 2  # Display the "Installation complete!" message for a few seconds
