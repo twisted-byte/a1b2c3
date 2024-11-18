@@ -118,7 +118,7 @@ select_games() {
         game_items=$(echo "$game" | sed -E 's/\.(chd|zip|iso)/\.\1\n/g')
         while IFS= read -r game_item; do
             if [[ -n "$game_item" ]]; then
-                game_item_cleaned=$(echo "$game_item" | sed 's/[\\\"]//g' | sed 's/^[[:space:]]*//g' | sed 's/[[:space:]]*$//g')
+                game_item_cleaned=$(echo "$game_item" | sed 's/[\\\"`]//g' | sed 's/^[[:space:]]*//g' | sed 's/[[:space:]]*$//g')
                 if [[ -n "$game_item_cleaned" ]]; then
                     download_game "$game_item_cleaned"
                 fi
@@ -131,7 +131,7 @@ select_games() {
 # Function to download the selected game and send the link to the DownloadManager
 download_game() {
     local decoded_name="$1"
-    decoded_name_cleaned=$(echo "$decoded_name" | sed 's/[\\\"]//g' | sed 's/^[[:space:]]*//g' | sed 's/[[:space:]]*$//g')
+    decoded_name_cleaned=$(echo "$decoded_name" | sed 's/[\\\"`]//g' | sed 's/^[[:space:]]*//g' | sed 's/[[:space:]]*$//g')
 
     # Check if the game already exists in the download directory
     if [[ -f "$DOWNLOAD_DIR/$decoded_name_cleaned" ]]; then
