@@ -19,60 +19,51 @@ MENU_ORDER=("PSX" "PS2" "Xbox" "Dreamcast" "Game Boy Advance")
 MENU_OPTIONS=("0" "Return to Main Menu")  # Add "Return to Main Menu" as the first option
 i=1
 for system in "${MENU_ORDER[@]}"; do
-    MENU_OPTIONS+=("$i" "$system" off)  # Default to "off" since this is a checklist
+    MENU_OPTIONS+=("$i" "$system")  # Add option number and system name
     ((i++))  # Increment the option number
 done
 
-# Main dialog checklist menu with dynamically generated options
-choices=$(dialog --clear --backtitle "Game System Installer" \
-                 --title "Select Game Systems" \
-                 --checklist "Choose one or more systems:" 15 50 9 \
-                 "${MENU_OPTIONS[@]}" \
-                 2>/tmp/game-downloader-choice)
+# Main dialog menu with dynamically generated options
+dialog --clear --backtitle "Game System Installer" \
+       --title "Select a Game System" \
+       --menu "Choose an option:" 15 50 9 \
+       "${MENU_OPTIONS[@]}" \
+       2>/tmp/game-downloader-choice
+choice=$(< /tmp/game-downloader-choice)
+rm /tmp/game-downloader-choice
 
 # Check if the user canceled the dialog (no choice selected)
-if [ -z "$choices" ]; then
+if [ -z "$choice" ]; then
     clear
     exit 0  # Exit the script when Cancel is clicked or no option is selected
 fi
 
 # If user selects "Return to Main Menu"
-if echo "$choices" | grep -q "^0$"; then
+if [ "$choice" -eq 0 ]; then
     clear
     exec /tmp/GameDownloader.sh  # Execute the main menu script
     exit 0  # In case exec fails, exit the script
 fi
 
-# Process the selected systems
-IFS=$'\n' # Split choices by newline
-for choice in $choices; do
-    # Get the system name corresponding to the selected choice
-    if [ "$choice" != "0" ]; then
-        selected_system="${MENU_ORDER[$choice-1]}"  # Adjust for 0-based indexing
-        
-        # Check if a valid system was selected
-        if [ -z "$selected_system" ]; then
-            dialog --msgbox "Invalid option selected. Please try again." 10 50
-            clear
-            bash /tmp/GameDownloader.sh  # Return to the main menu
-            exit 1
-        fi
-
-        # Get the URL for the selected system
-        scraper_url="${SCRAPERS[$selected_system]}"
-
-        # Inform the user that the installation is starting
-        dialog --infobox "Installing $selected_system downloader. Please wait..." 10 50
-
-        # Download and execute the scraper script
-        curl -Ls "$scraper_url" -o /tmp/scraper.sh 
-        bash /tmp/scraper.sh  # Run the downloaded scraper and wait for it to complete
-
-        # Show completion message once the process is done (after the script finishes)
-        dialog --infobox "Installation complete for $selected_system!" 10 50
-        sleep 2  # Display the "Installation complete!" message for a few seconds
-    fi
-done
+# Get the selected system based on the user choice
+selected_system="${MENU_ORDER[$choice-1]}"  # Adjust for 0-based indexing
+# Check if a valid system was selected
+if [ -z "$selected_system" ]; then
+    dialog --msgbox "Invalid option selected. Please try again." 10 50
+    clear
+    bash /tmp/GameDownloader.sh  # Return to the main menu
+    exit 1
+fi
+# Get the URL for the selected system
+scraper_url="${SCRAPERS[$selected_system]}"
+# Inform the user that the installation is starting
+dialog --infobox "Installing $selected_system downloader. Please wait..." 10 50
+# Download and execute the scraper script
+curl -Ls "$scraper_url" -o /tmp/scraper.sh 
+bash /tmp/scraper.sh  # Run the downloaded scraper and wait for it to complete
+# Show completion message once the process is done (after the script finishes)
+dialog --infobox "Installation complete!" 10 50
+sleep 2  # Display the "Installation complete!" message for a few seconds
 
 # Optionally, return to the main menu or run another script after the process
 bash /tmp/GameDownloader.sh
