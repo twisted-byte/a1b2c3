@@ -12,10 +12,13 @@ SCRAPERS["Xbox"]="https://raw.githubusercontent.com/DTJW92/game-downloader/main/
 SCRAPERS["Dreamcast"]="https://raw.githubusercontent.com/DTJW92/game-downloader/main/scrapers/dc-scraper.sh"
 SCRAPERS["Game Boy Advance"]="https://raw.githubusercontent.com/DTJW92/game-downloader/main/scrapers/gba-scraper.sh"
 
-# Create the menu dynamically based on the associative array
+# Define the predetermined order for the menu
+MENU_ORDER=("PSX" "PS2" "Xbox" "Dreamcast" "Game Boy Advance")
+
+# Create the menu dynamically based on the predetermined order
 MENU_OPTIONS=("0" "Return to Main Menu")  # Add "Return to Main Menu" as the first option
 i=1
-for system in "${!SCRAPERS[@]}"; do
+for system in "${MENU_ORDER[@]}"; do
     MENU_OPTIONS+=("$i" "$system")  # Add option number and system name
     ((i++))  # Increment the option number
 done
@@ -43,8 +46,8 @@ if [ "$choice" -eq 0 ]; then
     exit 0  # In case exec fails, exit the script
 fi
 
-# Correctly map the user's selection to the system name
-selected_system=$(echo "${!SCRAPERS[@]}" | tr ' ' '\n' | sed -n "${choice}p")
+# Get the selected system based on the user choice
+selected_system="${MENU_ORDER[$choice-1]}"  # Adjust for 0-based indexing
 
 # Check if a valid system was selected
 if [ -z "$selected_system" ]; then
