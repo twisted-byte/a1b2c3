@@ -92,7 +92,12 @@ download_file "https://raw.githubusercontent.com/DTJW92/game-downloader/main/bke
 echo "Refreshing Batocera games list using localhost..."
 curl -X POST http://localhost:1234/reloadgames >/dev/null 2>&1
 
-# Create a new XML entry to add with additional fields
+# Ensure the gamelist.xml file exists with basic XML structure if it doesn't
+if [[ ! -f "$GAMELIST" || ! -s "$GAMELIST" ]]; then
+    echo "<?xml version=\"1.0\" encoding=\"UTF-8\"?><gamelist></gamelist>" > "$GAMELIST"
+fi
+
+# New game entry to add
 NEW_ENTRY="<game>
     <path>./GameDownloader.sh</path>
     <name>Game Downloader</name>
@@ -103,20 +108,24 @@ NEW_ENTRY="<game>
     <lang>en</lang>
 </game>"
 
-# Replace the existing entry by path, or append the new one if it doesn't exist
+# Check if the game entry already exists in gamelist.xml
 if grep -q "<path>./GameDownloader.sh</path>" "$GAMELIST"; then
     # Replace the existing entry based on path
     sed -i "/<path>./GameDownloader.sh<\/path>/,/<\/game>/c\\
 $NEW_ENTRY" "$GAMELIST"
     echo "Replaced existing entry for Game Downloader based on path."
 else
-    # Append the new entry if it doesn't exist
-    echo "$NEW_ENTRY" >> "$GAMELIST"
-    echo "Appended new 'Game Downloader' entry."
+    # Append the new entry right before the closing </gamelist> tag if it exists
+    if grep -q "</gamelist>" "$GAMELIST"; then
+        sed -i "s|</gamelist>|$NEW_ENTRY\n</gamelist>|" "$GAMELIST"
+        echo "Appended new 'Game Downloader' entry before closing </gamelist>."
+    else
+        # If no </gamelist> tag is found (e.g., malformed file), we force a clean structure
+        echo "<?xml version=\"1.0\" encoding=\"UTF-8\"?><gamelist>$NEW_ENTRY</gamelist>" > "$GAMELIST"
+        echo "Created new gamelist.xml with 'Game Downloader' entry."
+    fi
 fi
 
+# Refresh Batocera games list via localhost
 curl -X POST http://localhost:1234/reloadgames >/dev/null 2>&1
 echo "Gamelist.xml has been updated."
-
-echo "Installation complete. Game Downloader should now be available in Ports."
-echo "Batocera will initiate the background downloader automatically, you should find a toggle switch for it within Main Menu -> System Settings -> Services. Ensure this is toggled to ON."
