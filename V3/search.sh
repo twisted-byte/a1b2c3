@@ -46,15 +46,12 @@ search_games() {
     local search_term="$1"
     local results=()
 
-    # Wrap the search term in backticks to match the game names in AllGames.txt
-    search_term_with_backticks="\`$search_term\`"
-
     # Search through subfolders and AllGames.txt files
     find "$DEST_DIR" -type f -name "AllGames.txt" | while read -r file; do
         folder_name=$(dirname "$file")  # Get the folder name (subfolder)
 
-        # Search for the term in AllGames.txt, now wrapped in backticks
-        grep -i "$search_term_with_backticks" "$file" | while IFS="|" read -r decoded_name encoded_url game_download_dir; do
+        # Search for the term in AllGames.txt
+        grep -i "$search_term" "$file" | while IFS="|" read -r decoded_name encoded_url game_download_dir; do
             # Clean the game name and display it with the subfolder name
             game_name_cleaned=$(echo "$decoded_name" | sed 's/[\\\"`]//g' | sed 's/^[[:space:]]*//g' | sed 's/[[:space:]]*$//g')
             results+=("$folder_name - $game_name_cleaned")
@@ -70,7 +67,7 @@ search_games() {
             IFS=$'\n'
             for game in $selected_games; do
                 game_cleaned=$(echo "$game" | sed 's/^[[:space:]]*//g' | sed 's/[[:space:]]*$//g')
-                download_game "$game_cleaned"
+                download_game "$game_cleaned")
             done
         fi
     else
@@ -78,7 +75,6 @@ search_games() {
         sleep 2
     fi
 }
-
 
 # Main search loop
 while true; do
