@@ -1,117 +1,126 @@
 #!/bin/bash
 
-# Paths to files and logs
-DEST_DIR="/userdata/system/game-downloader/links"
-ALLGAMES_FILE="$DEST_DIR/AllGames.txt"
-DEBUG_LOG="/userdata/system/game-downloader/debug/search_debug.txt"
+# Display animated title for installer
+animate_title() {
+    local text="GAME DOWNLOADER INSTALLER"
+    local delay=0.03
+    local length=${#text}
+    for (( i=0; i<length; i++ )); do
+        echo -n "${text:i:1}"
+        sleep $delay
+    done
+    echo
+}
 
-# Ensure the debug directory exists
-mkdir -p "$(dirname "$DEBUG_LOG")"
+# Function to display controls
+display_controls() {
+    echo
+    echo "  This will install the Game Downloader app in Ports."
+    echo
+    sleep 3  # Delay for 3 seconds
+}
 
-# Clear debug log for a fresh session
-if [ -f "$DEBUG_LOG" ]; then
-    echo "Clearing debug log for the new session." >> "$DEBUG_LOG"
-    > "$DEBUG_LOG"
+# Function to download files and handle errors
+download_file() {
+    local url=$1
+    local dest=$2
+
+    # Create the directory if it doesn't exist
+    mkdir -p "$(dirname "$dest")" >/dev/null 2>&1
+
+    # Attempt to download the file
+    if ! curl -L "$url" -o "$dest" >/dev/null 2>&1; then
+        dialog --msgbox "Error downloading $url. Please check your network connection or the URL." 7 50
+        exit 1
+    fi
+}
+
+# Create all necessary directories
+mkdir -p /userdata/system/game-downloader/debug >/dev/null 2>&1
+mkdir -p /userdata/roms/ports/images >/dev/null 2>&1
+mkdir -p /userdata/roms/ports/videos >/dev/null 2>&1
+mkdir -p /userdata/system/services >/dev/null 2>&1
+mkdir -p /userdata/roms/ports >/dev/null 2>&1
+
+# Define the path to the gamelist.xml
+GAMELIST="/userdata/roms/ports/gamelist.xml"
+
+# Ensure the gamelist.xml file exists with basic XML structure if it doesn't
+if [[ ! -f "$GAMELIST" ]]; then
+    echo "<?xml version=\"1.0\" encoding=\"UTF-8\"?><gameList></gameList>" > "$GAMELIST"
+fi
+# Main execution
+clear
+animate_title
+display_controls
+# Download the four files and save them in the Images folder
+download_file "https://raw.githubusercontent.com/DTJW92/game-downloader/main/images/Game%20Downloader%20Wheel.png" "/userdata/roms/ports/images/Game_Downloader_Wheel.png"
+download_file "https://raw.githubusercontent.com/DTJW92/game-downloader/main/videos/Game%20Downloader%20Video.mp4" "/userdata/roms/ports/videos/GameDownloader-video.mp4"
+download_file "https://raw.githubusercontent.com/DTJW92/game-downloader/main/images/Game%20Downloader%20Icon.png" "/userdata/roms/ports/images/Game_Downloader_Icon.png"
+download_file "https://raw.githubusercontent.com/DTJW92/game-downloader/main/images/Game%20Download%20Box%20Art.png" "/userdata/roms/ports/images/Game_Downloader_Box_Art.png"
+# Download and save download.sh locally (always replace)
+download_file "https://raw.githubusercontent.com/DTJW92/game-downloader/main/V3/download.sh" "/userdata/system/services/download.sh"
+# Convert download.sh to Unix format and set proper permissions
+dos2unix /userdata/system/services/download.sh >/dev/null 2>&1
+chmod +x /userdata/system/services/download.sh >/dev/null 2>&1
+chmod 777 /userdata/system/services/download.sh >/dev/null 2>&1 
+
+# Rename the file to remove the .sh extension
+mv /userdata/system/services/download.sh /userdata/system/services/Background_Game_Downloader >/dev/null 2>&1
+
+# Ensure the script is executable
+chmod +x /userdata/system/services/Background_Game_Downloader >/dev/null 2>&1
+
+# Enable and start the service in the background
+batocera-services enable Background_Game_Downloader >/dev/null 2>&1
+batocera-services start Background_Game_Downloader &>/dev/null &
+
+# Download GMD.sh and save it as GameDownloader.sh in Ports folder
+download_file "https://raw.githubusercontent.com/DTJW92/game-downloader/main/V3/Display.sh" "/userdata/roms/ports/GameDownloader.sh"
+
+# Make the downloaded GameDownloader.sh executable
+chmod +x /userdata/roms/ports/GameDownloader.sh >/dev/null 2>&1
+
+# Download bkeys.txt and save it as GameDownloader.sh.keys in the Ports folder
+download_file "https://raw.githubusercontent.com/DTJW92/game-downloader/main/bkeys.txt" "/userdata/roms/ports/GameDownloader.sh.keys"
+
+# Refresh Batocera games list via localhost
+echo "Refreshing Batocera games list using localhost..."
+curl -X POST http://localhost:1234/reloadgames >/dev/null 2>&1
+
+# Ensure the gamelist.xml file exists with basic XML structure if it doesn't
+if [[ ! -f "$GAMELIST" || ! -s "$GAMELIST" ]]; then
+    echo "<?xml version=\"1.0\" encoding=\"UTF-8\"?><gamelist></gamelist>" > "$GAMELIST"
 fi
 
-# Redirect stdout and stderr to debug log
-exec > "$DEBUG_LOG" 2>&1
-
-# Log script start
-echo "Starting search script at $(date)"
-
-# Arrays for tracking games
-added_games=()
-skipped_games=()
-
-# Function to clean up game names
-clean_name() {
-    echo "$1" | sed 's/[\\\"`]//g' | sed 's/^[[:space:]]*//g' | sed 's/[[:space:]]*$//g'
-}
-
-# Function to download a game
-download_game() {
-    local decoded_name="$1"
-    decoded_name_cleaned=$(clean_name "$decoded_name")
-
-    echo "Checking if game already exists or is queued: $decoded_name_cleaned"
-
-    if [[ -f "$DEST_DIR/$decoded_name_cleaned" ]] || grep -q "$decoded_name_cleaned" "/userdata/system/game-downloader/download.txt"; then
-        skipped_games+=("$decoded_name_cleaned")
-        echo "Game already exists or is queued: $decoded_name_cleaned"
-        return
-    fi
-
-    echo "Extracting URL and directory for $decoded_name_cleaned"
-    game_info=$(grep -F "$decoded_name_cleaned" "$ALLGAMES_FILE")
-    game_url=$(echo "$game_info" | cut -d '|' -f 2)
-    game_download_dir=$(echo "$game_info" | cut -d '|' -f 3)
-
-    if [[ -z "$game_url" || -z "$game_download_dir" ]]; then
-        dialog --infobox "Error: Could not find URL for '$decoded_name_cleaned'." 5 40
-        echo "Error: Could not find URL for '$decoded_name_cleaned'"
-        sleep 2
-        return
-    fi
-
-    echo "Adding to download queue: $decoded_name_cleaned|$game_url|$game_download_dir"
-    echo "$decoded_name_cleaned|$game_url|$game_download_dir" >> "/userdata/system/game-downloader/download.txt"
-    added_games+=("$decoded_name_cleaned")
-}
-
-# Function to search and display games
-search_games() {
-    local search_term="$1"
-    local results=()
-    IFS=$'\n'
-
-    search_term=$(echo "$search_term" | tr '[:upper:]' '[:lower:]')
-    echo "Searching for term: $search_term" &
-
-    for file in $(find "$DEST_DIR" -type f -name "AllGames.txt"); do
-        folder_name=$(basename "$(dirname "$file")")
-        echo "Searching in file: $file" &
-        while IFS="|" read -r decoded_name encoded_url game_download_dir; do
-            decoded_name_lower=$(echo "$decoded_name" | tr '[:upper:]' '[:lower:]')
-            if [[ "$decoded_name_lower" =~ $search_term ]]; then
-                game_name_cleaned=$(clean_name "$decoded_name")
-                echo "Found game: $folder_name - $game_name_cleaned" &
-                results+=("$folder_name - $game_name_cleaned" "$decoded_name" off)
-            fi
-        done < <(grep -i "$search_term" "$file")
-    done
-
-    wait
-
-    if [[ ${#results[@]} -gt 0 ]]; then
-        selected_games=$(dialog --title "Search Results" --checklist "Choose games to download" 25 70 10 "${results[@]}" 3>&1 1>&2 2>&3)
-        [[ $? -ne 0 ]] && return
-        for game in $selected_games; do
-            download_game "$(clean_name "$game")"
-        done
+# New game entry to add
+NEW_ENTRY="<game>
+    <path>./GameDownloader.sh</path>
+    <name>Game Downloader</name>
+    <image>./images/Game_Downloader_Icon.png</image>
+    <video>./videos/GameDownloader-video.mp4</video>
+    <marquee>./images/Game_Downloader_Wheel.png</marquee>
+    <thumbnail>./images/Game_Downloader_Box_Art.png</thumbnail>
+    <lang>en</lang>
+</game>"
+# Check if the game entry already exists in gamelist.xml
+if grep -q "<path>./GameDownloader.sh</path>" "$GAMELIST"; then
+    # Replace the existing entry based on path
+    sed -i "/<path>\\.\\/GameDownloader\\.sh<\\/path>/,/<\\/game>/c\\
+$NEW_ENTRY" "$GAMELIST"
+    echo "Replaced existing entry for Game Downloader based on path."
+else
+    # Append the new entry right before the closing </gamelist> tag if it exists
+    if grep -q "</gamelist>" "$GAMELIST"; then
+        sed -i "s|</gamelist>|$NEW_ENTRY\n</gamelist>|" "$GAMELIST"
+        echo "Appended new 'Game Downloader' entry before closing </gamelist>."
     else
-        dialog --infobox "No games found for '$search_term'." 5 40
-        echo "No games found for '$search_term'"
-        sleep 2
+        # If no </gamelist> tag is found (e.g., malformed file), we force a clean structure
+        echo "<?xml version=\"1.0\" encoding=\"UTF-8\"?><gamelist>$NEW_ENTRY</gamelist>" > "$GAMELIST"
+        echo "Created new gamelist.xml with 'Game Downloader' entry."
     fi
-}
+fi
 
-# Main loop
-while true; do
-    search_term=$(dialog --inputbox "Enter search term" 10 50 3>&1 1>&2 2>&3)
-    [[ -z "$search_term" ]] && break
-    search_games "$search_term"
-
-    if [[ ${#added_games[@]} -gt 0 ]]; then
-        dialog --msgbox "Added games:\n$(printf "%s\n" "${added_games[@]}")" 10 50
-        echo "Added games: ${added_games[@]}"
-    fi
-
-    if [[ ${#skipped_games[@]} -gt 0 ]]; then
-        dialog --msgbox "Skipped games:\n$(printf "%s\n" "${skipped_games[@]}")" 10 50
-        echo "Skipped games: ${skipped_games[@]}"
-    fi
-
-    dialog --title "Continue?" --yesno "Search for more games?" 7 50 || break
-done
-echo "Goodbye!"
+# Refresh Batocera games list via localhost
+curl -X POST http://localhost:1234/reloadgames >/dev/null 2>&1
+echo "Gamelist.xml has been updated."
