@@ -3,12 +3,12 @@
 # Predefined systems and their URLs
 declare -A SYSTEMS
 SYSTEMS=(
-    ["Nintendo Game Boy Advance"]="https://myrient.erista.me/files/No-Intro/Nintendo%20-%20Game%20Boy%20Advance/"
     ["PSX"]="https://myrient.erista.me/files/Internet%20Archive/chadmaster/chd_psx_eur/CHD-PSX-EUR/"
     ["PS2"]="https://myrient.erista.me/files/Redump/Sony%20-%20PlayStation%202/"
     ["Dreamcast"]="https://myrient.erista.me/files/Internet%20Archive/chadmaster/dc-chd-zstd-redump/dc-chd-zstd/"
     ["Nintendo 64"]="https://myrient.erista.me/files/No-Intro/Nintendo%20-%20Nintendo%2064%20(ByteSwapped)/"
     ["Game Cube"]="https://myrient.erista.me/files/Internet%20Archive/kodi_amp_spmc_canada/EuropeanGamecubeCollectionByGhostware/"
+    ["Game Boy Advance"]="https://myrient.erista.me/files/No-Intro/Nintendo%20-%20Game%20Boy%20Advance/"
     ["Game Boy Advance"]="https://myrient.erista.me/files/No-Intro/Nintendo%20-%20Game%20Boy%20Advance/"
     ["Game Boy"]="https://myrient.erista.me/files/No-Intro/Nintendo%20-%20Game%20Boy/"
     ["Game Boy Color"]="https://myrient.erista.me/files/No-Intro/Nintendo%20-%20Game%20Boy%20Color/"
@@ -36,14 +36,14 @@ SYSTEMS=(
 # Batocera system-to-folder mapping
 declare -A BATOCERA_FOLDERS
 BATOCERA_FOLDERS=(
-    ["Nintendo Game Boy Advance"]="gameboy_advance"
+    ["Game Boy Advance"]="gba"
     ["PSX"]="psx"
     ["PS2"]="ps2"
-    ["Dreamcast"]="dc"
+    ["Dreamcast"]="dreamcast"
     ["Nintendo 64"]="n64"
     ["Game Cube"]="gamecube"
-    ["Game Boy"]="gameboy"
-    ["Game Boy Color"]="gameboy_color"
+    ["Game Boy"]="gb"
+    ["Game Boy Color"]="gbc"
     ["NES"]="nes"
     ["SNES"]="snes"
     ["Nintendo DS"]="nds"
@@ -59,17 +59,13 @@ BATOCERA_FOLDERS=(
     ["Atari 2600"]="atari2600"
     ["Atari 5200"]="atari5200"
     ["Atari 7800"]="atari7800"
-    ["PC"]="pc"
+    ["PC"]="windows_installers"
     ["Apple Macintosh"]="macintosh"
-    ["MS-DOS"]="msdos"
+    ["MS-DOS"]="dos"
     ["Wii"]="wii"
 )
-
 # Destination base directory
 DEST_DIR_BASE="/userdata/system/game-downloaderV2/links"
-
-# Extensions for web scraping systems
-FILE_EXTENSIONS=(".chd" ".zip" ".iso")
 
 # Function to decode URL
 decode_url() {
@@ -82,20 +78,55 @@ clear_all_files() {
     echo "All text files cleared."
 }
 
-# Main loop for systems
-for SYSTEM in "${!SYSTEMS[@]}"; do
-    MANUFACTURER=$(get_manufacturer "$SYSTEM")
-    DEST_DIR="$DEST_DIR_BASE/$MANUFACTURER/$SYSTEM"
-    ROM_DIR="/userdata/roms/${BATOCERA_FOLDERS[$SYSTEM]}"  # Use Batocera folder mapping
+# Function to display the system selection menu
+select_system() {
+    local MENU_OPTIONS=("Return" "Back to Main Menu")
+    local index=1
+
+    # Prepare menu options for systems
+    for system in "${!SYSTEMS[@]}"; do
+        MENU_OPTIONS+=("$index" "$system")
+        ((index++))
+    done
+
+    # Show the dialog menu
+    selected_system=$(dialog --clear --backtitle "System Scraper" \
+        --title "Select a System to Scrape" \
+        --menu "Choose a system to scrape for:" 15 50 12 \
+        "${MENU_OPTIONS[@]}" 2>/tmp/scraper-choice)
+
+    choice=$(< /tmp/scraper-choice)
+    rm /tmp/scraper-choice
+
+    if [ -z "$choice" ]; then
+        clear
+        echo "No system selected, exiting."
+        exit 1  # Exit if no system is selected
+    fi
+
+    if [ "$choice" -eq 0 ]; then
+        clear
+        exit 0  # Exit if "Return" is selected
+    fi
+
+    SELECTED_SYSTEM="${MENU_OPTIONS[$((choice * 2))]}"
+    DEST_DIR="$DEST_DIR_BASE/${BATOCERA_FOLDERS[$SELECTED_SYSTEM]}/$SELECTED_SYSTEM"
+}
+
+# Main loop to handle scraping
+while true; do
+    # Show system selection menu
+    select_system
+
+    MANUFACTURER=$(get_manufacturer "$SELECTED_SYSTEM")
+    ROM_DIR="/userdata/roms/${BATOCERA_FOLDERS[$SELECTED_SYSTEM]}"  # Use Batocera folder mapping
     mkdir -p "$DEST_DIR"
 
-    echo "Starting scrape for $SYSTEM..."
+    echo "Starting scrape for $SELECTED_SYSTEM..."
     clear_all_files
 
-    # Start scraping in the background
-   {
     # Fetch the page content once
-    page_content=$(curl -s "${SYSTEMS[$SYSTEM]}")
+    page_content=$(curl -s "${SYSTEMS[$SELECTED_SYSTEM]}")
 
     # Extract and store all matching URLs in temp_urls.txt
     echo "$page_content" | grep -oP 'href="([^"]+\.(chd|zip|iso))"' | sed -E 's/href="(.*)"/\1/' > temp_urls.txt
@@ -108,7 +139,7 @@ for SYSTEM in "${!SYSTEMS[@]}"; do
         first_char=${first_char^^}  # Convert to uppercase
 
         quoted_name="\`$decoded_name\`"
-        full_url="${SYSTEMS[$SYSTEM]}$game_url"
+        full_url="${SYSTEMS[$SELECTED_SYSTEM]}$game_url"
 
         # Write to AllGames.txt
         echo "$quoted_name|$full_url|$ROM_DIR" >> "$DEST_DIR/AllGames.txt"
@@ -125,9 +156,19 @@ for SYSTEM in "${!SYSTEMS[@]}"; do
 
     # Clean up the temporary file
     rm -f temp_urls.txt
-}
 
+    echo "Scraping complete for $SELECTED_SYSTEM!"
+
+    # Ask if the user wants to scrape another system or exit
+    dialog --title "Continue?" --yesno "Do you want to scrape another system?" 7 50
+    if [ $? -eq 1 ]; then
+        break  # Exit if "No" is selected
+    fi
 done
+
+echo "Goodbye!"
+clear
+
 
 # Wait for all background jobs to finish before exiting the script
 wait
