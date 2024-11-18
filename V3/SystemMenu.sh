@@ -4,9 +4,24 @@ clear
 
 # Define the base directory for game systems
 BASE_DIR="/userdata/system/game-downloader/links"
+LOG_FILE="/userdata/system/game-downloader/debug/system_menu.txt"
+
+# Debug flag (set to 1 to enable logging, 0 to disable)
+DEBUG_ENABLED=1
+
+# Log function to write messages to the log file
+log_debug() {
+    if [ "$DEBUG_ENABLED" -eq 1 ]; then
+        echo "$(date '+%Y-%m-%d %H:%M:%S') - $1" >> "$LOG_FILE"
+    fi
+}
+
+# Start logging script execution
+log_debug "Script started"
 
 # Check if the base directory exists
 if [ ! -d "$BASE_DIR" ]; then
+    log_debug "Error: The game downloader directory doesn't exist!"
     dialog --msgbox "Error: The game downloader directory doesn't exist!" 10 50
     exit 1
 fi
@@ -28,6 +43,7 @@ done
 
 # Check if any systems were found
 if [ ${#GAME_SYSTEMS[@]} -eq 0 ]; then
+    log_debug "Error: No game systems found in $BASE_DIR!"
     dialog --msgbox "No game systems found in $BASE_DIR!" 10 50
     exit 1
 fi
@@ -46,6 +62,7 @@ rm /tmp/game-downloader-choice
 
 # Check if the user canceled the dialog (no choice selected)
 if [ -z "$choice" ]; then
+    log_debug "User canceled or no option selected."
     clear
     dialog --infobox "Thank you for using Game Downloader! Any issues, message DTJW92 on Discord!" 10 50
     sleep 3
@@ -54,12 +71,14 @@ fi
 
 # Execute the corresponding action based on user choice
 if [ "$choice" -eq 0 ]; then
+    log_debug "User selected Return, exiting to main menu."
     clear
     exec /tmp/GameDownloader.sh  # Execute the main menu script
     exit 0  # In case exec fails, exit the script
 else
     # Get the selected game system
     SELECTED_SYSTEM="${GAME_SYSTEMS[$((choice - 1))]}"
+    log_debug "User selected system: $SELECTED_SYSTEM"
 fi
 
 
@@ -76,10 +95,11 @@ skipped_games=()
 added_games=()
 
 # Function to display the game list and allow selection
-# Function to display the game list and allow selection
 select_games() {
     local letter="$1"
     local file
+
+    log_debug "Selecting games for letter: $letter"
 
     # Set file path based on the selection
     if [[ "$letter" == "AllGames" ]]; then
@@ -89,6 +109,7 @@ select_games() {
     fi
 
     if [[ ! -f "$file" ]]; then
+        log_debug "Error: No games found for selection '$letter'."
         dialog --infobox "No games found for selection '$letter'." 5 40
         sleep 2
         return
@@ -107,11 +128,11 @@ select_games() {
     selected_games=$(dialog --title "Select Games" --checklist "Choose games to download" 25 70 10 \
         "${game_list[@]}" 3>&1 1>&2 2>&3)
 
-# If "Return" is selected or no games are selected, exit without continuing
-if [[ "$selected_games" == "Return" || -z "$selected_games" ]]; then
-    return 1  # Return to the letter selection menu
-fi
-
+    # If "Return" is selected or no games are selected, exit without continuing
+    if [[ "$selected_games" == "Return" || -z "$selected_games" ]]; then
+        log_debug "User selected Return or no games selected."
+        return 1  # Return to the letter selection menu
+    fi
 
     # Proceed with downloading the selected games
     IFS=$'\n'
@@ -122,6 +143,7 @@ fi
             if [[ -n "$game_item" ]]; then
                 game_item_cleaned=$(echo "$game_item" | sed 's/[\\\"`]//g' | sed 's/^[[:space:]]*//g' | sed 's/[[:space:]]*$//g')
                 if [[ -n "$game_item_cleaned" ]]; then
+                    log_debug "Downloading game: $game_item_cleaned"
                     download_game "$game_item_cleaned"
                 fi
             fi
@@ -137,12 +159,14 @@ download_game() {
 
     # Check if the game already exists in the download directory
     if [[ -f "$DOWNLOAD_DIR/$decoded_name_cleaned" ]]; then
+        log_debug "Game '$decoded_name_cleaned' already exists, skipping."
         skipped_games+=("$decoded_name_cleaned")
         return
     fi
 
     # Check if the game is already in the download queue (download.txt)
     if grep -q "$decoded_name_cleaned" "/userdata/system/game-downloader/download.txt"; then
+        log_debug "Game '$decoded_name_cleaned' already in download queue, skipping."
         skipped_games+=("$decoded_name_cleaned")
         return
     fi
@@ -151,6 +175,7 @@ download_game() {
     game_info=$(grep -F "$decoded_name_cleaned" "$ALLGAMES_FILE")
 
     if [ -z "$game_info" ]; then
+        log_debug "Error: Could not find download URL for '$decoded_name_cleaned'."
         dialog --infobox "Error: Could not find download URL for '$decoded_name_cleaned'." 5 40
         sleep 2
         return
@@ -169,6 +194,7 @@ download_game() {
     
     # Collect the added game
     added_games+=("$decoded_name_cleaned")
+    log_debug "Game '$decoded_name_cleaned' added to download list."
 }
 
 
@@ -191,12 +217,15 @@ select_letter() {
 
     # If "Return" is selected, return to the system selection menu
     if [ "$selected_letter" == "Return" ]; then
+        log_debug "User selected Return, returning to system selection."
         return 1  # Return to the system selection
     elif [ "$selected_letter" == "All" ]; then
         # If "All Games" is selected, link to AllGames.txt
+        log_debug "User selected All Games."
         select_games "AllGames"
     else
         # Otherwise, proceed with the selected letter
+        log_debug "User selected letter: $selected_letter"
         select_games "$selected_letter"
     fi
 }
@@ -220,13 +249,14 @@ while true; do
         skipped_games=()
     fi
 
-if [ ${#added_games[@]} -gt 0 ]; then
-    dialog --title "Continue?" --yesno "Would you like to select some more games?" 7 50
-    if [ $? -eq 1 ]; then
-        break
-    fi
+    if [ ${#added_games[@]} -gt 0 ]; then
+        dialog --title "Continue?" --yesno "Would you like to select some more games?" 7 50
+        if [ $? -eq 1 ]; then
+            break
+        fi
 done
 
 # Goodbye message
+log_debug "Script ended."
 echo "Goodbye!"
 clear
