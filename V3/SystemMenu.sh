@@ -225,7 +225,6 @@ download_game() {
 }
 
 
-# Function to select the letter of the game list dynamically
 # Function to show the letter selection menu with an "All Games" and "Return" options
 select_letter() {
     # Get a sorted list of the .txt files (A.txt, B.txt, etc.) in the selected game system
@@ -257,6 +256,7 @@ select_letter() {
         select_games "$selected_letter"
     fi
 }
+
 
 
 # Main execution loop
