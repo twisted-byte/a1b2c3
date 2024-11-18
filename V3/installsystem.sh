@@ -38,31 +38,28 @@ fi
 
 # If user selects "Return to Main Menu"
 if [ "$choice" -eq 0 ]; then
-    exec /tmp/GameDownloader.sh  # Immediately return to the main menu script
+    clear
+    exec /tmp/GameDownloader.sh  # Execute the main menu script
     exit 0  # In case exec fails, exit the script
 fi
 
-# Find the system name corresponding to the user's choice
-selected_system=$(echo "${!SCRAPERS[@]}" | cut -d' ' -f$choice)
-
-# Execute the corresponding scraper based on the user's choice
-if [ -n "$selected_system" ]; then
     # Get the URL for the selected system
     scraper_url="${SCRAPERS[$selected_system]}"
 
+    # Inform the user that the installation is starting
+    dialog --infobox "Installing $selected_system downloader. Please wait..." 10 50
+    sleep 2  # Simulate some wait time before the actual installation process
     # Download and execute the scraper script
     curl -Ls "$scraper_url" -o /tmp/scraper.sh
     bash /tmp/scraper.sh  # Run the downloaded scraper
 
+    # Show completion message once the process is done
+    dialog --infobox "Installation complete!" 10 50
+    sleep 2  # Display the "Installation complete!" message for a few seconds
 else
     # Handle invalid choices
     dialog --msgbox "Invalid option selected. Please try again." 10 50
-    clear
-    exit 0  # Exit the script if an invalid option is selected
-fi
-
-# Clear screen at the end
 clear
 
 # Optionally, return to the main menu or run another script after the process
-exec /tmp/GameDownloader.sh
+bash /tmp/GameDownloader.sh
