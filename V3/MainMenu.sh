@@ -43,17 +43,16 @@ while true; do
     log_debug "Displaying menu."
 
     # Define the order explicitly
-    MENU_ORDER=(1 2 3 4 5 6 7)  # Add 7 (Exit) at the end explicitly
+    MENU_ORDER=(1 2 3 4 5 6)
 
     # Dynamically build menu options in the correct order
     MENU_OPTIONS=()
     for key in "${MENU_ORDER[@]}"; do
-        if [ "$key" -eq 7 ]; then
-            MENU_OPTIONS+=("$key" "Exit")  # Add Exit option
-        else
-            MENU_OPTIONS+=("$key" "${MENU_DESCRIPTIONS[$key]}")
-        fi
+        MENU_OPTIONS+=("$key" "${MENU_DESCRIPTIONS[$key]}")
     done
+    
+    # Add Exit option after the main menu items
+    MENU_OPTIONS+=("7" "Exit")  # Add Exit option after the loop
 
     # Display menu
     dialog --clear --backtitle "Game Downloader" \
@@ -74,8 +73,7 @@ while true; do
         clear
         dialog --infobox "Thank you for using Game Downloader! Any issues, message DTJW92 on Discord!" 10 50
         sleep 3
-        kill -9 $$  # Sends SIGKILL (9) to forcefully terminate the current process
- # Exit the script when Cancel is clicked or no option is selected
+        exit 0  # Exit gracefully
     fi
 
     # Exit logic for option 7
@@ -84,16 +82,17 @@ while true; do
         clear
         dialog --infobox "Thank you for using Game Downloader! Any issues, please reach out to DTJW92 on Discord!" 10 50
         sleep 3
-        
-        # Exit the script gracefully without attempting to kill the terminal process
-        kill -9 $$  # Sends SIGKILL (9) to forcefully terminate the current process
-
+        exit 0  # Exit gracefully
     fi
 
     # Execute the corresponding script for the selected option
     if [[ -n "${MENU_ITEMS[$choice]}" ]]; then
         log_debug "Running script for option $choice."
-        bash <(curl -s "${MENU_ITEMS[$choice]}")
+        script_url="${MENU_ITEMS[$choice]}"
+        script_path="/tmp/script.sh"
+
+        # Download and execute the script
+        curl -s "$script_url" -o "$script_path" && bash "$script_path"
         log_debug "Script for option $choice completed."
     else
         log_debug "Invalid option selected: $choice."
