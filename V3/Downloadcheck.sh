@@ -13,11 +13,11 @@ mkdir -p "$STATUS_DIR"
 # Function to display download status with Dialog
 check_downloads() {
     if [[ -s "$download_file" ]]; then
-        # If download.txt is not empty, downloads are still processing
-        dialog --infobox "Downloads are still processing." 10 50
-        sleep 5
+        # If processing.txt is not empty, display all games currently downloading
+        game_names=$(cut -d '|' -f 1 "$download_file" | tr '\n' '\n')
+        dialog --msgbox "Still downloading:\n$game_names" 10 50
     else
-        # If download.txt is empty, all downloads are processed
+        # If processing.txt is empty, all downloads are processed
         dialog --infobox "All downloads processed! Update your game list to see your new games! Don't forget to scrape for artwork!" 15 50
         sleep 5
     fi
