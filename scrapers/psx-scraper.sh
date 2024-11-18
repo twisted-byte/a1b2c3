@@ -16,7 +16,6 @@ decode_url() {
 # Clear all the text files before writing new data
 clear_all_files() {
     rm -f "$DEST_DIR"/*.txt
-    echo "All game list files have been cleared."
 }
 
 # Clear all text files before starting
