@@ -19,7 +19,7 @@ log_debug() {
 log_debug "Script started."
 
 # URLs for external scripts
-declare -A MENU_ITEMS=(
+declare -A MENU_ITEMS=( 
     [1]="https://raw.githubusercontent.com/DTJW92/game-downloader/main/V3/installsystem.sh"  # Install Game Systems
     [2]="https://raw.githubusercontent.com/DTJW92/game-downloader/main/V3/SystemMenu.sh"      # Select a Game System
     [3]="https://raw.githubusercontent.com/DTJW92/game-downloader/main/V3/search.sh"          # Search for a Game
@@ -29,7 +29,7 @@ declare -A MENU_ITEMS=(
 )
 
 # Menu items description
-declare -A MENU_DESCRIPTIONS=(
+declare -A MENU_DESCRIPTIONS=( 
     [1]="Install Game Systems"
     [2]="Select a Game System"
     [3]="Search for a Game"
@@ -42,18 +42,19 @@ declare -A MENU_DESCRIPTIONS=(
 while true; do
     log_debug "Displaying menu."
 
- # Define the order explicitly
-MENU_ORDER=(1 2 3 4 5 6 7)  # Add 7 (Exit) at the end explicitly
+    # Define the order explicitly
+    MENU_ORDER=(1 2 3 4 5 6 7)  # Add 7 (Exit) at the end explicitly
 
-# Dynamically build menu options in the correct order
-MENU_OPTIONS=()
-for key in "${MENU_ORDER[@]}"; do
-    if [ "$key" -eq 7 ]; then
-        MENU_OPTIONS+=("$key" "Exit")  # Add Exit option
-    else
-        MENU_OPTIONS+=("$key" "${MENU_DESCRIPTIONS[$key]}")
-    fi
-done
+    # Dynamically build menu options in the correct order
+    MENU_OPTIONS=()
+    for key in "${MENU_ORDER[@]}"; do
+        if [ "$key" -eq 7 ]; then
+            MENU_OPTIONS+=("$key" "Exit")  # Add Exit option
+        else
+            MENU_OPTIONS+=("$key" "${MENU_DESCRIPTIONS[$key]}")
+        fi
+    done
+
     # Display menu
     dialog --clear --backtitle "Game Downloader" \
            --title "Select a System" \
@@ -83,15 +84,7 @@ done
         dialog --infobox "Thank you for using Game Downloader! Any issues, please reach out to DTJW92 on Discord!" 10 50
         sleep 3
         
-        # Get the parent terminal emulator and close it if applicable
-        TERMINAL_EMULATOR=$(ps -o comm= -p $PPID)
-        if [[ "$TERMINAL_EMULATOR" == "xterm" ]]; then
-            log_debug "Closing xterm terminal."
-            kill -9 "$PPID"
-        else
-            log_debug "No xterm process found or another terminal emulator detected."
-        fi
-
+        # Exit the script gracefully without attempting to kill the terminal process
         exit 0
     fi
 
