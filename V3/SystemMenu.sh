@@ -137,8 +137,10 @@ download_game() {
         return
     fi
 
-    # Find the game URL from the AllGames.txt file
-    game_url=$(grep -F "$decoded_name_cleaned" "$ALLGAMES_FILE" | cut -d '|' -f 2)
+    # Find the game URL and folder from the AllGames.txt file
+    game_info=$(grep -F "$decoded_name_cleaned" "$ALLGAMES_FILE")
+    game_url=$(echo "$game_info" | cut -d '|' -f 2)
+    game_folder=$(echo "$game_info" | cut -d '|' -f 3)
 
     if [ -z "$game_url" ]; then
         dialog --infobox "Error: Could not find download URL for '$decoded_name_cleaned'." 5 40
@@ -146,13 +148,18 @@ download_game() {
         return
     fi
 
-    # Append the decoded name, URL, and folder to the DownloadManager.txt file
-    echo "$decoded_name_cleaned|$game_url|$DOWNLOAD_DIR" >> "/userdata/system/game-downloader/download.txt"
+    if [ -z "$game_folder" ]; then
+        dialog --infobox "Error: Could not find destination folder for '$decoded_name_cleaned'." 5 40
+        sleep 2
+        return
+    fi
+
+    # Append the decoded name, URL, and folder to the download.txt file
+    echo "$decoded_name_cleaned|$game_url|$game_folder" >> "/userdata/system/game-downloader/download.txt"
     
     # Collect the added game
     added_games+=("$decoded_name_cleaned")
 }
-
 # Function to show the letter selection menu with an "All Games" and "Return" options
 select_letter() {
     letter_list=$(ls "$DEST_DIR" | grep -oP '^[a-zA-Z#]' | sort | uniq)
