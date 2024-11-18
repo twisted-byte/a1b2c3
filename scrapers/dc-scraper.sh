@@ -38,7 +38,7 @@ echo "$page_content" | grep -oP "(?<=href=\")[^\"]*${EXT}" | while read -r game_
         first_char="${decoded_name:0:1}"
         
         # Append to AllGames.txt with both quoted decoded name and original URL
-        echo "$quoted_name|$BASE_URL$game_url" >> "$DEST_DIR/AllGames.txt"
+        echo "$quoted_name|$BASE_URL$game_url|$ROM_DIR" >> "$DEST_DIR/AllGames.txt"
         
         # Save to the appropriate letter-based file
         if [[ "$first_char" =~ [a-zA-Z] ]]; then
