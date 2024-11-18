@@ -43,7 +43,7 @@ process_download() {
     echo "Started download for $game_name... Logging to processing.txt"
 
     # Remove the line from download.txt once it is moved to processing.txt
-    sed -i "/$game_name|$url|$folder/d" "$DOWNLOAD_QUEUE"
+   grep -v "$game_name|$url|$folder" "$DOWNLOAD_QUEUE" > temp && mv temp "$DOWNLOAD_QUEUE"
 
     # Start the download with retry logic
     echo "Starting download for $game_name..."
@@ -67,8 +67,7 @@ process_download() {
         rm "$temp_path"  # Clean up the downloaded file
     fi
     # Remove the line from processing.txt after successful processing
-    sed -i "/$game_name|$url|$folder/d" /userdata/system/game-downloader/processing.txt
-}
+    grep -v "$game_name|$url|$folder" /userdata/system/game-downloader/processing.txt > temp && mv temp /userdata/system/game-downloader/processing.txt
 
 process_unzip() {
     local game_name="$1"
