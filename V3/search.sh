@@ -69,11 +69,13 @@ search_games() {
     for file in $(find "$DEST_DIR" -type f -name "AllGames.txt"); do
         folder_name=$(basename "$(dirname "$file")")
         echo "Searching in file: $file"
-        grep -i "$search_term" "$file" | while IFS="|" read -r decoded_name encoded_url game_download_dir; do
-            game_name_cleaned=$(clean_name "$decoded_name")
-            echo "Found game: $folder_name - $game_name_cleaned"
-            results+=("$folder_name - $game_name_cleaned" "$decoded_name" off)
-        done
+        while IFS="|" read -r decoded_name encoded_url game_download_dir; do
+            if [[ "$decoded_name" =~ $search_term ]]; then
+                game_name_cleaned=$(clean_name "$decoded_name")
+                echo "Found game: $folder_name - $game_name_cleaned"
+                results+=("$folder_name - $game_name_cleaned" "$decoded_name" off)
+            fi
+        done < <(grep -i "$search_term" "$file")
     done
 
     if [[ ${#results[@]} -gt 0 ]]; then
