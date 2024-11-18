@@ -84,7 +84,7 @@ select_games() {
     if [[ "$letter" == "AllGames" ]]; then
         file="$ALLGAMES_FILE"
     else
-        file="$DEST_DIR/$SELECTED_SYSTEM/${letter}.txt"
+        file="$DEST_DIR/${letter}.txt"
     fi
 
     if [[ ! -f "$file" ]]; then
@@ -99,23 +99,17 @@ select_games() {
         game_list+=("$decoded_name" "" off)
     done < "$file"
 
-    # Add "Return" option at the top of the list
-    game_list=("Return" "${game_list[@]}")
-
-    # Show the game selection menu
     selected_games=$(dialog --title "Select Games" --checklist "Choose games to download" 25 70 10 \
         "${game_list[@]}" 3>&1 1>&2 2>&3)
 
-    # If "Return" is selected or no games are selected, exit without continuing
-    if [[ "$selected_games" == "Return" || -z "$selected_games" ]]; then
-        return 1  # Return to the letter selection menu
+    if [ -z "$selected_games" ]; then
+        return
     fi
 
-    # Proceed with downloading the selected games
     IFS=$'\n'
     for game in $selected_games; do
         # Split game by .chd to treat each game as a separate item
-        game_items=$(echo "$game" | sed -E 's/\.(chd|zip|iso)/\.\1\n/g')
+        game_items=$(echo "$game" | sed 's/\.chd/.chd\n/g')
         while IFS= read -r game_item; do
             if [[ -n "$game_item" ]]; then
                 game_item_cleaned=$(echo "$game_item" | sed 's/[\\\"`]//g' | sed 's/^[[:space:]]*//g' | sed 's/[[:space:]]*$//g')
@@ -126,6 +120,7 @@ select_games() {
         done <<< "$game_items"
     done
 }
+
 
 
 # Function to download the selected game and send the link to the DownloadManager
@@ -145,45 +140,35 @@ download_game() {
         return
     fi
 
-    # Find the full line from the AllGames.txt file based on the cleaned game name
-    game_info=$(grep -F "$decoded_name_cleaned" "$ALLGAMES_FILE")
+    # Find the game URL from the AllGames.txt file
+    game_url=$(grep -F "$decoded_name_cleaned" "$ALLGAMES_FILE" | cut -d '|' -f 2)
 
-    if [ -z "$game_info" ]; then
+    if [ -z "$game_url" ]; then
         dialog --infobox "Error: Could not find download URL for '$decoded_name_cleaned'." 5 40
         sleep 2
         return
     fi
 
-    # Parse the game information (Name|URL|Destination)
-    game_name=$(echo "$game_info" | cut -d '|' -f 1)
-    game_url=$(echo "$game_info" | cut -d '|' -f 2)
-    game_dest_dir=$(echo "$game_info" | cut -d '|' -f 3)
-
-    # Ensure the destination directory exists
-    mkdir -p "$game_dest_dir"
-
-    # Append the full line (Game Name|Download URL|Destination) to the DownloadManager.txt file
-    echo "$game_info" >> "/userdata/system/game-downloader/download.txt"
+    # Append the decoded name, URL, and folder to the DownloadManager.txt file
+    echo "$decoded_name_cleaned|$game_url|$DOWNLOAD_DIR" >> "/userdata/system/game-downloader/download.txt"
     
     # Collect the added game
     added_games+=("$decoded_name_cleaned")
 }
 
 
+
 # Function to show the letter selection menu with an "All Games" and "Return" options
 select_letter() {
-    # Get a sorted list of the .txt files (A.txt, B.txt, etc.) in the selected game system
-    letter_list=$(ls "$DEST_DIR/$SELECTED_SYSTEM"/*.txt | grep -v "AllGames.txt" | sed -E 's/\.txt$//' | sed 's/.*\///' | sort)
+    letter_list=$(ls "$DEST_DIR" | grep -oP '^[a-zA-Z#]' | sort | uniq)
 
-    # Add "Return" and "All" options to the menu
-    menu_options=("Return" "Back to System Selection" "All" "All Games")
+    # Add "All" option to the menu
+    menu_options=("All" "All Games")
 
-    # Add each letter to the menu
     while read -r letter; do
         menu_options+=("$letter" "$letter")
     done <<< "$letter_list"
 
-    # Show the menu and capture the user's choice
     selected_letter=$(dialog --title "Select a Letter" --menu "Choose a letter or select 'All Games'" 25 70 10 \
         "${menu_options[@]}" 3>&1 1>&2 2>&3)
 
