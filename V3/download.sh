@@ -68,7 +68,7 @@ process_download() {
     fi
     # Remove the line from processing.txt after successful processing
     grep -v "$game_name|$url|$folder" /userdata/system/game-downloader/processing.txt > temp && mv temp /userdata/system/game-downloader/processing.txt
-
+}
 process_unzip() {
     local game_name="$1"
     local temp_path="$2"
