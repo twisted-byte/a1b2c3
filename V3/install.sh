@@ -111,7 +111,7 @@ NEW_ENTRY="<game>
 # Check if the game entry already exists in gamelist.xml
 if grep -q "<path>./GameDownloader.sh</path>" "$GAMELIST"; then
     # Replace the existing entry based on path
-    sed -i "/<path>./GameDownloader.sh<\/path>/,/<\/game>/c\\
+    sed -i "/<path>\\.\\/GameDownloader\\.sh<\\/path>/,/<\\/game>/c\\
 $NEW_ENTRY" "$GAMELIST"
     echo "Replaced existing entry for Game Downloader based on path."
 else
