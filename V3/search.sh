@@ -76,7 +76,9 @@ search_games() {
                 results+=("$folder_name - $game_name_cleaned" "$decoded_name" off)
             fi
         done < <(grep -i "$search_term" "$file")
-    done
+    done &  # Run the search in the background
+
+    wait  # Wait for the background search to complete
 
     if [[ ${#results[@]} -gt 0 ]]; then
         selected_games=$(dialog --title "Search Results" --checklist "Choose games to download" 25 70 10 "${results[@]}" 3>&1 1>&2 2>&3)
