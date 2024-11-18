@@ -2,6 +2,7 @@
 
 # Path to the download queue file
 DOWNLOAD_QUEUE="/userdata/system/game-downloader/download.txt"
+DOWNLOAD_PROCESSING="/userdata/system/game-downloader/processing.txt"
 DEBUG_LOG="/userdata/system/game-downloader/debug/debug.txt"
 
 # Ensure the debug directory exists
@@ -39,11 +40,11 @@ process_download() {
     local temp_path="/userdata/system/game-downloader/$game_name"
 
     # Log the line to processing.txt before starting the download
-    echo "$game_name|$url|$folder" >> /userdata/system/game-downloader/processing.txt
+    echo "$game_name|$url|$folder" >> "$DOWNLOAD_PROCESSING"
     echo "Started download for $game_name... Logging to processing.txt"
 
     # Remove the line from download.txt once it is moved to processing.txt
-   grep -v "$game_name|$url|$folder" "$DOWNLOAD_QUEUE" > temp && mv temp "$DOWNLOAD_QUEUE"
+   grep -v "$game_name|$url|$folder" "$DOWNLOAD_QUEUE" > temp && mv temp "$DOWNLOAD_PROCESSING"
 
     # Start the download with retry logic
     echo "Starting download for $game_name..."
@@ -67,7 +68,7 @@ process_download() {
         rm "$temp_path"  # Clean up the downloaded file
     fi
     # Remove the line from processing.txt after successful processing
-    grep -v "$game_name|$url|$folder" /userdata/system/game-downloader/processing.txt > temp && mv temp /userdata/system/game-downloader/processing.txt
+    grep -v "$game_name|$url|$folder" "$DOWNLOAD_PROCESSING" > temp && mv temp "$DOWNLOAD_PROCESSING"
 }
 process_unzip() {
     local game_name="$1"
