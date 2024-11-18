@@ -45,9 +45,9 @@ process_download() {
     # Remove the line from download.txt once it is moved to processing.txt
     sed -i "\|$game_name|$url|$folder|d" "$DOWNLOAD_QUEUE"
 
-    # Start the download
+    # Start the download with retry logic
     echo "Starting download for $game_name..."
-    wget -c "$url" -O "$temp_path" >> "$DEBUG_LOG" 2>&1
+    wget --tries=5 -c "$url" -O "$temp_path" >> "$DEBUG_LOG" 2>&1
     if [ $? -ne 0 ]; then
         echo "Download failed for $game_name. Check debug log for details."
         return
@@ -65,7 +65,7 @@ process_download() {
         # Unsupported file type
         echo "Unsupported file type for $game_name. Skipping."
         rm "$temp_path"  # Clean up the downloaded file
-    fi
+    }
 
     # Remove the line from processing.txt after successful processing
     sed -i "\|$game_name|$url|$folder|d" /userdata/system/game-downloader/processing.txt
