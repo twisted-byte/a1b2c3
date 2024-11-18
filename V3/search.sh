@@ -1,89 +1,93 @@
 #!/bin/bash
 
 DEST_DIR="/userdata/system/game-downloader/links"
-ALLGAMES_FILE="$DEST_DIR/AllGames.txt"
-
-# Ensure the directory exists
-mkdir -p "$DEST_DIR"
-
-# Arrays for tracking games
-added_games=()
-skipped_games=()
-
-# Function to clean up game names
-clean_name() {
-    echo "$1" | sed 's/[\\\"`]//g' | sed 's/^[[:space:]]*//g' | sed 's/[[:space:]]*$//g'
-}
-
-# Function to download a game
+  # Update this to your desired download directory
+ALLGAMES_FILE="$DEST_DIR/AllGames.txt"  # File containing the full list of games with URLs
+# Ensure the download directory exists
+mkdir -p "$DOWNLOAD_DIR"
+# Function to download the selected game and send the link to the DownloadManager
 download_game() {
     local decoded_name="$1"
-    decoded_name_cleaned=$(clean_name "$decoded_name")
-
-    # Check if the game already exists or is queued
-    if [[ -f "$DEST_DIR/$decoded_name_cleaned" ]] || grep -q "$decoded_name_cleaned" "/userdata/system/game-downloader/download.txt"; then
+    decoded_name_cleaned=$(echo "$decoded_name" | sed 's/[\\\"`]//g' | sed 's/^[[:space:]]*//g' | sed 's/[[:space:]]*$//g')
+    # Check if the game already exists in the download directory
+    if [[ -f "$DOWNLOAD_DIR/$decoded_name_cleaned" ]]; then
         skipped_games+=("$decoded_name_cleaned")
         return
     fi
-
-    # Extract URL and directory from AllGames.txt
+    # Check if the game is already in the download queue (download.txt)
+    if grep -q "$decoded_name_cleaned" "/userdata/system/game-downloader/download.txt"; then
+        skipped_games+=("$decoded_name_cleaned")
+        return
+    fi
+    # Find the game URL from the AllGames.txt file and the correct download directory
     game_info=$(grep -F "$decoded_name_cleaned" "$ALLGAMES_FILE")
     game_url=$(echo "$game_info" | cut -d '|' -f 2)
     game_download_dir=$(echo "$game_info" | cut -d '|' -f 3)
-
-    if [[ -z "$game_url" || -z "$game_download_dir" ]]; then
-        dialog --infobox "Error: Could not find URL for '$decoded_name_cleaned'." 5 40
+    if [ -z "$game_url" ]; then
+        dialog --infobox "Error: Could not find download URL for '$decoded_name_cleaned'." 5 40
         sleep 2
         return
     fi
-
-    # Add to download queue
+    # Append the decoded name, URL, and folder to the DownloadManager.txt file
     echo "$decoded_name_cleaned|$game_url|$game_download_dir" >> "/userdata/system/game-downloader/download.txt"
+    
+    # Collect the added game
     added_games+=("$decoded_name_cleaned")
 }
 
-# Function to search and display games
+# Function to search through AllGames.txt in subdirectories and return results
 search_games() {
     local search_term="$1"
     local results=()
-    IFS=$'\n'
-
-    # Search AllGames.txt in subfolders
-    for file in $(find "$DEST_DIR" -type f -name "AllGames.txt"); do
-        folder_name=$(basename "$(dirname "$file")")
+    # Search through subfolders and AllGames.txt files
+    find "$DEST_DIR" -type f -name "AllGames.txt" | while read -r file; do
+        folder_name=$(dirname "$file")  # Get the folder name (subfolder)
+        
+        # Search for the term in AllGames.txt
         grep -i "$search_term" "$file" | while IFS="|" read -r decoded_name encoded_url game_download_dir; do
-            game_name_cleaned=$(clean_name "$decoded_name")
-            results+=("$folder_name - $game_name_cleaned" "$decoded_name" off)
+            # Clean the game name and display it with the subfolder name
+            game_name_cleaned=$(echo "$decoded_name" | sed 's/[\\\"`]//g' | sed 's/^[[:space:]]*//g' | sed 's/[[:space:]]*$//g')
+            results+=("$folder_name - $game_name_cleaned")
         done
     done
-
     # Display results in dialog
-    if [[ ${#results[@]} -gt 0 ]]; then
-        selected_games=$(dialog --title "Search Results" --checklist "Choose games to download" 25 70 10 "${results[@]}" 3>&1 1>&2 2>&3)
-        [[ $? -ne 0 ]] && return
-
-        for game in $selected_games; do
-            download_game "$(clean_name "$game")"
-        done
+    if [ ${#results[@]} -gt 0 ]; then
+        selected_games=$(dialog --title "Search Results" --checklist "Choose games to download" 25 70 10 \
+            "${results[@]}" 3>&1 1>&2 2>&3)
+        if [ -n "$selected_games" ]; then
+            IFS=$'\n'
+            for game in $selected_games; do
+                game_cleaned=$(echo "$game" | sed 's/^[[:space:]]*//g' | sed 's/[[:space:]]*$//g')
+                download_game "$game_cleaned"
+            done
+        fi
     else
         dialog --infobox "No games found for '$search_term'." 5 40
         sleep 2
     fi
 }
 
-# Main loop
+# Main search loop
 while true; do
     search_term=$(dialog --inputbox "Enter search term" 10 50 3>&1 1>&2 2>&3)
-    [[ -z "$search_term" ]] && break
-
+    
+    if [ -z "$search_term" ]; then
+        break
+    fi
     search_games "$search_term"
-
-    # Notify user of results
-    [[ ${#added_games[@]} -gt 0 ]] && dialog --msgbox "Added games:\n$(printf "%s\n" "${added_games[@]}")" 10 50
-    [[ ${#skipped_games[@]} -gt 0 ]] && dialog --msgbox "Skipped games:\n$(printf "%s\n" "${skipped_games[@]}")" 10 50
-
-    # Ask to continue
-    dialog --title "Continue?" --yesno "Search for more games?" 7 50 || break
-done
-
-echo "Goodbye!"
+    # Show a single message if any games were added to the download list
+    if [ ${#added_games[@]} -gt 0 ]; then
+        dialog --msgbox "Your selection has been added to the download list! Check download status and once it's complete, reload your games list to see the new games!" 10 50
+        added_games=()  # Clear the added games list
+    fi
+    # Display skipped games message if there are any skipped games
+    if [ ${#skipped_games[@]} -gt 0 ]; then
+        skipped_games_list=$(printf "%s\n" "${skipped_games[@]}" | sed 's/^/• /')
+        dialog --msgbox "The following games already exist in the system and are being skipped:\n\n$skipped_games_list" 15 60
+        skipped_games=()  # Clear the skipped games list
+    fi
+    # Ask user if they want to continue after displaying skipped games
+    dialog --title "Continue?" --yesno "Would you like to search for more games?" 7 50
+    if [ $? -eq 1 ]; then
+        break
+    fi
