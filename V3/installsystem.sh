@@ -43,23 +43,31 @@ if [ "$choice" -eq 0 ]; then
     exit 0  # In case exec fails, exit the script
 fi
 
-    # Get the URL for the selected system
-    scraper_url="${SCRAPERS[$selected_system]}"
+# Map the selected menu option to the game system
+selected_system=$(echo "${!SCRAPERS[@]}" | cut -d ' ' -f "$choice")
 
-    # Inform the user that the installation is starting
-    dialog --infobox "Installing $selected_system downloader. Please wait..." 10 50
-    sleep 2  # Simulate some wait time before the actual installation process
-    # Download and execute the scraper script
-    curl -Ls "$scraper_url" -o /tmp/scraper.sh
-    bash /tmp/scraper.sh  # Run the downloaded scraper
-
-    # Show completion message once the process is done
-    dialog --infobox "Installation complete!" 10 50
-    sleep 2  # Display the "Installation complete!" message for a few seconds
-else
-    # Handle invalid choices
+# Check if a valid system was selected
+if [ -z "$selected_system" ]; then
     dialog --msgbox "Invalid option selected. Please try again." 10 50
-clear
+    clear
+    bash /tmp/GameDownloader.sh  # Return to the main menu
+    exit 1
+fi
+
+# Get the URL for the selected system
+scraper_url="${SCRAPERS[$selected_system]}"
+
+# Inform the user that the installation is starting
+dialog --infobox "Installing $selected_system downloader. Please wait..." 10 50
+sleep 2  # Simulate some wait time before the actual installation process
+
+# Download and execute the scraper script
+curl -Ls "$scraper_url" -o /tmp/scraper.sh
+bash /tmp/scraper.sh  # Run the downloaded scraper
+
+# Show completion message once the process is done
+dialog --infobox "Installation complete!" 10 50
+sleep 2  # Display the "Installation complete!" message for a few seconds
 
 # Optionally, return to the main menu or run another script after the process
 bash /tmp/GameDownloader.sh
