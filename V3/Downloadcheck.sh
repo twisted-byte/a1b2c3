@@ -4,7 +4,7 @@
 export DISPLAY=:0.0
 
 # Main entry: specify download file
-download_file="/userdata/system/game-downloader/download.txt"
+download_file="/userdata/system/game-downloader/processing.txt"
 
 # Correct directory where the download status files are stored
 STATUS_DIR="/userdata/system/game-downloader/status"
