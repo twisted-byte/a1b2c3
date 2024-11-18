@@ -53,14 +53,13 @@ search_games() {
         folder_name=$(basename "$(dirname "$file")")
         grep -i "$search_term" "$file" | while IFS="|" read -r decoded_name encoded_url game_download_dir; do
             game_name_cleaned=$(clean_name "$decoded_name")
-            results+=("$folder_name - $game_name_cleaned")
+            results+=("$folder_name - $game_name_cleaned" "$decoded_name" off)
         done
     done
 
     # Display results in dialog
     if [[ ${#results[@]} -gt 0 ]]; then
-        selected_games=$(dialog --title "Search Results" --checklist "Choose games to download" 25 70 10 \
-            "${results[@]}" 3>&1 1>&2 2>&3)
+        selected_games=$(dialog --title "Search Results" --checklist "Choose games to download" 25 70 10 "${results[@]}" 3>&1 1>&2 2>&3)
         [[ $? -ne 0 ]] && return
 
         for game in $selected_games; do
