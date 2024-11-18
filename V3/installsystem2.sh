@@ -63,6 +63,7 @@ BATOCERA_FOLDERS=(
     ["MS-DOS"]="dos"
     ["Wii"]="wii"
 )
+
 # Destination base directory
 DEST_DIR_BASE="/userdata/system/game-downloaderV2/links"
 
@@ -79,19 +80,19 @@ clear_all_files() {
 
 # Function to display the system selection menu
 select_system() {
-    local MENU_OPTIONS=("Return" "Back to Main Menu")
-    local index=1
+    local MENU_OPTIONS=("0" "Return to Main Menu")
+    local i=1
 
     # Prepare menu options for systems
     for system in "${!SYSTEMS[@]}"; do
-        MENU_OPTIONS+=("$index" "$system")
-        ((index++))
+        MENU_OPTIONS+=("$i" "$system")
+        ((i++))
     done
 
     # Show the dialog menu
-    selected_system=$(dialog --clear --backtitle "System Scraper" \
+    selected_system=$(dialog --clear --backtitle "Game System Scraper" \
         --title "Select a System to Scrape" \
-        --menu "Choose a system to scrape for:" 15 50 12 \
+        --menu "Choose a system to scrape for:" 15 50 9 \
         "${MENU_OPTIONS[@]}" 2>/tmp/scraper-choice)
 
     choice=$(< /tmp/scraper-choice)
@@ -116,10 +117,6 @@ select_system() {
 while true; do
     # Show system selection menu
     select_system
-
-    MANUFACTURER=$(get_manufacturer "$SELECTED_SYSTEM")
-    ROM_DIR="/userdata/roms/${BATOCERA_FOLDERS[$SELECTED_SYSTEM]}"  # Use Batocera folder mapping
-    mkdir -p "$DEST_DIR"
 
     echo "Starting scrape for $SELECTED_SYSTEM..."
     clear_all_files
@@ -167,9 +164,3 @@ done
 
 echo "Goodbye!"
 clear
-
-
-# Wait for all background jobs to finish before exiting the script
-wait
-
-echo "All scraping tasks are complete!"
