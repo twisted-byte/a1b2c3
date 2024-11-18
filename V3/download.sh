@@ -6,7 +6,7 @@ DOWNLOAD_PROCESSING="/userdata/system/game-downloader/processing.txt"
 DEBUG_LOG="/userdata/system/game-downloader/debug/debug.txt"
 
 # Maximum number of parallel downloads
-MAX_PARALLEL=1
+MAX_PARALLEL=3
 
 # Ensure debug directory exists
 mkdir -p "$(dirname "$DEBUG_LOG")"
@@ -130,6 +130,10 @@ parallel_downloads() {
     while IFS='|' read -r game_name url folder; do
         echo "Starting parallel download for: $game_name | $url | $folder"
         
+        # Move the line to processing.txt and remove from download.txt
+        echo "$game_name|$url|$folder" >> "$DOWNLOAD_PROCESSING"
+        update_queue_file "$DOWNLOAD_QUEUE" "$game_name|$url|$folder"
+
         # Launch download in the background
         process_download "$game_name" "$url" "$folder" &
 
