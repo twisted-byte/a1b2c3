@@ -126,7 +126,7 @@ download_game() {
     decoded_name_cleaned=$(echo "$decoded_name" | sed 's/[\\\"`]//g' | sed 's/^[[:space:]]*//g' | sed 's/[[:space:]]*$//g')
 
     # Check if the game already exists in the download directory
-    if [[ -f "$DOWNLOAD_DIR/$decoded_name_cleaned" ]]; then
+    if [[ -f "$game_folder/$decoded_name_cleaned" ]]; then
         skipped_games+=("$decoded_name_cleaned")
         return
     fi
