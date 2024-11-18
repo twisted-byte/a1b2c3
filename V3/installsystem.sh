@@ -26,7 +26,10 @@ done
 # Main dialog menu with dynamically generated options
 dialog --clear --backtitle "Game System Installer" \
        --title "Select a Game System" \
-@@ -33,25 +65,51 @@
+       --menu "Choose an option:" 15 50 9 \
+       "${MENU_OPTIONS[@]}" \
+       2>/tmp/game-downloader-choice
+
 choice=$(< /tmp/game-downloader-choice)
 rm /tmp/game-downloader-choice
 
@@ -52,7 +55,8 @@ if [ -z "$selected_system" ]; then
     clear
     bash /tmp/GameDownloader.sh  # Return to the main menu
     exit 1
-@@ -60,16 +118,39 @@
+fi
+
 # Get the URL for the selected system
 scraper_url="${SCRAPERS[$selected_system]}"
 
@@ -60,7 +64,7 @@ scraper_url="${SCRAPERS[$selected_system]}"
 dialog --infobox "Installing $selected_system downloader. Please wait..." 10 50
 
 # Download and execute the scraper script
-curl -Ls "$scraper_url" -o /tmp/scraper.sh 
+curl -Ls "$scraper_url" -o /tmp/scraper.sh &
 bash /tmp/scraper.sh  # Run the downloaded scraper and wait for it to complete
 
 # Show completion message once the process is done (after the script finishes)
