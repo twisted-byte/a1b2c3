@@ -43,8 +43,8 @@ if [ "$choice" -eq 0 ]; then
     exit 0  # In case exec fails, exit the script
 fi
 
-# Map the selected menu option to the game system
-selected_system=$(echo "${!SCRAPERS[@]}" | cut -d ' ' -f "$choice")
+# Correctly map the user's selection to the system name
+selected_system=$(echo "${!SCRAPERS[@]}" | tr ' ' '\n' | sed -n "${choice}p")
 
 # Check if a valid system was selected
 if [ -z "$selected_system" ]; then
