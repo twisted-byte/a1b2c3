@@ -2,6 +2,9 @@
 # Ensure clear display
 clear
 
+# Toggle for dialog (1 = enabled, 0 = disabled)
+USE_DIALOG=0  # Set to 0 to disable dialog, 1 to enable it
+
 # Define the base directory for game systems
 BASE_DIR="/userdata/system/game-downloader/links"
 LOG_FILE="/userdata/system/game-downloader/debug/system_menu.txt"
@@ -22,7 +25,11 @@ log_debug "Script started"
 # Check if the base directory exists
 if [ ! -d "$BASE_DIR" ]; then
     log_debug "Error: The game downloader directory doesn't exist!"
-    dialog --msgbox "Error: The game downloader directory doesn't exist!" 10 50
+    if [ "$USE_DIALOG" -eq 1 ]; then
+        dialog --msgbox "Error: The game downloader directory doesn't exist!" 10 50
+    else
+        echo "Error: The game downloader directory doesn't exist!"
+    fi
     exit 1
 fi
 
@@ -44,7 +51,11 @@ done
 # Check if any systems were found
 if [ ${#GAME_SYSTEMS[@]} -eq 0 ]; then
     log_debug "Error: No game systems found in $BASE_DIR!"
-    dialog --msgbox "No game systems found in $BASE_DIR!" 10 50
+    if [ "$USE_DIALOG" -eq 1 ]; then
+        dialog --msgbox "No game systems found in $BASE_DIR!" 10 50
+    else
+        echo "No game systems found in $BASE_DIR!"
+    fi
     exit 1
 fi
 
@@ -52,34 +63,37 @@ fi
 MENU_OPTIONS=("0" "Return" "${MENU_OPTIONS[@]}")
 
 # Main dialog menu with loop to keep the menu active until a valid choice is selected
-dialog --clear --backtitle "Game Downloader" \
-       --title "Select a Game System" \
-       --menu "Choose an option:" 15 50 12 \
-       "${MENU_OPTIONS[@]}" 2>/tmp/game-downloader-choice
-
-choice=$(< /tmp/game-downloader-choice)
-rm /tmp/game-downloader-choice
+if [ "$USE_DIALOG" -eq 1 ]; then
+    dialog --clear --backtitle "Game Downloader" \
+           --title "Select a Game System" \
+           --menu "Choose an option:" 15 50 12 \
+           "${MENU_OPTIONS[@]}" 2>/tmp/game-downloader-choice
+    choice=$(< /tmp/game-downloader-choice)
+    rm /tmp/game-downloader-choice
+else
+    echo "Select a Game System:"
+    for ((i=1; i<=${#GAME_SYSTEMS[@]}; i++)); do
+        echo "$i) ${GAME_SYSTEMS[$i-1]}"
+    done
+    read -p "Enter your choice (0 to return): " choice
+fi
 
 # Check if the user canceled the dialog (no choice selected)
-if [ -z "$choice" ]; then
+if [ -z "$choice" ] || [ "$choice" -eq 0 ]; then
     log_debug "User canceled or no option selected."
     clear
-    dialog --infobox "Thank you for using Game Downloader! Any issues, message DTJW92 on Discord!" 10 50
+    if [ "$USE_DIALOG" -eq 1 ]; then
+        dialog --infobox "Thank you for using Game Downloader! Any issues, message DTJW92 on Discord!" 10 50
+    else
+        echo "Thank you for using Game Downloader! Any issues, message DTJW92 on Discord!"
+    fi
     sleep 3
     exit 0  # Exit the script when Cancel is clicked or no option is selected
 fi
 
-# Execute the corresponding action based on user choice
-if [ "$choice" -eq 0 ]; then
-    log_debug "User selected Return, exiting to main menu."
-    clear
-    exec /tmp/GameDownloader.sh  # Execute the main menu script
-    exit 0  # In case exec fails, exit the script
-else
-    # Get the selected game system
-    SELECTED_SYSTEM="${GAME_SYSTEMS[$((choice - 1))]}"
-    log_debug "User selected system: $SELECTED_SYSTEM"
-fi
+# Get the selected game system
+SELECTED_SYSTEM="${GAME_SYSTEMS[$((choice - 1))]}"
+log_debug "User selected system: $SELECTED_SYSTEM"
 
 
 # Define directories and files
@@ -110,7 +124,11 @@ select_games() {
 
     if [[ ! -f "$file" ]]; then
         log_debug "Error: No games found for selection '$letter'."
-        dialog --infobox "No games found for selection '$letter'." 5 40
+        if [ "$USE_DIALOG" -eq 1 ]; then
+            dialog --infobox "No games found for selection '$letter'." 5 40
+        else
+            echo "No games found for selection '$letter'."
+        fi
         sleep 2
         return
     fi
@@ -125,8 +143,16 @@ select_games() {
     game_list=("Return" "${game_list[@]}")
 
     # Show the game selection menu
-    selected_games=$(dialog --title "Select Games" --checklist "Choose games to download" 25 70 10 \
-        "${game_list[@]}" 3>&1 1>&2 2>&3)
+    if [ "$USE_DIALOG" -eq 1 ]; then
+        selected_games=$(dialog --title "Select Games" --checklist "Choose games to download" 25 70 10 \
+            "${game_list[@]}" 3>&1 1>&2 2>&3)
+    else
+        echo "Select games to download (enter numbers separated by space):"
+        for game in "${game_list[@]}"; do
+            echo "$game"
+        done
+        read -p "Enter your selection: " selected_games
+    fi
 
     # If "Return" is selected or no games are selected, exit without continuing
     if [[ "$selected_games" == "Return" || -z "$selected_games" ]]; then
@@ -152,6 +178,7 @@ select_games() {
 }
 
 
+# Function to download the selected game and send the link to the DownloadManager
 # Function to download the selected game and send the link to the DownloadManager
 download_game() {
     local decoded_name="$1"
@@ -189,7 +216,7 @@ download_game() {
     # Ensure the destination directory exists
     mkdir -p "$game_dest_dir"
 
-    # Append the full line (Game Name|Download URL|Destination) to the DownloadManager.txt file
+    # **Reverted back to appending the full game line** (Name|URL|Destination)
     echo "$game_info" >> "/userdata/system/game-downloader/download.txt"
     
     # Collect the added game
@@ -198,65 +225,28 @@ download_game() {
 }
 
 
-# Function to show the letter selection menu with an "All Games" and "Return" options
+# Function to select the letter of the game list dynamically
 select_letter() {
-    # Get a sorted list of the .txt files (A.txt, B.txt, etc.) in the selected game system
-    letter_list=$(ls "$DEST_DIR/$SELECTED_SYSTEM"/*.txt | grep -v "AllGames.txt" | sed -E 's/\.txt$//' | sed 's/.*\///' | sort)
-
-    # Add "Return" and "All" options to the menu
-    menu_options=("Return" "Back to System Selection" "All" "All Games")
-
-    # Add each letter to the menu
-    while read -r letter; do
-        menu_options+=("$letter" "$letter")
-    done <<< "$letter_list"
-
-    # Show the menu and capture the user's choice
-    selected_letter=$(dialog --title "Select a Letter" --menu "Choose a letter or select 'All Games'" 25 70 10 \
-        "${menu_options[@]}" 3>&1 1>&2 2>&3)
-
-    # If "Return" is selected, return to the system selection menu
-    if [ "$selected_letter" == "Return" ]; then
-        log_debug "User selected Return, returning to system selection."
-        return 1  # Return to the system selection
-    elif [ "$selected_letter" == "All" ]; then
-        # If "All Games" is selected, link to AllGames.txt
-        log_debug "User selected All Games."
-        select_games "AllGames"
+    if [ "$USE_DIALOG" -eq 1 ]; then
+        dialog --menu "Select letter" 15 50 5 $(for file in "$DEST_DIR/$SELECTED_SYSTEM"/*.txt; do echo "$(basename "$file" .txt) $file"; done) 2>/tmp/letter_choice
+        letter_choice=$(< /tmp/letter_choice)
+        rm /tmp/letter_choice
     else
-        # Otherwise, proceed with the selected letter
-        log_debug "User selected letter: $selected_letter"
-        select_games "$selected_letter"
+        echo "Select a letter for the game list:"
+        select i in $(for file in "$DEST_DIR/$SELECTED_SYSTEM"/*.txt; do echo "$(basename "$file" .txt)"; done); do
+            letter_choice=$i
+            break
+        done
+    fi
+
+    if [[ -n "$letter_choice" ]]; then
+        select_games "$letter_choice"
     fi
 }
 
-
-# Main loop to process selected games
+# Main execution loop
 while true; do
     select_letter
-
-    # Show a single message if any games were added to the download list
-    if [ ${#added_games[@]} -gt 0 ]; then
-        dialog --msgbox "Your selection has been added to the download list! Check download status and once it's complete, reload your games list to see the new games!" 10 50
-        # Clear the added games list
-        added_games=()
-    fi
-
-    # Display skipped games message if there are any skipped games
-    if [ ${#skipped_games[@]} -gt 0 ]; then
-        skipped_games_list=$(printf "%s\n" "${skipped_games[@]}" | sed 's/^/• /')
-        dialog --msgbox "The following games already exist in the system and are being skipped:\n\n$skipped_games_list" 15 60
-        skipped_games=()
-    fi
-
-    if [ ${#added_games[@]} -gt 0 ]; then
-        dialog --title "Continue?" --yesno "Would you like to select some more games?" 7 50
-        if [ $? -eq 1 ]; then
-            break
-        fi
 done
 
-# Goodbye message
-log_debug "Script ended."
-echo "Goodbye!"
-clear
+log_debug "Script ended"
