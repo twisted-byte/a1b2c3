@@ -6,7 +6,7 @@ DOWNLOAD_PROCESSING="/userdata/system/game-downloader/processing.txt"
 DEBUG_LOG="/userdata/system/game-downloader/debug/debug.txt"
 
 # Maximum number of parallel downloads
-MAX_PARALLEL=3
+MAX_PARALLEL=1
 
 # Ensure debug directory exists
 mkdir -p "$(dirname "$DEBUG_LOG")"
