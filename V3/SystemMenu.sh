@@ -62,11 +62,10 @@ else
     SELECTED_SYSTEM="${GAME_SYSTEMS[$((choice - 1))]}"
 fi
 
-
 # Define directories and files
-DEST_DIR="/userdata/system/game-downloader/links"
-ALLGAMES_FILE="$DEST_DIR/$SELECTED_SYSTEM/AllGames.txt"  # File containing the full list of games with URLs
-DOWNLOAD_DIR="$DEST_DIR/$SELECTED_SYSTEM"  # Download directory
+DEST_DIR="$BASE_DIR/$SELECTED_SYSTEM"
+ALLGAMES_FILE="$DEST_DIR/AllGames.txt"  # File containing the full list of games with URLs
+DOWNLOAD_DIR="$DEST_DIR"  # Download directory
 
 # Ensure the download directory exists
 mkdir -p "$DOWNLOAD_DIR"
@@ -121,8 +120,6 @@ select_games() {
     done
 }
 
-
-
 # Function to download the selected game and send the link to the DownloadManager
 download_game() {
     local decoded_name="$1"
@@ -156,8 +153,6 @@ download_game() {
     added_games+=("$decoded_name_cleaned")
 }
 
-
-
 # Function to show the letter selection menu with an "All Games" and "Return" options
 select_letter() {
     letter_list=$(ls "$DEST_DIR" | grep -oP '^[a-zA-Z#]' | sort | uniq)
@@ -184,9 +179,9 @@ select_letter() {
     fi
 }
 
-
 # Main loop to process selected games
 while true; do
+    echo "Selected System: $SELECTED_SYSTEM"  # Debugging step
     select_letter
 
     # Show a single message if any games were added to the download list
