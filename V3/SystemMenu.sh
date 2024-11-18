@@ -226,23 +226,38 @@ download_game() {
 
 
 # Function to select the letter of the game list dynamically
+# Function to show the letter selection menu with an "All Games" and "Return" options
 select_letter() {
-    if [ "$USE_DIALOG" -eq 1 ]; then
-        dialog --menu "Select letter" 15 50 5 $(for file in "$DEST_DIR/$SELECTED_SYSTEM"/*.txt; do echo "$(basename "$file" .txt) $file"; done) 2>/tmp/letter_choice
-        letter_choice=$(< /tmp/letter_choice)
-        rm /tmp/letter_choice
-    else
-        echo "Select a letter for the game list:"
-        select i in $(for file in "$DEST_DIR/$SELECTED_SYSTEM"/*.txt; do echo "$(basename "$file" .txt)"; done); do
-            letter_choice=$i
-            break
-        done
-    fi
+    # Get a sorted list of the .txt files (A.txt, B.txt, etc.) in the selected game system
+    letter_list=$(ls "$DEST_DIR/$SELECTED_SYSTEM"/*.txt | grep -v "AllGames.txt" | sed -E 's/\.txt$//' | sed 's/.*\///' | sort)
 
-    if [[ -n "$letter_choice" ]]; then
-        select_games "$letter_choice"
+    # Add "Return" and "All" options to the menu
+    menu_options=("Return" "Back to System Selection" "All" "All Games")
+
+    # Add each letter to the menu
+    while read -r letter; do
+        menu_options+=("$letter" "$letter")
+    done <<< "$letter_list"
+
+    # Show the menu and capture the user's choice
+    selected_letter=$(dialog --title "Select a Letter" --menu "Choose a letter or select 'All Games'" 25 70 10 \
+        "${menu_options[@]}" 3>&1 1>&2 2>&3)
+
+    # If "Return" is selected, return to the system selection menu
+    if [ "$selected_letter" == "Return" ]; then
+        log_debug "User selected Return, returning to system selection."
+        return 1  # Return to the system selection
+    elif [ "$selected_letter" == "All" ]; then
+        # If "All Games" is selected, link to AllGames.txt
+        log_debug "User selected All Games."
+        select_games "AllGames"
+    else
+        # Otherwise, proceed with the selected letter
+        log_debug "User selected letter: $selected_letter"
+        select_games "$selected_letter"
     fi
 }
+
 
 # Main execution loop
 while true; do
