@@ -65,7 +65,7 @@ process_download() {
         # Unsupported file type
         echo "Unsupported file type for $game_name. Skipping."
         rm "$temp_path"  # Clean up the downloaded file
-
+    fi
     # Remove the line from processing.txt after successful processing
     sed -i "\|$game_name|$url|$folder|d" /userdata/system/game-downloader/processing.txt
 }
