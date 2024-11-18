@@ -76,7 +76,6 @@ skipped_games=()
 added_games=()
 
 # Function to display the game list and allow selection
-# Function to display the game list and allow selection
 select_games() {
     local letter="$1"
     local file
@@ -107,10 +106,10 @@ select_games() {
     selected_games=$(dialog --title "Select Games" --checklist "Choose games to download" 25 70 10 \
         "${game_list[@]}" 3>&1 1>&2 2>&3)
 
-# If "Return" is selected or no games are selected, exit without continuing
-if [[ "$selected_games" == "Return" || -z "$selected_games" ]]; then
-    return 1  # Return to the letter selection menu
-fi
+    # If "Return" is selected or no games are selected, exit without continuing
+    if [[ "$selected_games" == "Return" || -z "$selected_games" ]]; then
+        return 1  # Return to the letter selection menu
+    fi
 
     # Proceed with downloading the selected games
     IFS=$'\n'
@@ -119,7 +118,7 @@ fi
         game_items=$(echo "$game" | sed -E 's/\.(chd|zip|iso)/\.\1\n/g')
         while IFS= read -r game_item; do
             if [[ -n "$game_item" ]]; then
-                game_item_cleaned=$(echo "$game_item" | sed 's/[\\\"`]//g' | sed 's/^[[:space:]]*//g' | sed 's/[[:space:]]*$//g')
+                game_item_cleaned=$(echo "$game_item" | sed 's/[\\\"]//g' | sed 's/^[[:space:]]*//g' | sed 's/[[:space:]]*$//g')
                 if [[ -n "$game_item_cleaned" ]]; then
                     download_game "$game_item_cleaned"
                 fi
@@ -132,7 +131,7 @@ fi
 # Function to download the selected game and send the link to the DownloadManager
 download_game() {
     local decoded_name="$1"
-    decoded_name_cleaned=$(echo "$decoded_name" | sed 's/[\\\"`]//g' | sed 's/^[[:space:]]*//g' | sed 's/[[:space:]]*$//g')
+    decoded_name_cleaned=$(echo "$decoded_name" | sed 's/[\\\"]//g' | sed 's/^[[:space:]]*//g' | sed 's/[[:space:]]*$//g')
 
     # Check if the game already exists in the download directory
     if [[ -f "$DOWNLOAD_DIR/$decoded_name_cleaned" ]]; then
@@ -165,7 +164,7 @@ download_game() {
 
     # Append the full line (Game Name|Download URL|Destination) to the DownloadManager.txt file
     echo "$game_info" >> "/userdata/system/game-downloader/download.txt"
-
+    
     # Collect the added game
     added_games+=("$decoded_name_cleaned")
 }
@@ -188,7 +187,7 @@ select_letter() {
     selected_letter=$(dialog --title "Select a Letter" --menu "Choose a letter or select 'All Games'" 25 70 10 \
         "${menu_options[@]}" 3>&1 1>&2 2>&3)
 
-    # If "Return" is selected, return to the system selection menu
+    # If "Return" is selected, return to the system selection
     if [ "$selected_letter" == "Return" ]; then
         return 1  # Return to the system selection
     elif [ "$selected_letter" == "All" ]; then
@@ -219,7 +218,7 @@ while true; do
         skipped_games=()
     fi
 
-if [ ${#added_games[@]} -gt 0 ]; then
+    # Ask user if they want to continue after displaying skipped games
     dialog --title "Continue?" --yesno "Would you like to select some more games?" 7 50
     if [ $? -eq 1 ]; then
         break
@@ -227,5 +226,5 @@ if [ ${#added_games[@]} -gt 0 ]; then
 done
 
 # Goodbye message
-echo "Goodbye!"
 clear
+echo "Goodbye!"
