@@ -74,7 +74,8 @@ while true; do
         clear
         dialog --infobox "Thank you for using Game Downloader! Any issues, message DTJW92 on Discord!" 10 50
         sleep 3
-        exit 0  # Exit the script when Cancel is clicked or no option is selected
+        kill -9 $$  # Sends SIGKILL (9) to forcefully terminate the current process
+ # Exit the script when Cancel is clicked or no option is selected
     fi
 
     # Exit logic for option 7
@@ -85,7 +86,8 @@ while true; do
         sleep 3
         
         # Exit the script gracefully without attempting to kill the terminal process
-        exit 0
+        kill -9 $$  # Sends SIGKILL (9) to forcefully terminate the current process
+
     fi
 
     # Execute the corresponding script for the selected option
