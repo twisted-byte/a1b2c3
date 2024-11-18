@@ -118,7 +118,7 @@ while true; do
             echo "Reading download entry: $game_name | $url | $folder"
 
             # Process the download (sequentially)
-            process_download "$game_name" "$url" "$folder" &
+            process_download "$game_name" "$url" "$folder" 
 
         done < <(cat "$DOWNLOAD_QUEUE")  # Use a subshell to safely handle the file while reading
     else
