@@ -15,7 +15,7 @@ if [ -f "$DEBUG_LOG" ]; then
 fi
 
 # Redirect stdout and stderr to debug log
-# exec > "$DEBUG_LOG" 2>&1
+exec > "$DEBUG_LOG" 2>&1
 
 # Log script start
 echo "Starting search script at $(date)"
@@ -66,21 +66,22 @@ search_games() {
     IFS=$'\n'
 
     search_term=$(echo "$search_term" | tr '[:upper:]' '[:lower:]')
-    echo "Searching for term: $search_term"
+    echo "Searching for term: $search_term" &
+
     for file in $(find "$DEST_DIR" -type f -name "AllGames.txt"); do
         folder_name=$(basename "$(dirname "$file")")
-        echo "Searching in file: $file"
+        echo "Searching in file: $file" &
         while IFS="|" read -r decoded_name encoded_url game_download_dir; do
             decoded_name_lower=$(echo "$decoded_name" | tr '[:upper:]' '[:lower:]')
             if [[ "$decoded_name_lower" =~ $search_term ]]; then
                 game_name_cleaned=$(clean_name "$decoded_name")
-                echo "Found game: $folder_name - $game_name_cleaned"
+                echo "Found game: $folder_name - $game_name_cleaned" &
                 results+=("$folder_name - $game_name_cleaned" "$decoded_name" off)
             fi
         done < <(grep -i "$search_term" "$file")
-    done &  # Run the search in the background
+    done
 
-    wait  # Wait for the background search to complete
+    wait
 
     if [[ ${#results[@]} -gt 0 ]]; then
         selected_games=$(dialog --title "Search Results" --checklist "Choose games to download" 25 70 10 "${results[@]}" 3>&1 1>&2 2>&3)
