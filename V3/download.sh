@@ -30,7 +30,6 @@ check_internet() {
     fi
 }
 
-# Function to process each download
 process_download() {
     local game_name="$1"
     local url="$2"
@@ -48,6 +47,14 @@ process_download() {
     # Add a marker to the line to indicate the download has started
     sed -i "/$game_name|$url|$folder/ s|$|#DOWNLOADING|" "$DOWNLOAD_QUEUE"
 
+    # Log the line to processing.txt before starting the download
+    echo "$game_name|$url|$folder" >> /userdata/system/game-downloader/processing.txt
+    echo "Started download for $game_name... Logging to processing.txt"
+
+    # Remove the line from download.txt once it is moved to processing.txt
+    sed -i "\|$game_name|$url|$folder|d" "$DOWNLOAD_QUEUE"
+
+    # Start the download
     echo "Starting download for $game_name..."
     wget -c "$url" -O "$temp_path" >> "$DEBUG_LOG" 2>&1
     if [ $? -ne 0 ]; then
@@ -70,6 +77,9 @@ process_download() {
         echo "Unsupported file type for $game_name. Skipping."
         rm "$temp_path"  # Clean up the downloaded file
     fi
+
+    # Remove the line from processing.txt after successful processing
+    sed -i "\|$game_name|$url|$folder|d" /userdata/system/game-downloader/processing.txt
 
     # Remove the processed line from the queue using the escaped variables
     sed -i "\|$game_name|$url|$folder|d" "$DOWNLOAD_QUEUE"
