@@ -57,7 +57,7 @@ if [ -z "$choices" ]; then
 fi
 
 # Iterate over each selected system and run the corresponding scraper
-IFS=$'\n'  # Use newline as the separator for choices
+IFS=$' '  # Use newline as the separator for choices
 
 for system in $choices; do
     # Remove quotes from the system name, if any
