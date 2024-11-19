@@ -28,4 +28,4 @@ check_downloads
 sleep 3
 
 # Optionally, call GameDownloader.sh after progress is done
-bash /tmp/GameDownloader.sh
+exec /tmp/GameDownloader.sh
