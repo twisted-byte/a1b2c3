@@ -34,11 +34,9 @@ download_game() {
     local decoded_name="$1"
     decoded_name_cleaned=$(clean_name "$decoded_name")
 
-    echo "Checking if game already exists or is queued: $decoded_name_cleaned"
 
-    if [[ -f "$DEST_DIR/$decoded_name_cleaned" ]] || grep -q "$decoded_name_cleaned" "/userdata/system/game-downloader/download.txt"; then
+    if [[ -f "$DEST_DIR/$decoded_name_cleaned" ]] || grep -q "$decoded_name_cleaned" "/userdata/system/game-downloader/processing.txt"; then
         skipped_games+=("$decoded_name_cleaned")
-        echo "Game already exists or is queued: $decoded_name_cleaned"
         return
     fi
 
@@ -49,12 +47,10 @@ download_game() {
 
     if [[ -z "$game_url" || -z "$game_download_dir" ]]; then
         dialog --infobox "Error: Could not find URL for '$decoded_name_cleaned'." 5 40
-        echo "Error: Could not find URL for '$decoded_name_cleaned'"
         sleep 2
         return
     fi
 
-    echo "Adding to download queue: $decoded_name_cleaned|$game_url|$game_download_dir"
     echo "$decoded_name_cleaned|$game_url|$game_download_dir" >> "/userdata/system/game-downloader/download.txt"
     added_games+=("$decoded_name_cleaned")
 }
@@ -66,18 +62,15 @@ search_games() {
     IFS=$'\n'
 
     search_term=$(echo "$search_term" | tr '[:upper:]' '[:lower:]')
-    echo "Searching for term: $search_term" &
 
     for file in $(find "$DEST_DIR" -type f -name "AllGames.txt"); do
         folder_name=$(basename "$(dirname "$file")")
-        echo "Searching in file: $file" &
-
+       
         while IFS="|" read -r decoded_name encoded_url game_download_dir; do
             decoded_name_lower=$(echo "$decoded_name" | tr '[:upper:]' '[:lower:]')
             if [[ "$decoded_name_lower" =~ $search_term ]]; then
                 game_name_cleaned=$(clean_name "$decoded_name")
-                echo "Found game: $folder_name - $game_name_cleaned" &
-
+                
                 # Format the result to match the checklist menu style in the second script
                 results+=("$game_name_cleaned" "" off)
             fi
@@ -94,7 +87,6 @@ search_games() {
         done
     else
         dialog --infobox "No games found for '$search_term'." 5 40
-        echo "No games found for '$search_term'"
         sleep 2
     fi
 }
@@ -108,14 +100,11 @@ while true; do
 
     if [[ ${#added_games[@]} -gt 0 ]]; then
         dialog --msgbox "Added games:\n$(printf "%s\n" "${added_games[@]}")" 10 50
-        echo "Added games: ${added_games[@]}"
     fi
 
     if [[ ${#skipped_games[@]} -gt 0 ]]; then
         dialog --msgbox "Skipped games:\n$(printf "%s\n" "${skipped_games[@]}")" 10 50
-        echo "Skipped games: ${skipped_games[@]}"
     fi
 
     dialog --title "Continue?" --yesno "Search for more games?" 7 50 || break
 done
-echo "Goodbye!"
