@@ -29,7 +29,7 @@ page_content=$(curl -s "$BASE_URL")
 echo "$page_content" | grep -oP "(?<=href=\")[^\"]*${EXT}" | while read -r game_url; do
     # Decode the URL and check for the region tags and (En) in the decoded text
     decoded_name=$(decode_url "$game_url")
-    if [[ "$decoded_name" =~ Europe ]]; then
+    if [[ "$decoded_name" =~ (Europe|UK|United Kingdom) ]]; then
         # Process games matching the "Europe" criteria
         # Format the entry with backticks around the decoded name
         quoted_name="\`$decoded_name\`"
