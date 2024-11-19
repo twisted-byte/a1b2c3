@@ -182,7 +182,12 @@ scrape_system() {
 # Iterate over the selected choices and scrape each system
 for choice in $choices; do
     system="${MENU_ORDER[$choice-1]}"  # Adjust for 0-based indexing
-    scrape_system "$system"
+
+    # Ensure that we are working with the selected system only
+    if [[ -n "$system" ]]; then
+        # Call the scrape function only for valid selections
+        scrape_system "$system"
+    fi
 done
 
 # Show completion message once the process is done
