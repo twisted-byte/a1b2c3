@@ -40,9 +40,8 @@ MENU_ORDER=("PSX" "PS2" "PS3" "PSP" "PS Vita" "Xbox" "Xbox 360" "PC" "DOS" "Maci
 # Create the menu dynamically based on the predetermined order
 MENU_OPTIONS=()
 for system in "${MENU_ORDER[@]}"; do
-    MENU_OPTIONS+=("$system" "off")  # Add system name as tag and item, with default "off"
+    MENU_OPTIONS+=("$system" "$system OFF")  # Add system name and default to OFF
 done
-
 
 # Main dialog checklist menu
 dialog --clear --backtitle "Game System Installer" \
@@ -84,4 +83,4 @@ for system in "${selected_systems[@]}"; do
 done
 
 # Optionally, return to the main menu or run another script after the process
-bash /tmp/GameDownloader.sh
+exec /tmp/GameDownloader.sh
