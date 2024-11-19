@@ -65,7 +65,7 @@ BATOCERA_FOLDERS=(
 )
 
 # Destination base directory
-DEST_DIR_BASE="/userdata/system/game-downloaderV2/links"
+DEST_DIR_BASE="/userdata/system/game-downloader/links"
 
 # Function to decode URL
 decode_url() {
