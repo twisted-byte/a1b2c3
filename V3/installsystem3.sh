@@ -1,5 +1,5 @@
 #!/bin/bash
-
+clear
 # Define the systems and URLs
 declare -A SYSTEMS
 SYSTEMS=(
