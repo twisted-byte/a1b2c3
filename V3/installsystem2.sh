@@ -35,7 +35,7 @@ SCRAPERS["Wii"]="https://raw.githubusercontent.com/DTJW92/game-downloader/main/s
 SCRAPERS["Xbox_360"]="https://raw.githubusercontent.com/DTJW92/game-downloader/main/scrapers/xbox360-scraper.sh"
 
 # Define the predetermined order for the menu with underscores instead of spaces
-MENU_ORDER=("PSX" "PS2" "PS3" "PSP" "PS_Vita" "Xbox" "Xbox_360" "PC" "DOS" "Macintosh" "Game_Boy" "Game_Boy_Color" "Game_Boy_Advance" "Nintendo_DS" "Nintendo_64" "GameCube" "NES" "SNES" "Wii" "Dreamcast" "Game_Gear" "Master_System" "Mega_Drive" "Saturn" "Atari_2600" "Atari_5200" "Atari_7800")
+MENU_ORDER=("PSX" "PS2" "PS3" "PSP" "PS_Vita" "Xbox" "Xbox_360" "PC" "DOS" "Macintosh" "Game_Boy" "Game_Boy_Color" "Game_Boy_Advance" "Nintendo_DS" "NES" "SNES" "Nintendo_64" "GameCube" "Wii" "Game_Gear" "Master_System" "Mega_Drive" "Saturn" "Dreamcast" "Atari_2600" "Atari_5200" "Atari_7800")
 
 # Create the menu dynamically based on the predetermined order
 MENU_OPTIONS=()
