@@ -71,12 +71,15 @@ search_games() {
     for file in $(find "$DEST_DIR" -type f -name "AllGames.txt"); do
         folder_name=$(basename "$(dirname "$file")")
         echo "Searching in file: $file" &
+
         while IFS="|" read -r decoded_name encoded_url game_download_dir; do
             decoded_name_lower=$(echo "$decoded_name" | tr '[:upper:]' '[:lower:]')
             if [[ "$decoded_name_lower" =~ $search_term ]]; then
                 game_name_cleaned=$(clean_name "$decoded_name")
                 echo "Found game: $folder_name - $game_name_cleaned" &
-                results+=("$game_name_cleaned" "$decoded_name" off)
+
+                # Format the result to match the checklist menu style in the second script
+                results+=("$game_name_cleaned" "" off)
             fi
         done < <(grep -i "$search_term" "$file")
     done
@@ -95,6 +98,7 @@ search_games() {
         sleep 2
     fi
 }
+
 
 # Main loop
 while true; do
