@@ -151,7 +151,7 @@ scrape_system() {
 
 # Run the scraping processes in the background
 for system in $choices; do
-    scrape_system "$system" &  # Run the scrape_system function in the background
+    scrape_system "$system"   # Run the scrape_system function in the background
 done
 
 # Wait for all background tasks to complete
