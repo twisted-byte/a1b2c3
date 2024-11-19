@@ -81,6 +81,9 @@ clear_all_files() {
     echo "All text files cleared."
 }
 
+# Clear all text files before starting
+clear_all_files
+
 # Define the predetermined order for the menu
 MENU_ORDER=(
     "Apple Macintosh" "Atari 2600" "Atari 5200" "Atari 7800" "Dreamcast" "Game Boy"
@@ -88,6 +91,28 @@ MENU_ORDER=(
     "Mega Drive" "MS-DOS" "NES" "Nintendo 64" "Nintendo DS" "PC" "PS Vita" "PS2"
     "PS3" "PSP" "PSX" "Saturn" "SNES" "Wii" "Xbox" "Xbox 360"
 )
+
+# Create the checklist dynamically based on the predetermined order
+CHECKLIST_ITEMS=()
+i=1
+for system in "${MENU_ORDER[@]}"; do
+    CHECKLIST_ITEMS+=("$i" "$system")  # Add option number and system name
+    ((i++))  # Increment the option number
+done
+
+echo "Choose systems to scrape by entering their numbers separated by spaces (e.g., 1 3 5):"
+for item in "${CHECKLIST_ITEMS[@]}"; do
+    echo "$item"
+done
+
+# Read user input
+read -p "Enter your choices: " -a choices
+
+# Check if the user canceled the dialog (no choice selected)
+if [ ${#choices[@]} -eq 0 ]; then
+    echo "No systems selected. Exiting..."
+    exit 0  # Exit the script when no option is selected
+fi
 
 # Function to scrape the selected systems
 scrape_system() {
@@ -99,9 +124,6 @@ scrape_system() {
 
     # Ensure the destination directory exists
     mkdir -p "$DEST_DIR"
-
-    # Clear all text files before starting
-    clear_all_files
 
     # Fetch the page content
     page_content=$(curl -s "$BASE_URL")
@@ -124,8 +146,8 @@ scrape_system() {
             decoded_name=$(decode_url "$game_url")
 
             # Debugging output for each extracted URL and decoded name
-            echo "Extracted URL: $game_url"
-            echo "Decoded Name: $decoded_name"
+            echo "Extracted URL: $game_url" >> /userdata/system/game-downloader/debug/scraperdebug.txt
+            echo "Decoded Name: $decoded_name" >> /userdata/system/game-downloader/debug/scraperdebug.txt
 
             if [[ "$decoded_name" =~ Europe ]]; then  # Adjust this criteria as needed
                 # Process games matching the criteria
@@ -146,22 +168,28 @@ scrape_system() {
                 else
                     echo "$quoted_name|$BASE_URL$game_url|$ROM_DIR" >> "$DEST_DIR/other.txt"
                 fi
-                echo "Processed game: $quoted_name"
+                echo "Processed game: $quoted_name" >> /userdata/system/game-downloader/debug/scraperdebug.txt
             fi
             current_file=$((current_file + 1))
             percent=$((current_file * 100 / total_files))
-            echo "Scraping $system... $percent%"
+            echo "Scraping $system... $percent% complete."
         done
     done
 }
 
-# Iterate over the selected systems and scrape each one
-for system in "${MENU_ORDER[@]}"; do
-    scrape_system "$system"
+# Iterate over the selected choices and scrape each system
+for choice in "${choices[@]}"; do
+    system="${MENU_ORDER[$choice-1]}"  # Adjust for 0-based indexing
+
+    # Ensure that we are working with the selected system only
+    if [[ -n "$system" ]]; then
+        # Call the scrape function only for valid selections
+        scrape_system "$system"
+    fi
 done
 
+# Show completion message once the process is done
 echo "Scraping complete!"
-sleep 2  # Display the "Scraping complete!" message for a few seconds
 
-# Optionally, run another script after the process
+# Optionally, return to the main menu or run another script after the process
 bash /tmp/GameDownloader.sh
