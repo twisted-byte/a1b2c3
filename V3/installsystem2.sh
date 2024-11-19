@@ -131,6 +131,9 @@ scrape_system() {
     page_content=$(curl -s "$BASE_URL")
 
     # Parse links, decode them, and check for region-specific criteria
+    total_files=$(echo "$page_content" | grep -oP "(?<=href=\")[^\"]*(${EXTENSIONS[*]// /|})" | wc -l)
+    current_file=0
+
     for EXT in "${EXTENSIONS[@]}"; do
         echo "$page_content" | grep -oP "(?<=href=\")[^\"]*${EXT}" | while read -r game_url; do
             # Decode the URL and check for the region tags and criteria in the decoded text
@@ -155,10 +158,11 @@ scrape_system() {
                     echo "$quoted_name|$BASE_URL$game_url|$ROM_DIR" >> "$DEST_DIR/other.txt"
                 fi
             fi
+            current_file=$((current_file + 1))
+            percent=$((current_file * 100 / total_files))
+            dialog --backtitle "Game System Scraper" --gauge "Scraping $system... $percent%" 10 70 $percent
         done
     done
-
-    echo "Scraping complete for $system!"
 }
 
 # Iterate over the selected choices and scrape each system
