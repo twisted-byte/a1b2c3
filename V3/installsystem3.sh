@@ -129,7 +129,7 @@ scrape_system() {
     page_content=$(curl -s "$BASE_URL")
 
     # Print the page content to scraperdebug.txt for debugging
-    echo "$page_content" > /userdata/system/game-downloader/debug/scraperdebug.txt
+   # echo "$page_content" > /userdata/system/game-downloader/debug/scraperdebug.txt
 
     # Debugging: Print the search pattern
     search_pattern="(?<=href=\")[^\"]*(${EXTENSIONS[*]// /|})"
