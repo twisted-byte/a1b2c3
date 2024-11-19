@@ -58,8 +58,12 @@ if [ -z "$choices" ]; then
     exit 0  # Exit the script when Cancel is clicked or no option is selected
 fi
 
+# Join the choices with a custom delimiter (comma in this case)
+choices=$(echo "$choices" | tr ' ' ',')
+
 # Iterate over each selected system and run the corresponding scraper
-IFS=$' '  # Set Internal Field Separator to newline
+IFS=','  # Set Internal Field Separator to comma (our custom delimiter)
+
 for system in $choices; do
     # Remove quotes from the system name, if any
     system=$(sed 's/^"//;s/"$//' <<< "$system")
@@ -87,8 +91,6 @@ for system in $choices; do
     dialog --infobox "$system installation complete!" 10 50
     sleep 2  # Display the "Installation complete!" message for a few seconds
 done
-
-
 
 # Optionally, return to the main menu or run another script after the process
 exec /tmp/GameDownloader.sh
