@@ -71,7 +71,7 @@ search_games() {
                 game_name_cleaned=$(clean_name "$decoded_name")
                 
                 # Include the folder name in the result
-                results+=("$game_name_cleaned ($folder_name)" "" off)
+                results+=("($folder_name) $game_name_cleaned" "" off)
             fi
         done < <(grep -i "$search_term" "$file")
     done
