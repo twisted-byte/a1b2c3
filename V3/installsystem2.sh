@@ -44,14 +44,11 @@ for system in "${MENU_ORDER[@]}"; do
 done
 
 # Main dialog checklist menu
-dialog --clear --backtitle "Game System Installer" \
+choices=$(dialog --clear --backtitle "Game System Installer" \
        --title "Select Game Systems" \
        --checklist "Use SPACE to select systems for installation. Press ENTER when done:" 20 60 15 \
        "${MENU_OPTIONS[@]}" \
-       2>/tmp/game-downloader-choice
-
-choices=$(< /tmp/game-downloader-choice)
-rm /tmp/game-downloader-choice
+       3>&1 1>&2 2>&3 3>&-)
 
 # Check if the user canceled the dialog (no choice selected)
 if [ -z "$choices" ]; then
@@ -60,7 +57,7 @@ if [ -z "$choices" ]; then
 fi
 
 # Iterate over each selected system and run the corresponding scraper
-echo "$choices" | tr ' ' '\n' | while read -r system; do
+for system in $choices; do
     # Remove quotes from the system name
     system=$(sed 's/^"//;s/"$//' <<< "$system")
 
