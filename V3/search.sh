@@ -15,7 +15,7 @@ if [ -f "$DEBUG_LOG" ]; then
 fi
 
 # Redirect stdout and stderr to debug log
-exec 2>>"$DEBUG_LOG"
+exec > "$DEBUG_LOG" 2>&1
 
 # Log script start
 echo "Starting search script at $(date)"
