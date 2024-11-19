@@ -128,65 +128,38 @@ scrape_system() {
     mkdir -p "$DEST_DIR"
 
     # Fetch the page content
-    page_content=$(curl -s "$BASE_URL")
+    page_content=$(curl -s --fail "$BASE_URL") || { echo "Failed to fetch $BASE_URL"; exit 1; }
 
-    # Print the page content to scraperdebug.txt for debugging
-    echo "$page_content" > /userdata/system/game-downloader/debug/scraperdebug.txt
-
-    # Debugging: Print the search pattern
-    search_pattern="(?<=href=\")[^\"]*(${EXTENSIONS[*]// /|})"
-    echo "Search Pattern: $search_pattern" >> /userdata/system/game-downloader/debug/scraperdebug.txt
+    # Check if the content is empty
+    if [ -z "$page_content" ]; then
+        echo "No content fetched from $BASE_URL"
+        return  # Skip this system if no content is fetched
+    fi
 
     # Parse links, decode them, and check for region-specific criteria
     for EXT in "${EXTENSIONS[@]}"; do
         echo "$page_content" | grep -oP "(?<=href=\")[^\"]*${EXT}" | while read -r game_url; do
-            # Decode the URL and check for the region tags and criteria in the decoded text
             decoded_name=$(decode_url "$game_url")
-
-            # Debugging output for each extracted URL and decoded name
-            echo "Extracted URL: $game_url" >> /userdata/system/game-downloader/debug/scraperdebug.txt
-            echo "Decoded Name: $decoded_name" >> /userdata/system/game-downloader/debug/scraperdebug.txt
-
             if [[ "$decoded_name" =~ Europe ]]; then  # Adjust this criteria as needed
-                # Process games matching the criteria
-                # Format the entry with backticks around the decoded name
                 quoted_name="\`$decoded_name\`"
-                # Get the first character of the decoded file name
                 first_char="${decoded_name:0:1}"
-
-                # Append to AllGames.txt with both quoted decoded name and original URL
-                echo "$quoted_name|$BASE_URL$game_url|$ROM_DIR" >> "$DEST_DIR/AllGames.txt"
-
-                # Save to the appropriate letter-based file
-                if [[ "$first_char" =~ [a-zA-Z] ]]; then
-                    first_char=$(echo "$first_char" | tr 'a-z' 'A-Z')
-                    echo "$quoted_name|$BASE_URL$game_url|$ROM_DIR" >> "$DEST_DIR/${first_char}.txt"
-                elif [[ "$first_char" =~ [0-9] ]]; then
-                    echo "$quoted_name|$BASE_URL$game_url|$ROM_DIR" >> "$DEST_DIR/#.txt"
-                else
-                    echo "$quoted_name|$BASE_URL$game_url|$ROM_DIR" >> "$DEST_DIR/other.txt"
-                fi
-                echo "Processed game: $quoted_name" >> /userdata/system/game-downloader/debug/scraperdebug.txt
-                dialog --infobox "Scraping $system..." 10 70
+                echo "$quoted_name|$first_char" >> "$DEST_DIR/${first_char}.txt"
             fi
         done
     done
 }
 
-# Iterate over the selected choices and scrape each system
-for choice in $choices; do
-    system="${MENU_ORDER[$choice-1]}"  # Adjust for 0-based indexing
-
-    # Ensure that we are working with the selected system only
-    if [[ -n "$system" ]]; then
-        # Call the scrape function only for valid selections
-        scrape_system "$system"
-    fi
+# Run the scraping processes in the background
+for system in $choices; do
+    scrape_system "$system" &  # Run the scrape_system function in the background
 done
 
-# Show completion message once the process is done
-dialog --infobox "Scraping complete!" 10 50
-sleep 2  # Display the "Scraping complete!" message for a few seconds
+# Wait for all background tasks to complete
+wait
 
-# Optionally, return to the main menu or run another script after the process
-bash /tmp/GameDownloader.sh
+# After scraping is complete, show the dialog box for completion
+dialog --clear --msgbox "Scraping is complete!" 6 40
+
+# Exit after completion
+clear
+exit 0
