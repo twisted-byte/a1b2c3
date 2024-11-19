@@ -75,7 +75,8 @@ search_games() {
             decoded_name_lower=$(echo "$decoded_name" | tr '[:upper:]' '[:lower:]')
             if [[ "$decoded_name_lower" =~ $search_term ]]; then
                 game_name_cleaned=$(clean_name "$decoded_name")
-                results+=("$decoded_name" off)
+                # echo "Found game: $folder_name - $game_name_cleaned" &
+                results+=("$game_name_cleaned" "$decoded_name" off)
             fi
         done < <(grep -i "$search_term" "$file")
     done
