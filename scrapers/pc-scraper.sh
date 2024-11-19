@@ -3,7 +3,7 @@
 # Base URL and destination directory
 BASE_URLS="https://myrient.erista.me/files/Redump/IBM%20-%20PC%20compatible/"
 DEST_DIR="/userdata/system/game-downloader/links/PC"
-ROM_DIR="/userdata/roms/windows_installers"
+ROM_DIR="/userdata/saves/flatpak/data"
 EXT=".zip"
 
 # Ensure the destination directory exists
@@ -14,13 +14,6 @@ decode_url() {
     echo -n "$1" | sed 's/%/\\x/g' | xargs -0 printf "%b"
 }
 
-# Clear all the text files before writing new data
-clear_all_files() {
-    rm -f "$DEST_DIR"/*.txt
-}
-
-# Clear all text files before starting
-clear_all_files
 
 # Function to scrape a given base URL
 scrape_url() {
