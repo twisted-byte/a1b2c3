@@ -80,8 +80,9 @@ clear_all_files() {
     rm -f "$DEST_DIR_BASE"/*/*.txt
     echo "All text files cleared."
 }
-    # Clear all text files before starting
-    clear_all_files
+
+# Clear all text files before starting
+clear_all_files
 
 # Define the predetermined order for the menu
 MENU_ORDER=(
