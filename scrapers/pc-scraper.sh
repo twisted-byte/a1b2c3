@@ -28,15 +28,24 @@ scrape_url() {
         # Get the first character of the decoded file name
         first_char="${decoded_name:0:1}"
         
-        # Save to the appropriate letter-based file
+        # Determine the appropriate file based on the first character
         if [[ "$first_char" =~ [a-zA-Z] ]]; then
             first_char=$(echo "$first_char" | tr 'a-z' 'A-Z')
-            echo "$quoted_name|$base_url$game_url|$ROM_DIR" >> "$DEST_DIR/${first_char}.txt"
+            target_file="$DEST_DIR/${first_char}.txt"
         elif [[ "$first_char" =~ [0-9] ]]; then
-            echo "$quoted_name|$base_url$game_url|$ROM_DIR" >> "$DEST_DIR/#.txt"
+            target_file="$DEST_DIR/#.txt"
         else
-            echo "$quoted_name|$base_url$game_url|$ROM_DIR" >> "$DEST_DIR/other.txt"
+            target_file="$DEST_DIR/other.txt"
         fi
+
+        # Check if the game already exists in the target file
+        if grep -q "$quoted_name" "$target_file"; then
+            echo "Skipping $decoded_name as it already exists."
+            continue
+        fi
+
+        # Save to the appropriate letter-based file
+        echo "$quoted_name|$base_url$game_url|$ROM_DIR" >> "$target_file"
     done
 }
 
