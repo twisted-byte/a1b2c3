@@ -2,22 +2,6 @@
 # Ensure clear display
 clear
 
-# Define debug mode (set to "true" to enable debugging, "false" to disable)
-DEBUG_MODE=true
-
-# Define debug directory and file
-DEBUG_DIR="/userdata/system/game-downloader/debug"
-DEBUG_FILE="$DEBUG_DIR/system_menu.txt"
-
-# Ensure the debug directory exists
-mkdir -p "$DEBUG_DIR"
-
-# Start debugging if DEBUG_MODE is enabled
-if [ "$DEBUG_MODE" = true ]; then
-    exec > >(tee -a "$DEBUG_FILE") 2>&1
-    set -x
-fi
-
 # Define the base directory for game systems
 BASE_DIR="/userdata/system/game-downloader/links"
 
@@ -32,11 +16,11 @@ GAME_SYSTEMS=()
 MENU_OPTIONS=()
 
 # Define the predetermined order for the menu with internal system names
-MENUORDER=("PSX" "PS2" "PS3" "PSP" "PS Vita" "Xbox" "Xbox 360" "PC" "DOS" "Macintosh" "Game Boy" "Game Boy Color" "Game Boy Advance" "Nintendo DS" "NES" "SNES" "Nintendo 64" "GameCube" "Wii" "Game Gea[...]
+MENUORDER=("PSX" "PS2" "PS3" "PSP" "PS Vita" "Xbox" "Xbox 360" "PC" "DOS" "Macintosh" "Game Boy" "Game Boy Color" "Game Boy Advance" "Nintendo DS" "NES" "SNES" "Nintendo 64" "GameCube" "Wii" "Game Gear" "Master System" "Mega Drive" "Saturn" "Dreamcast" "Atari 2600" "Atari 5200" "Atari 7800")
 
 # Loop through the directories in /userdata/system/game-downloader/links in the predetermined order and add them to the menu
 index=1
-for system in "${MENUORDER[@]}"; do
+for system in "${MENU_ORDER[@]}"; do
     if [ -d "$BASE_DIR/$system" ]; then
         GAME_SYSTEMS+=("$system")
         MENU_OPTIONS+=("$index" "$system")
@@ -54,10 +38,13 @@ fi
 MENU_OPTIONS=("0" "Return" "${MENU_OPTIONS[@]}")
 
 # Main dialog menu with loop to keep the menu active until a valid choice is selected
-choice=$(dialog --clear --backtitle "Game Downloader" \
+dialog --clear --backtitle "Game Downloader" \
        --title "Select a Game System" \
        --menu "Choose an option:" 15 50 12 \
-       "${MENU_OPTIONS[@]}" 3>&1 1>&2 2>&3)
+       "${MENU_OPTIONS[@]}" 2>/tmp/game-downloader-choice
+
+choice=$(< /tmp/game-downloader-choice)
+rm /tmp/game-downloader-choice
 
 # Check if the user canceled the dialog (no choice selected)
 if [ -z "$choice" ]; then
@@ -89,13 +76,10 @@ mkdir -p "$DOWNLOAD_DIR"
 skipped_games=()
 added_games=()
 
-# Function to display the game list and allow selection with pagination
+# Function to display the game list and allow selection
 select_games() {
     local letter="$1"
     local file
-    local page_size=10  # Number of items per page
-    local current_page=1
-    local total_pages
 
     # Set file path based on the selection
     if [[ "$letter" == "AllGames" ]]; then
@@ -110,78 +94,31 @@ select_games() {
         return
     fi
 
-    # Read the list of games from the file
+    # Read the list of games from the file and prepare the dialog input
     local game_list=()
     while IFS="|" read -r decoded_name encoded_url; do
-        game_list+=("$decoded_name")
-    done <"$file"
+        game_list+=("$decoded_name" "" off)
+    done < "$file"
 
-    total_pages=$(((${#game_list[@]} + page_size - 1) / page_size))
+    selected_games=$(dialog --title "Select Games" --checklist "Choose games to download" 25 70 10 \
+        "${game_list[@]}" 3>&1 1>&2 2>&3)
 
-    while true; do
-        local start_index=$(( (current_page - 1) * page_size ))
-        local end_index=$(( start_index + page_size ))
-        local paged_game_list=("${game_list[@]:$start_index:$page_size}")
+    if [ -z "$selected_games" ]; then
+        return
+    fi
 
-        local dialog_game_list=()
-        for game in "${paged_game_list[@]}"; do
-            dialog_game_list+=("$game" "" off)
-        done
-
-        selected_games=$(dialog --title "Select Games - Page $current_page of $total_pages" --checklist "Choose games to download" 25 70 10 \
-            "${dialog_game_list[@]}" 3>&1 1>&2 2>&3)
-
-        if [ -z "$selected_games" ]; then
-            break
-        fi
-
-        IFS=$'\n'
-        for game in $selected_games; do
-            # Split game by .chd to treat each game as a separate item
-            game_items=$(echo "$game" | sed 's/\.chd/.chd\n/g')
-           while IFS= read -r game_item; do
-        if [[ -n "$game_item" ]]; then
-            game_item_cleaned=$(echo "$game_item" | sed 's/[\\\"`]//g' | sed 's/^[[:space:]]*//g' | sed 's/[[:space:]]*$//g')
-            if [[ -n "$game_item_cleaned" ]]; then
-                download_game "$game_item_cleaned"
+    IFS=$'\n'
+    for game in $selected_games; do
+        # Split game by .chd to treat each game as a separate item
+        game_items=$(echo "$game" | sed 's/\.chd/.chd\n/g')
+        while IFS= read -r game_item; do
+            if [[ -n "$game_item" ]]; then
+                game_item_cleaned=$(echo "$game_item" | sed 's/[\\\"`]//g' | sed 's/^[[:space:]]*//g' | sed 's/[[:space:]]*$//g')
+                if [[ -n "$game_item_cleaned" ]]; then
+                    download_game "$game_item_cleaned"
+                fi
             fi
-        fi
-    done <<<"$game_items"
-        done
-
-        # Navigation options
-        if (( current_page < total_pages )); then
-            next_page_option="Next Page"
-        else
-            next_page_option=""
-        fi
-
-        if (( current_page > 1 )); then
-            prev_page_option="Previous Page"
-        else
-            prev_page_option=""
-        fi
-
-        nav_choice=$(dialog --title "Navigation" --menu "Choose an option:" 15 50 12 \
-            "1" "Return" \
-            "2" "Next Page" \
-            "3" "Previous Page" 3>&1 1>&2 2>&3)
-
-        case $nav_choice in
-            1)
-                break
-                ;;
-            2)
-                if (( current_page < total_pages )); then
-                    ((current_page++))
-                fi
-                ;;
-            3)
-                if (( current_page > 1 )); then
-                    ((current_page--))
-                fi
-                ;;
-        esac
+        done <<< "$game_items"
     done
 }
 
