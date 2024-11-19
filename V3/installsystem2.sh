@@ -56,9 +56,10 @@ if [ -z "$choices" ]; then
     exit 0  # Exit the script when Cancel is clicked or no option is selected
 fi
 
-# Iterate over each selected system and run the corresponding scraper
-echo "$choices" | tr ' ' '\n' | while read -r system; do
-    # Remove quotes from the system name
+# Use 'IFS' to handle multi-word systems (treating each choice as a separate line)
+IFS=$'\n'  # Set Internal Field Separator to newline
+for system in $choices; do
+    # Remove quotes from the system name, if any
     system=$(sed 's/^"//;s/"$//' <<< "$system")
 
     # Get the URL for the selected system
@@ -75,6 +76,7 @@ echo "$choices" | tr ' ' '\n' | while read -r system; do
     dialog --infobox "$system installation complete!" 10 50
     sleep 2  # Display the "Installation complete!" message for a few seconds
 done
+
 
 # Optionally, return to the main menu or run another script after the process
 exec /tmp/GameDownloader.sh
