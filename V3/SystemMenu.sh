@@ -15,13 +15,15 @@ fi
 GAME_SYSTEMS=()
 MENU_OPTIONS=()
 
-# Loop through the directories in /userdata/system/game-downloader/links and add them to the menu
+# Define the predetermined order for the menu with internal system names
+MENU_ORDER=("PSX" "PS2" "PS3" "PSP" "PS_Vita" "Xbox" "Xbox_360" "PC" "DOS" "Macintosh" "Game_Boy" "Game_Boy_Color" "Game_Boy_Advance" "Nintendo_DS" "NES" "SNES" "Nintendo_64" "GameCube" "Wii" "Game_Gear" "Master_System" "Mega_Drive" "Saturn" "Dreamcast" "Atari_2600" "Atari_5200" "Atari_7800")
+
+# Loop through the directories in /userdata/system/game-downloader/links in the predetermined order and add them to the menu
 index=1
-for dir in "$BASE_DIR"/*/; do
-    if [ -d "$dir" ]; then
-        SYSTEM_NAME=$(basename "$dir")
-        GAME_SYSTEMS+=("$SYSTEM_NAME")
-        MENU_OPTIONS+=("$index" "$SYSTEM_NAME")
+for system in "${MENU_ORDER[@]}"; do
+    if [ -d "$BASE_DIR/$system" ]; then
+        GAME_SYSTEMS+=("$system")
+        MENU_OPTIONS+=("$index" "$system")
         ((index++))
     fi
 done
@@ -29,7 +31,7 @@ done
 # Check if any systems were found
 if [ ${#GAME_SYSTEMS[@]} -eq 0 ]; then
     dialog --msgbox "No game systems found in $BASE_DIR!" 10 50
-   exec /tmp/GameDownloader.sh
+    exec /tmp/GameDownloader.sh
 fi
 
 # Add the option for the user to exit
@@ -160,6 +162,7 @@ download_game() {
     # Collect the added game
     added_games+=("$decoded_name_cleaned")
 }
+
 # Function to show the letter selection menu with an "All Games" and "Return" options
 select_letter() {
     letter_list=$(ls "$DEST_DIR" | grep -oP '^[a-zA-Z#]' | sort | uniq)
