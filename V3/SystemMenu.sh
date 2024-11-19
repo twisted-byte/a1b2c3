@@ -66,7 +66,6 @@ fi
 
 # Define directories and files
 DEST_DIR="$BASE_DIR/$SELECTED_SYSTEM"
-ALLGAMES_FILE="$DEST_DIR/AllGames.txt"  # File containing the full list of games with URLs
 DOWNLOAD_DIR="$DEST_DIR"  # Download directory
 
 # Ensure the download directory exists
@@ -79,14 +78,7 @@ added_games=()
 # Function to display the game list and allow selection
 select_games() {
     local letter="$1"
-    local file
-
-    # Set file path based on the selection
-    if [[ "$letter" == "AllGames" ]]; then
-        file="$ALLGAMES_FILE"
-    else
-        file="$DEST_DIR/${letter}.txt"
-    fi
+    local file="$DEST_DIR/${letter}.txt"
 
     if [[ ! -f "$file" ]]; then
         dialog --infobox "No games found for selection '$letter'." 5 40
@@ -115,7 +107,7 @@ select_games() {
             if [[ -n "$game_item" ]]; then
                 game_item_cleaned=$(echo "$game_item" | sed 's/[\\\"`]//g' | sed 's/^[[:space:]]*//g' | sed 's/[[:space:]]*$//g')
                 if [[ -n "$game_item_cleaned" ]]; then
-                    download_game "$game_item_cleaned"
+                    download_game "$game_item_cleaned" "$file"
                 fi
             fi
         done <<< "$game_items"
@@ -125,6 +117,7 @@ select_games() {
 # Function to download the selected game and send the link to the DownloadManager
 download_game() {
     local decoded_name="$1"
+    local file="$2"
     decoded_name_cleaned=$(echo "$decoded_name" | sed 's/[\\\"`]//g' | sed 's/^[[:space:]]*//g' | sed 's/[[:space:]]*$//g')
 
     # Check if the game already exists in the download directory
@@ -139,8 +132,8 @@ download_game() {
         return
     fi
 
-    # Find the game URL and folder from the AllGames.txt file
-    game_info=$(grep -F "$decoded_name_cleaned" "$ALLGAMES_FILE")
+    # Find the game URL and folder from the selected letter .txt file
+    game_info=$(grep -F "$decoded_name_cleaned" "$file")
     game_url=$(echo "$game_info" | cut -d '|' -f 2)
     game_folder=$(echo "$game_info" | cut -d '|' -f 3)
 
@@ -163,26 +156,22 @@ download_game() {
     added_games+=("$decoded_name_cleaned")
 }
 
-# Function to show the letter selection menu with an "All Games" and "Return" options
+# Function to show the letter selection menu
 select_letter() {
     letter_list=$(ls "$DEST_DIR" | grep -oP '^[a-zA-Z#]' | sort | uniq)
 
-    # Add "All" option to the menu
-    menu_options=("All" "All Games")
+    menu_options=()
 
     while read -r letter; do
         menu_options+=("$letter" "$letter")
     done <<< "$letter_list"
 
-    selected_letter=$(dialog --title "Select a Letter" --menu "Choose a letter or select 'All Games'" 25 70 10 \
+    selected_letter=$(dialog --title "Select a Letter" --menu "Choose a letter" 25 70 10 \
         "${menu_options[@]}" 3>&1 1>&2 2>&3)
 
     # If "Return" is selected, return to the system selection
     if [ "$selected_letter" == "Return" ]; then
         return 1  # Return to the system selection
-    elif [ "$selected_letter" == "All" ]; then
-        # If "All Games" is selected, link to AllGames.txt
-        select_games "AllGames"
     else
         # Otherwise, proceed with the selected letter
         select_games "$selected_letter"
