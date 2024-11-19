@@ -40,7 +40,7 @@ MENU_ORDER=("PSX" "PS2" "PS3" "PSP" "PS Vita" "Xbox" "Xbox 360" "PC" "DOS" "Maci
 # Create the menu dynamically based on the predetermined order
 MENU_OPTIONS=()
 for system in "${MENU_ORDER[@]}"; do
-    MENU_OPTIONS+=("$system" "$system OFF")  # Add system name and default to OFF
+    MENU_OPTIONS+=("$system" "" "OFF")  # Add system name and default to OFF
 done
 
 # Main dialog checklist menu
