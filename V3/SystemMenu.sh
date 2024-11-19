@@ -8,7 +8,7 @@ BASE_DIR="/userdata/system/game-downloader/links"
 # Check if the base directory exists
 if [ ! -d "$BASE_DIR" ]; then
     dialog --msgbox "Error: The game downloader directory doesn't exist!" 10 50
-    exit 1
+    exec /tmp/GameDownloader.sh
 fi
 
 # Create a list of available game systems (directories inside /userdata/system/game-downloader/links)
@@ -29,7 +29,7 @@ done
 # Check if any systems were found
 if [ ${#GAME_SYSTEMS[@]} -eq 0 ]; then
     dialog --msgbox "No game systems found in $BASE_DIR!" 10 50
-    exit 1
+   exec /tmp/GameDownloader.sh
 fi
 
 # Add the option for the user to exit
@@ -49,7 +49,7 @@ if [ -z "$choice" ]; then
     clear
     dialog --infobox "Thank you for using Game Downloader! Any issues, message DTJW92 on Discord!" 10 50
     sleep 3
-    exit 0  # Exit the script when Cancel is clicked or no option is selected
+    exec /tmp/GameDownloader.sh  # Exit the script when Cancel is clicked or no option is selected
 fi
 
 # Execute the corresponding action based on user choice
@@ -214,4 +214,4 @@ done
 
 # Goodbye message
 clear
-echo "Goodbye!"
+exec /tmp/GameDownloader.sh
