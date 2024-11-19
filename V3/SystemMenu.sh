@@ -2,6 +2,9 @@
 # Ensure clear display
 clear
 
+# Define debug mode (set to "true" to enable debugging, "false" to disable)
+DEBUG_MODE=false
+
 # Define debug directory and file
 DEBUG_DIR="/userdata/system/game-downloader/debug"
 DEBUG_FILE="$DEBUG_DIR/system_menu.txt"
@@ -9,9 +12,11 @@ DEBUG_FILE="$DEBUG_DIR/system_menu.txt"
 # Ensure the debug directory exists
 mkdir -p "$DEBUG_DIR"
 
-# Start debugging
-exec > >(tee -a "$DEBUG_FILE") 2>&1
-set -x
+# Start debugging if DEBUG_MODE is enabled
+if [ "$DEBUG_MODE" = true ]; then
+    exec > >(tee -a "$DEBUG_FILE") 2>&1
+    set -x
+fi
 
 # Define the base directory for game systems
 BASE_DIR="/userdata/system/game-downloader/links"
@@ -27,7 +32,7 @@ GAME_SYSTEMS=()
 MENU_OPTIONS=()
 
 # Define the predetermined order for the menu with internal system names
-MENUORDER=("PSX" "PS2" "PS3" "PSP" "PS Vita" "Xbox" "Xbox 360" "PC" "DOS" "Macintosh" "Game Boy" "Game Boy Color" "Game Boy Advance" "Nintendo DS" "NES" "SNES" "Nintendo 64" "GameCube" "Wii" "Game Gear" "Dreamcast" "Saturn" "Mega Drive" "Master System" "32X" "SG-1000" "Game & Watch" "3DO" "Jaguar" "Lynx" "Neo Geo" "Neo Geo Pocket" "Neo Geo Pocket Color" "TurboGrafx-16" "TurboGrafx-CD" "PC Engine" "PC Engine CD" "SuperGrafx" "Amiga" "Amstrad CPC" "Atari 2600" "Atari 5200" "Atari 7800" "Atari 8-bit" "Atari ST" "Commodore 64" "Intellivision" "MSX" "MSX2" "Oric" "Sharp X68000" "TI-99/4A" "Vectrex" "WonderSwan" "WonderSwan Color" "ZX Spectrum")
+MENUORDER=("PSX" "PS2" "PS3" "PSP" "PS Vita" "Xbox" "Xbox 360" "PC" "DOS" "Macintosh" "Game Boy" "Game Boy Color" "Game Boy Advance" "Nintendo DS" "NES" "SNES" "Nintendo 64" "GameCube" "Wii" "Game Gea[...]
 
 # Loop through the directories in /userdata/system/game-downloader/links in the predetermined order and add them to the menu
 index=1
