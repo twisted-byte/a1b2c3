@@ -11,9 +11,31 @@ SCRAPERS["PS2"]="https://raw.githubusercontent.com/DTJW92/game-downloader/main/s
 SCRAPERS["Xbox"]="https://raw.githubusercontent.com/DTJW92/game-downloader/main/scrapers/xbox-scraper.sh"
 SCRAPERS["Dreamcast"]="https://raw.githubusercontent.com/DTJW92/game-downloader/main/scrapers/dc-scraper.sh"
 SCRAPERS["Game Boy Advance"]="https://raw.githubusercontent.com/DTJW92/game-downloader/main/scrapers/gba-scraper.sh"
+SCRAPERS["Atari 5200"]="https://raw.githubusercontent.com/DTJW92/game-downloader/main/scrapers/atari-5200-scraper.sh"
+SCRAPERS["Atari 2600"]="https://raw.githubusercontent.com/DTJW92/game-downloader/main/scrapers/atari2600-scraper.sh"
+SCRAPERS["Atari 7800"]="https://raw.githubusercontent.com/DTJW92/game-downloader/main/scrapers/atari7800-scraper.sh"
+SCRAPERS["DOS"]="https://raw.githubusercontent.com/DTJW92/game-downloader/main/scrapers/dos-scraper.sh"
+SCRAPERS["Game Gear"]="https://raw.githubusercontent.com/DTJW92/game-downloader/main/scrapers/gamegear-scraper.sh"
+SCRAPERS["Game Boy"]="https://raw.githubusercontent.com/DTJW92/game-downloader/main/scrapers/gb-scraper.sh"
+SCRAPERS["Game Boy Color"]="https://raw.githubusercontent.com/DTJW92/game-downloader/main/scrapers/gbc-scraper.sh"
+SCRAPERS["GameCube"]="https://raw.githubusercontent.com/DTJW92/game-downloader/main/scrapers/gc-scraper.sh"
+SCRAPERS["Macintosh"]="https://raw.githubusercontent.com/DTJW92/game-downloader/main/scrapers/macintosh-scraper.sh"
+SCRAPERS["Master System"]="https://raw.githubusercontent.com/DTJW92/game-downloader/main/scrapers/mastersystem-scraper.sh"
+SCRAPERS["Mega Drive"]="https://raw.githubusercontent.com/DTJW92/game-downloader/main/scrapers/megadrive-scraper.sh"
+SCRAPERS["Nintendo 64"]="https://raw.githubusercontent.com/DTJW92/game-downloader/main/scrapers/n64-scraper.sh"
+SCRAPERS["Nintendo DS"]="https://raw.githubusercontent.com/DTJW92/game-downloader/main/scrapers/nds-scraper.sh"
+SCRAPERS["NES"]="https://raw.githubusercontent.com/DTJW92/game-downloader/main/scrapers/nes-scraper.sh"
+SCRAPERS["PC"]="https://raw.githubusercontent.com/DTJW92/game-downloader/main/scrapers/pc--scraper.sh"
+SCRAPERS["PS3"]="https://raw.githubusercontent.com/DTJW92/game-downloader/main/scrapers/ps3-scraper.sh"
+SCRAPERS["PSP"]="https://raw.githubusercontent.com/DTJW92/game-downloader/main/scrapers/psp-scraper.sh"
+SCRAPERS["PS Vita"]="https://raw.githubusercontent.com/DTJW92/game-downloader/main/scrapers/psv-scraper.sh"
+SCRAPERS["Saturn"]="https://raw.githubusercontent.com/DTJW92/game-downloader/main/scrapers/saturn-scraper.sh"
+SCRAPERS["SNES"]="https://raw.githubusercontent.com/DTJW92/game-downloader/main/scrapers/snes-scraper.sh"
+SCRAPERS["Wii"]="https://raw.githubusercontent.com/DTJW92/game-downloader/main/scrapers/wii-scraper.sh"
+SCRAPERS["Xbox 360"]="https://raw.githubusercontent.com/DTJW92/game-downloader/main/scrapers/xbox360-scraper.sh"
 
 # Define the predetermined order for the menu
-MENU_ORDER=("PSX" "PS2" "Xbox" "Dreamcast" "Game Boy Advance")
+MENU_ORDER=("PSX" "PS2" "Xbox" "Dreamcast" "Game Boy Advance" "Atari 5200" "Atari 2600" "Atari 7800" "DOS" "Game Gear" "Game Boy" "Game Boy Color" "GameCube" "Macintosh" "Master System" "Mega Drive" "Nintendo 64" "Nintendo DS" "NES" "PC" "PS3" "PSP" "PS Vita" "Saturn" "SNES" "Wii" "Xbox 360")
 
 # Create the menu dynamically based on the predetermined order
 MENU_OPTIONS=("0" "Return to Main Menu")  # Add "Return to Main Menu" as the first option
