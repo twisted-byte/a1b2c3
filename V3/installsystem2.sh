@@ -80,6 +80,8 @@ clear_all_files() {
     rm -f "$DEST_DIR_BASE"/*/*.txt
     echo "All text files cleared."
 }
+    # Clear all text files before starting
+    clear_all_files
 
 # Define the predetermined order for the menu
 MENU_ORDER=(
@@ -123,9 +125,6 @@ scrape_system() {
 
     # Ensure the destination directory exists
     mkdir -p "$DEST_DIR"
-
-    # Clear all text files before starting
-    clear_all_files
 
     # Fetch the page content
     page_content=$(curl -s "$BASE_URL")
