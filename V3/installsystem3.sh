@@ -1,9 +1,6 @@
 #!/bin/bash
 
-# Ensure clear display
-clear
-
-# Predefined systems and their URLs
+# Define the systems and URLs
 declare -A SYSTEMS
 SYSTEMS=(
     ["PSX"]="https://myrient.erista.me/files/Internet%20Archive/chadmaster/chd_psx_eur/CHD-PSX-EUR/"
@@ -35,125 +32,42 @@ SYSTEMS=(
     ["Wii"]="https://myrient.erista.me/files/Redump/Nintendo%20-%20Wii%20-%20NKit%20RVZ%20[zstd-19-128k]/"
 )
 
-# Batocera system-to-folder mapping
-declare -A BATOCERA_FOLDERS
-BATOCERA_FOLDERS=(
-    ["Game Boy Advance"]="gba"
-    ["PSX"]="psx"
-    ["PS2"]="ps2"
-    ["Dreamcast"]="dreamcast"
-    ["Nintendo 64"]="n64"
-    ["Game Cube"]="gamecube"
-    ["Game Boy"]="gb"
-    ["Game Boy Color"]="gbc"
-    ["NES"]="nes"
-    ["SNES"]="snes"
-    ["Nintendo DS"]="nds"
-    ["PSP"]="psp"
-    ["PS3"]="ps3"
-    ["PS Vita"]="psvita"
-    ["Xbox"]="xbox"
-    ["Xbox 360"]="xbox360"
-    ["Game Gear"]="gamegear"
-    ["Master System"]="mastersystem"
-    ["Mega Drive"]="megadrive"
-    ["Saturn"]="saturn"
-    ["Atari 2600"]="atari2600"
-    ["Atari 5200"]="atari5200"
-    ["Atari 7800"]="atari7800"
-    ["PC"]="windows_installers"
-    ["Apple Macintosh"]="macintosh"
-    ["MS-DOS"]="dos"
-    ["Wii"]="wii"
-)
-
-# Destination base directory
-DEST_DIR_BASE="/userdata/system/game-downloader/links"
-
-# Function to decode URL
+# Function to decode URL (ASCII decode)
 decode_url() {
     echo -n "$1" | sed 's/%/\\x/g' | xargs -0 printf "%b"
 }
 
-# Function to clear text files before starting
+# Clear all text files before starting
 clear_all_files() {
-    rm -f "$DEST_DIR_BASE"/*/*.txt
-    echo "All text files cleared."
+    local DEST_DIR="$1"
+    rm -f "$DEST_DIR"/*.txt
 }
 
-# Clear all text files before starting
-clear_all_files
-
-# Define the predetermined order for the menu
-MENU_ORDER=(
-    "Apple Macintosh" "Atari 2600" "Atari 5200" "Atari 7800" "Dreamcast" "Game Boy"
-    "Game Boy Advance" "Game Boy Color" "Game Cube" "Game Gear" "Master System"
-    "Mega Drive" "MS-DOS" "NES" "Nintendo 64" "Nintendo DS" "PC" "PS Vita" "PS2"
-    "PS3" "PSP" "PSX" "Saturn" "SNES" "Wii" "Xbox" "Xbox 360"
-)
-
-# Create the checklist dynamically based on the predetermined order
-CHECKLIST_ITEMS=()
-i=1
-for system in "${MENU_ORDER[@]}"; do
-    CHECKLIST_ITEMS+=("$i" "$system")  # Add option number and system name
-    ((i++))  # Increment the option number
-done
-
-echo "Choose systems to scrape by entering their numbers separated by spaces (e.g., 1 3 5):"
-for item in "${CHECKLIST_ITEMS[@]}"; do
-    echo "$item"
-done
-
-# Read user input
-read -p "Enter your choices: " -a choices
-
-# Check if the user canceled the dialog (no choice selected)
-if [ ${#choices[@]} -eq 0 ]; then
-    echo "No systems selected. Exiting..."
-    exit 0  # Exit the script when no option is selected
-fi
-
-# Function to scrape the selected systems
+# Function to scrape data for a system
 scrape_system() {
     local system="$1"
     local BASE_URL="${SYSTEMS[$system]}"
-    local DEST_DIR="$DEST_DIR_BASE/$system"
-    local ROM_DIR="/userdata/roms/${BATOCERA_FOLDERS[$system]}"
-    local EXTENSIONS=(".chd" ".zip" ".iso")  # List of extensions to search for
+    local DEST_DIR="/userdata/system/game-downloader/links/$system"
+    local ROM_DIR="/userdata/roms/${system,,}"  # Using lowercase system name for ROM directory
+    local EXTENSIONS=(".chd" ".zip" ".iso")  # File extensions to check for
 
     # Ensure the destination directory exists
     mkdir -p "$DEST_DIR"
 
+    # Clear all existing files in the destination directory
+    clear_all_files "$DEST_DIR"
+
     # Fetch the page content
-    page_content=$(curl -s "$BASE_URL")
+    page_content=$(curl -s "$BASE_URL") || { echo "Failed to fetch $BASE_URL"; return; }
 
-    # Print the page content to scraperdebug.txt for debugging
-   # echo "$page_content" > /userdata/system/game-downloader/debug/scraperdebug.txt
-
-    # Debugging: Print the search pattern
-    search_pattern="(?<=href=\")[^\"]*(${EXTENSIONS[*]// /|})"
-    echo "Search Pattern: $search_pattern" >> /userdata/system/game-downloader/debug/scraperdebug.txt
-
-    # Parse links, decode them, and check for region-specific criteria
-    total_files=$(echo "$page_content" | grep -oP "$search_pattern" | wc -l)
-    current_file=0
-    echo "Total files found: $total_files" >> /userdata/system/game-downloader/debug/scraperdebug.txt
-
+    # Parse links and check for Europe
     for EXT in "${EXTENSIONS[@]}"; do
         echo "$page_content" | grep -oP "(?<=href=\")[^\"]*${EXT}" | while read -r game_url; do
-            # Decode the URL and check for the region tags and criteria in the decoded text
+            # Decode the URL and check for Europe
             decoded_name=$(decode_url "$game_url")
-
-            # Debugging output for each extracted URL and decoded name
-            echo "Extracted URL: $game_url" >> /userdata/system/game-downloader/debug/scraperdebug.txt
-            echo "Decoded Name: $decoded_name" >> /userdata/system/game-downloader/debug/scraperdebug.txt
-
-            if [[ "$decoded_name" =~ Europe ]]; then  # Adjust this criteria as needed
-                # Process games matching the criteria
+            if [[ "$decoded_name" =~ Europe ]]; then
                 # Format the entry with backticks around the decoded name
                 quoted_name="\`$decoded_name\`"
-                # Get the first character of the decoded file name
                 first_char="${decoded_name:0:1}"
 
                 # Append to AllGames.txt with both quoted decoded name and original URL
@@ -168,28 +82,17 @@ scrape_system() {
                 else
                     echo "$quoted_name|$BASE_URL$game_url|$ROM_DIR" >> "$DEST_DIR/other.txt"
                 fi
-                echo "Processed game: $quoted_name" >> /userdata/system/game-downloader/debug/scraperdebug.txt
             fi
-            current_file=$((current_file + 1))
-            percent=$((current_file * 100 / total_files))
-            echo "Scraping $system... $percent% complete."
         done
     done
 }
 
-# Iterate over the selected choices and scrape each system
-for choice in "${choices[@]}"; do
-    system="${MENU_ORDER[$choice-1]}"  # Adjust for 0-based indexing
-
-    # Ensure that we are working with the selected system only
-    if [[ -n "$system" ]]; then
-        # Call the scrape function only for valid selections
-        scrape_system "$system"
-    fi
+# Main loop to scrape multiple systems
+for system in "${!SYSTEMS[@]}"; do
+    scrape_system "$system" &
 done
 
-# Show completion message once the process is done
-echo "Scraping complete!"
+# Wait for all background processes to finish
+wait
 
-# Optionally, return to the main menu or run another script after the process
-bash /tmp/GameDownloader.sh
+echo "Scraping complete!"
