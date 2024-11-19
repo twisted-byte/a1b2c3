@@ -41,7 +41,7 @@ MENU_ORDER=("PSX" "PS2" "PS3" "PSP" "PS Vita" "Xbox" "Xbox 360" "PC" "DOS" "Maci
 MENU_OPTIONS=("0" "Return to Main Menu")  # Add "Return to Main Menu" as the first option
 i=1
 for system in "${MENU_ORDER[@]}"; do
-    MENU_OPTIONS+=("$i" "$system")  # Add option number and system name
+    MENU_OPTIONS+=("$i" "$system")  # Each system name is quoted correctly
     ((i++))  # Increment the option number
 done
 
