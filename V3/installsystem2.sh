@@ -113,8 +113,7 @@ if [ -z "$choices" ]; then
     exit 0  # Exit the script when Cancel is clicked or no option is selected
 fi
 
-# Function to scrape the selected system
-scrape_system() {
+# Function to scrape the selected systemscrape_system() {
     local system="$1"
     local BASE_URL="${SYSTEMS[$system]}"
     local DEST_DIR="$DEST_DIR_BASE/$system"
@@ -131,16 +130,22 @@ scrape_system() {
     page_content=$(curl -s "$BASE_URL")
 
     # Print the page content to scraperdebug.txt for debugging
-    echo "$page_content" > /userdata/system/game-downloader/debug/scraperdebug.txt
+   # echo "$page_content" > /userdata/system/game-downloader/debug/scraperdebug.txt
 
     # Parse links, decode them, and check for region-specific criteria
     total_files=$(echo "$page_content" | grep -oP "(?<=href=\")[^\"]*(${EXTENSIONS[*]// /|})" | wc -l)
     current_file=0
+    echo "Total files found: $total_files" >> /userdata/system/game-downloader/debug/scraperdebug.txt
 
     for EXT in "${EXTENSIONS[@]}"; do
         echo "$page_content" | grep -oP "(?<=href=\")[^\"]*${EXT}" | while read -r game_url; do
             # Decode the URL and check for the region tags and criteria in the decoded text
             decoded_name=$(decode_url "$game_url")
+
+            # Debugging output for each extracted URL and decoded name
+            echo "Extracted URL: $game_url" >> /userdata/system/game-downloader/debug/scraperdebug.txt
+            echo "Decoded Name: $decoded_name" >> /userdata/system/game-downloader/debug/scraperdebug.txt
+
             if [[ "$decoded_name" =~ Europe ]]; then  # Adjust this criteria as needed
                 # Process games matching the criteria
                 # Format the entry with backticks around the decoded name
@@ -160,6 +165,7 @@ scrape_system() {
                 else
                     echo "$quoted_name|$BASE_URL$game_url|$ROM_DIR" >> "$DEST_DIR/other.txt"
                 fi
+                echo "Processed game: $quoted_name" >> /userdata/system/game-downloader/debug/scraperdebug.txt
             fi
             current_file=$((current_file + 1))
             percent=$((current_file * 100 / total_files))
