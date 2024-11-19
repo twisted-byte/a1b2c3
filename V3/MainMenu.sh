@@ -4,7 +4,7 @@
 clear
 
 # Set debug flag
-DEBUG=true
+DEBUG=false
 
 # Function to log debug messages
 log_debug() {
@@ -82,6 +82,8 @@ while true; do
         clear
         dialog --infobox "Thank you for using Game Downloader! Any issues, please reach out to DTJW92 on Discord!" 10 50
         sleep 3
+        # Kill the parent process (foreground terminal)
+        kill -9 $(ps -o ppid= -p $$)
         exit 0  # Exit gracefully
     fi
 
