@@ -49,13 +49,10 @@ fi
 MENU_OPTIONS=("0" "Return" "${MENU_OPTIONS[@]}")
 
 # Main dialog menu with loop to keep the menu active until a valid choice is selected
-dialog --clear --backtitle "Game Downloader" \
+choice=$(dialog --clear --backtitle "Game Downloader" \
        --title "Select a Game System" \
        --menu "Choose an option:" 15 50 12 \
-       "${MENU_OPTIONS[@]}" 2>/tmp/game-downloader-choice
-
-choice=$(< /tmp/game-downloader-choice)
-rm /tmp/game-downloader-choice
+       "${MENU_OPTIONS[@]}" 3>&1 1>&2 2>&3)
 
 # Check if the user canceled the dialog (no choice selected)
 if [ -z "$choice" ]; then
