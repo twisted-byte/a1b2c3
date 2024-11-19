@@ -130,6 +130,9 @@ scrape_system() {
     # Fetch the page content
     page_content=$(curl -s "$BASE_URL")
 
+    # Print the page content to scraperdebug.txt for debugging
+    echo "$page_content" > /userdata/system/game-downloader/scraperdebug.txt
+
     # Parse links, decode them, and check for region-specific criteria
     total_files=$(echo "$page_content" | grep -oP "(?<=href=\")[^\"]*(${EXTENSIONS[*]// /|})" | wc -l)
     current_file=0
