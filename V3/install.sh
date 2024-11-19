@@ -122,5 +122,5 @@ else
 fi
 
 # Refresh Batocera games list via localhost
-curl -X POST http://localhost:1234/reloadgames >/dev/null 2>&1
-echo "Gamelist.xml has been updated."
+http://localhost:1234/reloadgames
+echo "Game list has been updated."
