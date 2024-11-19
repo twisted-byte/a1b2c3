@@ -20,8 +20,8 @@ log_debug "Script started."
 
 # URLs for external scripts
 declare -A MENU_ITEMS=( 
-    [1]="https://raw.githubusercontent.com/DTJW92/game-downloader/main/V3/installsystem2.sh"  # Install Game Systems
-    [2]="https://raw.githubusercontent.com/DTJW92/game-downloader/main/V3/SystemMenu.sh"      # Select a Game System
+    [1]="https://raw.githubusercontent.com/DTJW92/game-downloader/main/V3/SystemMenu.sh"  # Select Game Systems
+    [2]="https://raw.githubusercontent.com/DTJW92/game-downloader/main/V3/installsystem2.sh"      # Install a Game System
     [3]="https://raw.githubusercontent.com/DTJW92/game-downloader/main/V3/search.sh"          # Search for a Game
     [4]="https://raw.githubusercontent.com/DTJW92/game-downloader/main/V3/Updater.sh"         # Run Updater
     [5]="https://raw.githubusercontent.com/DTJW92/game-downloader/main/V3/Downloadcheck.sh"   # Status Checker
@@ -30,8 +30,8 @@ declare -A MENU_ITEMS=(
 
 # Menu items description
 declare -A MENU_DESCRIPTIONS=( 
-    [1]="Install Game Systems"
-    [2]="Select a Game System"
+    [1]="Select a Game Systems"
+    [2]="Install a Game System"
     [3]="Search for a Game"
     [4]="Run Updater"
     [5]="Status Checker"
