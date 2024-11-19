@@ -113,7 +113,8 @@ if [ -z "$choices" ]; then
     exit 0  # Exit the script when Cancel is clicked or no option is selected
 fi
 
-# Function to scrape the selected systemscrape_system() {
+# Function to scrape the selected systems
+scrape_system() {
     local system="$1"
     local BASE_URL="${SYSTEMS[$system]}"
     local DEST_DIR="$DEST_DIR_BASE/$system"
@@ -130,10 +131,14 @@ fi
     page_content=$(curl -s "$BASE_URL")
 
     # Print the page content to scraperdebug.txt for debugging
-   # echo "$page_content" > /userdata/system/game-downloader/debug/scraperdebug.txt
+    echo "$page_content" > /userdata/system/game-downloader/debug/scraperdebug.txt
+
+    # Debugging: Print the search pattern
+    search_pattern="(?<=href=\")[^\"]*(${EXTENSIONS[*]// /|})"
+    echo "Search Pattern: $search_pattern" >> /userdata/system/game-downloader/debug/scraperdebug.txt
 
     # Parse links, decode them, and check for region-specific criteria
-    total_files=$(echo "$page_content" | grep -oP "(?<=href=\")[^\"]*(${EXTENSIONS[*]// /|})" | wc -l)
+    total_files=$(echo "$page_content" | grep -oP "$search_pattern" | wc -l)
     current_file=0
     echo "Total files found: $total_files" >> /userdata/system/game-downloader/debug/scraperdebug.txt
 
