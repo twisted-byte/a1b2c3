@@ -3,7 +3,7 @@
 clear
 
 # Define debug mode (set to "true" to enable debugging, "false" to disable)
-DEBUG_MODE=false
+DEBUG_MODE=true
 
 # Define debug directory and file
 DEBUG_DIR="/userdata/system/game-downloader/debug"
