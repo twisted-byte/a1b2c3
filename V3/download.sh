@@ -4,6 +4,7 @@
 DOWNLOAD_QUEUE="/userdata/system/game-downloader/download.txt"
 DOWNLOAD_PROCESSING="/userdata/system/game-downloader/processing.txt"
 DEBUG_LOG="/userdata/system/game-downloader/debug/debug.txt"
+LOG_FILE="download.log"  # Added log file for tracking downloads
 
 # Maximum number of parallel downloads
 MAX_PARALLEL=3
@@ -41,6 +42,27 @@ update_queue_file() {
     local line_to_exclude="$2"
     awk -v pattern="$line_to_exclude" '!index($0, pattern)' "$file" > temp && mv temp "$file"
 }
+
+# Log download function
+log_download() {
+    url=$1
+    echo "$url" >> "$LOG_FILE"
+}
+
+# Function to resume downloads
+resume_downloads() {
+    if [ -f "$LOG_FILE" ]; then
+        while IFS= read -r url; do
+            wget -c "$url"
+            if [ $? -eq 0 ]; then
+                sed -i "\|$url|d" "$LOG_FILE"
+            fi
+        done < "$LOG_FILE"
+    fi
+}
+
+# Start resuming downloads
+resume_downloads
 
 # Function to process individual downloads
 process_download() {
@@ -117,6 +139,16 @@ process_unzip() {
     echo "Removed .zip file: $temp_path."
 }
 
+# Function to check and move .iso files
+move_iso_files() {
+    src_dir="/userdata/saves/flatpak/data"
+    dest_dir="/userdata/roms/windows_installers"
+    find "$src_dir" -type f -name "*.iso" -exec mv {} "$dest_dir" \;
+}
+
+# Call move_iso_files function
+move_iso_files
+
 # Graceful exit handling
 trap 'echo "Cleaning up and exiting."; exit 0' SIGINT SIGTERM
 
@@ -137,6 +169,9 @@ parallel_downloads() {
         # Move the line to processing.txt and remove from download.txt
         echo "$game_name|$url|$folder" >> "$DOWNLOAD_PROCESSING"
         update_queue_file "$DOWNLOAD_QUEUE" "$game_name|$url|$folder"
+
+        # Log the download URL
+        log_download "$url"
 
         # Launch download in the background
         process_download "$game_name" "$url" "$folder" &
@@ -169,5 +204,5 @@ while true; do
     fi
 
     # Pause before checking again
-    sleep 5
+    sleep 10
 done
