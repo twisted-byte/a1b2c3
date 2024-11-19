@@ -57,7 +57,7 @@ if [ -z "$choices" ]; then
 fi
 
 # Iterate over each selected system and run the corresponding scraper
-for system in $choices; do
+echo "$choices" | tr ' ' '\n' | while read -r system; do
     # Remove quotes from the system name
     system=$(sed 's/^"//;s/"$//' <<< "$system")
 
