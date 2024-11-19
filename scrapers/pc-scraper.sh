@@ -14,7 +14,6 @@ decode_url() {
     echo -n "$1" | sed 's/%/\\x/g' | xargs -0 printf "%b"
 }
 
-
 # Function to scrape a given base URL
 scrape_url() {
     local base_url="$1"
@@ -28,15 +27,6 @@ scrape_url() {
         quoted_name="\`$decoded_name\`"
         # Get the first character of the decoded file name
         first_char="${decoded_name:0:1}"
-        
-        # Check if the game already exists in AllGames.txt
-        if grep -q "$quoted_name" "$DEST_DIR/AllGames.txt"; then
-            echo "Skipping $decoded_name as it already exists."
-            continue
-        fi
-        
-        # Append to AllGames.txt with both quoted decoded name and original URL
-        echo "$quoted_name|$base_url$game_url|$ROM_DIR" >> "$DEST_DIR/AllGames.txt"
         
         # Save to the appropriate letter-based file
         if [[ "$first_char" =~ [a-zA-Z] ]]; then
