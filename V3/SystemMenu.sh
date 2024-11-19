@@ -20,7 +20,7 @@ MENUORDER=("PSX" "PS2" "PS3" "PSP" "PS Vita" "Xbox" "Xbox 360" "PC" "DOS" "Macin
 
 # Loop through the directories in /userdata/system/game-downloader/links in the predetermined order and add them to the menu
 index=1
-for system in "${MENU_ORDER[@]}"; do
+for system in "${MENUORDER[@]}"; do
     if [ -d "$BASE_DIR/$system" ]; then
         GAME_SYSTEMS+=("$system")
         MENU_OPTIONS+=("$index" "$system")
