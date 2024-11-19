@@ -60,7 +60,7 @@ if [ -z "$choices" ]; then
 fi
 
 # Convert the selected choices into an array
-IFS=' ' read -r -a selected_systems <<< "$choices"
+IFS=$'\n' read -r -a selected_systems <<< "$choices"
 
 # Iterate over each selected system and run the corresponding scraper
 for system in "${selected_systems[@]}"; do
