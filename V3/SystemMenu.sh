@@ -2,6 +2,17 @@
 # Ensure clear display
 clear
 
+# Define debug directory and file
+DEBUG_DIR="/userdata/system/game-downloader/debug"
+DEBUG_FILE="$DEBUG_DIR/system_menu.txt"
+
+# Ensure the debug directory exists
+mkdir -p "$DEBUG_DIR"
+
+# Start debugging
+exec > >(tee -a "$DEBUG_FILE") 2>&1
+set -x
+
 # Define the base directory for game systems
 BASE_DIR="/userdata/system/game-downloader/links"
 
@@ -16,7 +27,7 @@ GAME_SYSTEMS=()
 MENU_OPTIONS=()
 
 # Define the predetermined order for the menu with internal system names
-MENUORDER=("PSX" "PS2" "PS3" "PSP" "PS Vita" "Xbox" "Xbox 360" "PC" "DOS" "Macintosh" "Game Boy" "Game Boy Color" "Game Boy Advance" "Nintendo DS" "NES" "SNES" "Nintendo 64" "GameCube" "Wii" "Game Gear" "Master System" "Mega Drive" "Saturn" "Dreamcast" "Atari 2600" "Atari 5200" "Atari 7800")
+MENUORDER=("PSX" "PS2" "PS3" "PSP" "PS Vita" "Xbox" "Xbox 360" "PC" "DOS" "Macintosh" "Game Boy" "Game Boy Color" "Game Boy Advance" "Nintendo DS" "NES" "SNES" "Nintendo 64" "GameCube" "Wii" "Game Gea[...]
 
 # Loop through the directories in /userdata/system/game-downloader/links in the predetermined order and add them to the menu
 index=1
