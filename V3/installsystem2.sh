@@ -70,6 +70,12 @@ for system in $choices; do
     # Get the URL for the selected system
     scraper_url="${SCRAPERS[$internal_system_name]}"
 
+    # Check if the scraper URL exists for the system (to avoid errors)
+    if [[ -z "$scraper_url" ]]; then
+        dialog --infobox "Error: Scraper not found for $system." 10 50
+        continue  # Skip this system if no scraper URL exists
+    fi
+
     # Inform the user that the installation is starting
     dialog --infobox "Installing $system downloader. Please wait..." 10 50
 
@@ -81,6 +87,8 @@ for system in $choices; do
     dialog --infobox "$system installation complete!" 10 50
     sleep 2  # Display the "Installation complete!" message for a few seconds
 done
+
+
 
 # Optionally, return to the main menu or run another script after the process
 exec /tmp/GameDownloader.sh
