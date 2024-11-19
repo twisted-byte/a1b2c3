@@ -59,7 +59,7 @@ if [ -z "$choices" ]; then
 fi
 
 # Iterate over each selected system and run the corresponding scraper
-IFS=$'\n'  # Set Internal Field Separator to newline
+IFS=$' '  # Set Internal Field Separator to newline
 for system in $choices; do
     # Remove quotes from the system name, if any
     system=$(sed 's/^"//;s/"$//' <<< "$system")
