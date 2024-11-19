@@ -68,7 +68,7 @@ BATOCERA_FOLDERS=(
 )
 
 # Destination base directory
-DEST_DIR_BASE="/userdata/system/game-downloaderV2/links"
+DEST_DIR_BASE="/userdata/system/game-downloader/links"
 
 # Function to decode URL
 decode_url() {
@@ -83,66 +83,47 @@ clear_all_files() {
 
 # Define the predetermined order for the menu
 MENU_ORDER=(
-    "PSX" "PS2" "Dreamcast" "Nintendo 64" "Game Cube" "Game Boy Advance"
-    "Game Boy" "Game Boy Color" "NES" "SNES" "Nintendo DS" "PSP" "PS3"
-    "PS Vita" "Xbox" "Xbox 360" "Game Gear" "Master System" "Mega Drive"
-    "Saturn" "Atari 2600" "Atari 5200" "Atari 7800" "PC" "Apple Macintosh"
-    "MS-DOS" "Wii"
+    "Apple Macintosh" "Atari 2600" "Atari 5200" "Atari 7800" "Dreamcast" "Game Boy"
+    "Game Boy Advance" "Game Boy Color" "Game Cube" "Game Gear" "Master System"
+    "Mega Drive" "MS-DOS" "NES" "Nintendo 64" "Nintendo DS" "PC" "PS Vita" "PS2"
+    "PS3" "PSP" "PSX" "Saturn" "SNES" "Wii" "Xbox" "Xbox 360"
 )
 
-# Create the menu dynamically based on the predetermined order
-MENU_OPTIONS=("0" "Return to Main Menu")  # Add "Return to Main Menu" as the first option
+# Create the checklist dynamically based on the predetermined order
+CHECKLIST_ITEMS=()
 i=1
 for system in "${MENU_ORDER[@]}"; do
-    MENU_OPTIONS+=("$i" "$system")  # Add option number and system name
+    CHECKLIST_ITEMS+=("$i" "$system" "off")  # Add option number, system name, and default to "off"
     ((i++))  # Increment the option number
 done
 
-# Main dialog menu with dynamically generated options
+# Main dialog checklist menu
 dialog --clear --backtitle "Game System Scraper" \
-       --title "Select a System to Scrape" \
-       --menu "Choose an option:" 15 50 9 \
-       "${MENU_OPTIONS[@]}" \
+       --title "Select Systems to Scrape" \
+       --checklist "Choose systems to scrape:" 20 60 15 \
+       "${CHECKLIST_ITEMS[@]}" \
        2>/tmp/game-downloader-choice
 
-choice=$(< /tmp/game-downloader-choice)
+choices=$(< /tmp/game-downloader-choice)
 rm /tmp/game-downloader-choice
 
 # Check if the user canceled the dialog (no choice selected)
-if [ -z "$choice" ]; then
+if [ -z "$choices" ]; then
     clear
     exit 0  # Exit the script when Cancel is clicked or no option is selected
 fi
 
-# If user selects "Return to Main Menu"
-if [ "$choice" -eq 0 ]; then
-    clear
-    exec /tmp/GameDownloader.sh  # Execute the main menu script
-    exit 0  # In case exec fails, exit the script
-fi
-
-# Get the selected system based on the user choice
-selected_system="${MENU_ORDER[$choice-1]}"  # Adjust for 0-based indexing
-
-# Check if a valid system was selected
-if [ -z "$selected_system" ]; then
-    dialog --msgbox "Invalid option selected. Please try again." 10 50
-    clear
-    bash /tmp/GameDownloader.sh  # Return to the main menu
-    exit 1
-fi
-
-# Get the URL for the selected system
-BASE_URL="${SYSTEMS[$selected_system]}"
-DEST_DIR="$DEST_DIR_BASE/${BATOCERA_FOLDERS[$selected_system]}/$selected_system"
-ROM_DIR="/userdata/roms/${BATOCERA_FOLDERS[$selected_system]}"
-EXT=".chd"  # Adjust this as needed based on the system
-
-# Ensure the destination directory exists
-mkdir -p "$DEST_DIR"
-
 # Function to scrape the selected system
 scrape_system() {
+    local system="$1"
+    local BASE_URL="${SYSTEMS[$system]}"
+    local DEST_DIR="$DEST_DIR_BASE/$system"
+    local ROM_DIR="/userdata/roms/${BATOCERA_FOLDERS[$system]}"
+    local EXTENSIONS=(".chd" ".zip" ".iso")  # List of extensions to search for
+
+    # Ensure the destination directory exists
+    mkdir -p "$DEST_DIR"
+
     # Clear all text files before starting
     clear_all_files
 
@@ -150,39 +131,41 @@ scrape_system() {
     page_content=$(curl -s "$BASE_URL")
 
     # Parse links, decode them, and check for region-specific criteria
-    echo "$page_content" | grep -oP "(?<=href=\")[^\"]*${EXT}" | while read -r game_url; do
-        # Decode the URL and check for the region tags and criteria in the decoded text
-        decoded_name=$(decode_url "$game_url")
-        if [[ "$decoded_name" =~ Europe ]]; then  # Adjust this criteria as needed
-            # Process games matching the criteria
-            # Format the entry with backticks around the decoded name
-            quoted_name="\`$decoded_name\`"
-            # Get the first character of the decoded file name
-            first_char="${decoded_name:0:1}"
+    for EXT in "${EXTENSIONS[@]}"; do
+        echo "$page_content" | grep -oP "(?<=href=\")[^\"]*${EXT}" | while read -r game_url; do
+            # Decode the URL and check for the region tags and criteria in the decoded text
+            decoded_name=$(decode_url "$game_url")
+            if [[ "$decoded_name" =~ Europe ]]; then  # Adjust this criteria as needed
+                # Process games matching the criteria
+                # Format the entry with backticks around the decoded name
+                quoted_name="\`$decoded_name\`"
+                # Get the first character of the decoded file name
+                first_char="${decoded_name:0:1}"
 
-            # Append to AllGames.txt with both quoted decoded name and original URL
-            echo "$quoted_name|$BASE_URL$game_url|$ROM_DIR" >> "$DEST_DIR/AllGames.txt"
+                # Append to AllGames.txt with both quoted decoded name and original URL
+                echo "$quoted_name|$BASE_URL$game_url|$ROM_DIR" >> "$DEST_DIR/AllGames.txt"
 
-            # Save to the appropriate letter-based file
-            if [[ "$first_char" =~ [a-zA-Z] ]]; then
-                first_char=$(echo "$first_char" | tr 'a-z' 'A-Z')
-                echo "$quoted_name|$BASE_URL$game_url|$ROM_DIR" >> "$DEST_DIR/${first_char}.txt"
-            elif [[ "$first_char" =~ [0-9] ]]; then
-                echo "$quoted_name|$BASE_URL$game_url|$ROM_DIR" >> "$DEST_DIR/#.txt"
-            else
-                echo "$quoted_name|$BASE_URL$game_url|$ROM_DIR" >> "$DEST_DIR/other.txt"
+                # Save to the appropriate letter-based file
+                if [[ "$first_char" =~ [a-zA-Z] ]]; then
+                    first_char=$(echo "$first_char" | tr 'a-z' 'A-Z')
+                    echo "$quoted_name|$BASE_URL$game_url|$ROM_DIR" >> "$DEST_DIR/${first_char}.txt"
+                elif [[ "$first_char" =~ [0-9] ]]; then
+                    echo "$quoted_name|$BASE_URL$game_url|$ROM_DIR" >> "$DEST_DIR/#.txt"
+                else
+                    echo "$quoted_name|$BASE_URL$game_url|$ROM_DIR" >> "$DEST_DIR/other.txt"
+                fi
             fi
-        fi
+        done
     done
 
-    echo "Scraping complete for $selected_system!"
+    echo "Scraping complete for $system!"
 }
 
-# Inform the user that the scraping is starting
-dialog --infobox "Scraping $selected_system. Please wait..." 10 50
-
-# Scrape the selected system
-scrape_system
+# Iterate over the selected choices and scrape each system
+for choice in $choices; do
+    system="${MENU_ORDER[$choice-1]}"  # Adjust for 0-based indexing
+    scrape_system "$system"
+done
 
 # Show completion message once the process is done
 dialog --infobox "Scraping complete!" 10 50
