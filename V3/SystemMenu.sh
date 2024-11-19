@@ -112,7 +112,7 @@ select_games() {
     local game_list=()
     while IFS="|" read -r decoded_name encoded_url; do
         game_list+=("$decoded_name")
-    done < "$file"
+    done <"$file"
 
     total_pages=$(((${#game_list[@]} + page_size - 1) / page_size))
 
@@ -137,14 +137,14 @@ select_games() {
         for game in $selected_games; do
             # Split game by .chd to treat each game as a separate item
             game_items=$(echo "$game" | sed 's/\.chd/.chd\n/g')
-            while IFS= read -r game_item; do
-                if [[ -n "$game_item" ]]; then
-                    game_item_cleaned=$(echo "$game_item" | sed 's/[\\\"`]//g' | sed 's/^[[:space:]]*//g' | sed 's/[[:space:]]*$//g')
-                    if [[ -n "$game_item_cleaned" ]]; then
-                        download_game "$game_item_cleaned"
-                    fi
-                fi
-            done <<< "$game_items"
+           while IFS= read -r game_item; do
+        if [[ -n "$game_item" ]]; then
+            game_item_cleaned=$(echo "$game_item" | sed 's/[\\\"`]//g' | sed 's/^[[:space:]]*//g' | sed 's/[[:space:]]*$//g')
+            if [[ -n "$game_item_cleaned" ]]; then
+                download_game "$game_item_cleaned"
+            fi
+        fi
+    done <<<"$game_items"
         done
 
         # Navigation options
