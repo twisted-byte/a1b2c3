@@ -2,7 +2,6 @@
 
 # Paths to files and logs
 DEST_DIR="/userdata/system/game-downloader/links"
-ALLGAMES_FILE="$DEST_DIR/AllGames.txt"
 DEBUG_LOG="/userdata/system/game-downloader/debug/search_debug.txt"
 
 # Ensure the debug directory exists
@@ -13,9 +12,6 @@ if [ -f "$DEBUG_LOG" ]; then
     echo "Clearing debug log for the new session." >> "$DEBUG_LOG"
     > "$DEBUG_LOG"
 fi
-
-# Redirect stdout and stderr to debug log
-# exec > "$DEBUG_LOG" 2>&1
 
 # Log script start
 echo "Starting search script at $(date)"
@@ -32,6 +28,7 @@ clean_name() {
 # Function to download a game
 download_game() {
     local decoded_name="$1"
+    local file="$2"
     decoded_name_cleaned=$(clean_name "$decoded_name")
 
     if [[ -f "$DEST_DIR/$decoded_name_cleaned" ]] || grep -q "$decoded_name_cleaned" "/userdata/system/game-downloader/processing.txt"; then
@@ -40,7 +37,7 @@ download_game() {
     fi
 
     echo "Extracting URL and directory for $decoded_name_cleaned"
-    game_info=$(grep -F "$decoded_name_cleaned" "$ALLGAMES_FILE")
+    game_info=$(grep -F "$decoded_name_cleaned" "$file")
     game_url=$(echo "$game_info" | cut -d '|' -f 2)
     game_download_dir=$(echo "$game_info" | cut -d '|' -f 3)
 
@@ -62,7 +59,7 @@ search_games() {
 
     search_term=$(echo "$search_term" | tr '[:upper:]' '[:lower:]')
 
-    for file in $(find "$DEST_DIR" -type f -name "AllGames.txt"); do
+    for file in $(find "$DEST_DIR" -type f -name "*.txt"); do
         folder_name=$(basename "$(dirname "$file")")
        
         while IFS="|" read -r decoded_name encoded_url game_download_dir; do
@@ -84,7 +81,7 @@ search_games() {
         for game in $selected_games; do
             # Extract the game name without the folder part for download
             game_name=$(echo "$game" | sed 's/ (.*)//')
-            download_game "$(clean_name "$game_name")"
+            download_game "$(clean_name "$game_name")" "$file"
         done
     else
         dialog --infobox "No games found for '$search_term'." 5 40
