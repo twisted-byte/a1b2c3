@@ -34,7 +34,6 @@ download_game() {
     local decoded_name="$1"
     decoded_name_cleaned=$(clean_name "$decoded_name")
 
-
     if [[ -f "$DEST_DIR/$decoded_name_cleaned" ]] || grep -q "$decoded_name_cleaned" "/userdata/system/game-downloader/processing.txt"; then
         skipped_games+=("$decoded_name_cleaned")
         return
@@ -71,8 +70,8 @@ search_games() {
             if [[ "$decoded_name_lower" =~ $search_term ]]; then
                 game_name_cleaned=$(clean_name "$decoded_name")
                 
-                # Format the result to match the checklist menu style in the second script
-                results+=("$game_name_cleaned" "" off)
+                # Include the folder name in the result
+                results+=("$game_name_cleaned ($folder_name)" "" off)
             fi
         done < <(grep -i "$search_term" "$file")
     done
@@ -83,14 +82,15 @@ search_games() {
         selected_games=$(dialog --title "Search Results" --checklist "Choose games to download" 25 70 10 "${results[@]}" 3>&1 1>&2 2>&3)
         [[ $? -ne 0 ]] && return
         for game in $selected_games; do
-            download_game "$(clean_name "$game")"
+            # Extract the game name without the folder part for download
+            game_name=$(echo "$game" | sed 's/ (.*)//')
+            download_game "$(clean_name "$game_name")"
         done
     else
         dialog --infobox "No games found for '$search_term'." 5 40
         sleep 2
     fi
 }
-
 
 # Main loop
 while true; do
