@@ -1,6 +1,6 @@
 #!/bin/bash
 
-BASE_URLS="https://myrient.erista.me/files/Internet%20Archive/chadmaster/chd_psx_eur/CHD-PSX-EUR/"
+BASE_URLS="https://myrient.erista.me/files/Internet%20Archive/chadmaster/chd_psx_eur/CHD-PSX-EUR/" "https://myrient.erista.me/files/Internet%20Archive/chadmaster/chd_psx/CHD-PSX-USA/" "https://myrient.erista.me/files/Internet%20Archive/chadmaster/chd_psx_jap/CHD-PSX-JAP/" "https://myrient.erista.me/files/Internet%20Archive/chadmaster/chd_psx_jap_p2/CHD-PSX-JAP/""
 DEST_DIR="/userdata/system/game-downloader/links/PSX"
 ROM_DIR="/userdata/roms/psx"  # Fixed missing closing quote
 EXT=".chd"
