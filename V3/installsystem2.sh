@@ -49,9 +49,8 @@ done
 dialog --clear --backtitle "Game System Installer" \
        --title "Select Game Systems" \
        --checklist "Use SPACE to select systems for installation. Press ENTER when done:" 20 60 15 \
-       $(for i in "${!MENU_ORDER[@]}"; do echo "$((i+1))" "${MENU_ORDER[$i]}" "off"; done) \
+       $(for i in "${!MENU_ORDER[@]}"; do echo "$((i+1))" \""${MENU_ORDER[$i]}"\" "off"; done) \
        2>/tmp/game-downloader-choices
-
 
 choice=$(< /tmp/game-downloader-choice)
 rm /tmp/game-downloader-choice
