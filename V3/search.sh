@@ -14,7 +14,7 @@ if [ -f "$DEBUG_LOG" ]; then
 fi
 
 # Redirect stderr to debug log
-exec 2>>"$DEBUG_LOG"
+# exec 2>>"$DEBUG_LOG"
 
 # Arrays for tracking games
 added_games=()
