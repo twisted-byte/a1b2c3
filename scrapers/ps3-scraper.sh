@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Base URL and destination directory
-BASE_URLS="https://myrient.erista.me/files/No-Intro/Sony%20-%20PlayStation%203%20(PSN)%20(Content)/"
+BASE_URLS=("https://myrient.erista.me/files/No-Intro/Sony%20-%20PlayStation%203%20(PSN)%20(Content)/" "https://myrient.erista.me/files/Redump/Sony%20-%20PlayStation%203/")
 DEST_DIR="/userdata/system/game-downloader/links/PS3"
 ROM_DIR="/userdata/roms/ps3"
 EXT=".zip"
