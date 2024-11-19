@@ -34,15 +34,13 @@ SCRAPERS["SNES"]="https://raw.githubusercontent.com/DTJW92/game-downloader/main/
 SCRAPERS["Wii"]="https://raw.githubusercontent.com/DTJW92/game-downloader/main/scrapers/wii-scraper.sh"
 SCRAPERS["Xbox_360"]="https://raw.githubusercontent.com/DTJW92/game-downloader/main/scrapers/xbox360-scraper.sh"
 
-# Define the predetermined order for the menu with underscores instead of spaces
+# Define the predetermined order for the menu with internal system names
 MENU_ORDER=("PSX" "PS2" "PS3" "PSP" "PS_Vita" "Xbox" "Xbox_360" "PC" "DOS" "Macintosh" "Game_Boy" "Game_Boy_Color" "Game_Boy_Advance" "Nintendo_DS" "NES" "SNES" "Nintendo_64" "GameCube" "Wii" "Game_Gear" "Master_System" "Mega_Drive" "Saturn" "Dreamcast" "Atari_2600" "Atari_5200" "Atari_7800")
 
 # Create the menu dynamically based on the predetermined order
 MENU_OPTIONS=()
 for system in "${MENU_ORDER[@]}"; do
-    # Replace underscores with spaces for display in the dialog menu
-    display_name=$(echo "$system" | sed 's/_/ /g')
-    MENU_OPTIONS+=("$display_name" "" "OFF")  # Add system name and default to OFF
+    MENU_OPTIONS+=("$system" "" "OFF")  # Use the internal name directly, default to OFF
 done
 
 # Main dialog checklist menu
@@ -58,21 +56,15 @@ if [ -z "$choices" ]; then
     exit 0  # Exit the script when Cancel is clicked or no option is selected
 fi
 
-# Join the choices with a custom delimiter (comma in this case)
-choices=$(echo "$choices" | tr ' ' ',')
-
 # Iterate over each selected system and run the corresponding scraper
-IFS=','  # Set Internal Field Separator to comma (our custom delimiter)
+IFS=$'\n'  # Use newline as the separator for choices
 
 for system in $choices; do
     # Remove quotes from the system name, if any
     system=$(sed 's/^"//;s/"$//' <<< "$system")
-    
-    # Convert the displayed name back to the internal name by replacing spaces with underscores
-    internal_system_name=$(echo "$system" | sed 's/ /_/g')
-    
+
     # Get the URL for the selected system
-    scraper_url="${SCRAPERS[$internal_system_name]}"
+    scraper_url="${SCRAPERS[$system]}"
 
     # Check if the scraper URL exists for the system (to avoid errors)
     if [[ -z "$scraper_url" ]]; then
