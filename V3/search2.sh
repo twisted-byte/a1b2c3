@@ -13,8 +13,8 @@ search_games() {
         exit 1
     fi
 
-    # Find and grep for the game name in all .txt files in subdirectories
-    results=$(find . -type f -name "*.txt" -exec grep -Hn "$game_name" {} \;)
+    # Find and grep for the game name in all .txt files under /userdata/system/game-downloader/links
+    results=$(find /userdata/system/game-downloader/links -type f -name "*.txt" -exec grep -Hn "$game_name" {} \;)
 
     if [ -z "$results" ]; then
         dialog --msgbox "No matching games found!" 8 40
@@ -50,7 +50,7 @@ search_games() {
     echo "Game information saved."
 }
 
-# Function to download selected games (no actual download, just saving details)
+# Function to save selected game information (no actual download, just saving details)
 download_game() {
     # Pull game information from the temporary file
     game_details="$1"
@@ -60,8 +60,8 @@ download_game() {
     url=$(echo "$game_details" | awk -F'|' '{print $2}')
     destination=$(echo "$game_details" | awk -F'|' '{print $3}')
 
-    # Save the game information to download.txt
-    echo "$gamename|$url|$destination" >> download.txt
+    # Save the game information to download.txt in the /userdata/system/game-downloader directory
+    echo "$gamename|$url|$destination" >> /userdata/system/game-downloader/download.txt
 }
 
 # Main script execution
