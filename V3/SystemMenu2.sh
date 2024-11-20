@@ -14,7 +14,7 @@ fi
 # Define the predetermined scripts to be executed for each system (pulled from installsystem.sh)
 declare -A SYSTEM_SCRIPTS
 SYSTEM_SCRIPTS=(
-    ["PSX"]="/path/to/scripts/PSX.sh"
+    ["PSX"]="https://raw.githubusercontent.com/DTJW92/game-downloader/main/psx-downloader-menu.sh"
     ["PS2"]="/path/to/scripts/PS2.sh"
     ["PS3"]="/path/to/scripts/PS3.sh"
     ["PSP"]="/path/to/scripts/PSP.sh"
