@@ -22,7 +22,7 @@ skipped_games=()
 
 # Function to clean up game names
 clean_name() {
-    echo "$1" | sed 's/[\\\"]//g' | sed 's/^[[:space:]]*//g' | sed 's/[[:space:]]*$//g'
+    echo "$1" | sed 's/[\\\"\`]//g' | sed 's/^[[:space:]]*//g' | sed 's/[[:space:]]*$//g'
 }
 
 # Function to download a game
@@ -76,8 +76,13 @@ search_games() {
             if [[ "$decoded_name_lower" =~ $search_term ]]; then
                 game_name_cleaned=$(clean_name "$decoded_name")
                 
-                # Store the cleaned game name for processing and the folder name for display
-                 results+=("$(clean_name "$decoded_name")" "($folder_name)" off)
+                # Split each game by extensions and remove backticks
+                game_items=$(echo "$game_name_cleaned" | sed 's/\.chd/.chd\n/g; s/\.zip/.zip\n/g; s/\.iso/.iso\n/g' | sed 's/`//g')
+                while IFS= read -r game_item; do
+                    if [[ -n "$game_item" ]]; then
+                        results+=("$game_item" "($folder_name)" off)
+                    fi
+                done <<< "$game_items"
             fi
         done < <(grep -i "$search_term" "$file")
     done
