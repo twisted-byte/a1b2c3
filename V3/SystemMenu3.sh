@@ -38,8 +38,8 @@ SYSTEM_SCRIPTS=(
     ["Xbox"]="/path/to/scripts/Xbox.sh"
     ["Xbox 360"]="/path/to/scripts/Xbox_360.sh"
     ["PC"]="/path/to/scripts/PC.sh"
-    ["DOS"]="/path/to/scripts/DOS.sh"
-    ["Macintosh"]="/path/to/scripts/Macintosh.sh"
+    ["MS-DOS"]="/path/to/scripts/DOS.sh"
+    ["Apple Macintosh"]="/path/to/scripts/Macintosh.sh"
     ["Game Boy"]="/path/to/scripts/Game_Boy.sh"
     ["Game Boy Color"]="/path/to/scripts/Game_Boy_Color.sh"
     ["Game Boy Advance"]="/path/to/scripts/Game_Boy_Advance.sh"
@@ -60,7 +60,7 @@ SYSTEM_SCRIPTS=(
 )
 
 # Define the predetermined order for the menu with internal system names
-MENU_ORDER=("PSX" "PS2" "PS3" "PSP" "PS_Vita" "Xbox" "Xbox_360" "PC" "DOS" "Macintosh" "Game_Boy" "Game_Boy_Color" "Game_Boy_Advance" "Nintendo_DS" "NES" "SNES" "Nintendo_64" "GameCube" "Wii" "Game_Gear" "Master_System" "Mega_Drive" "Saturn" "Dreamcast" "Atari_2600" "Atari_5200" "Atari_7800")
+MENU_ORDER=("PSX" "PS2" "PS3" "PSP" "PS Vita" "Xbox" "Xbox 360" "PC" "MS-DOS" "Apple Macintosh" "Game Boy" "Game Boy Color" "Game Boy Advance" "Nintendo DS" "NES" "SNES" "Nintendo 64" "GameCube" "Wii" "Game Gear" "Master System" "Mega Drive" "Saturn" "Dreamcast" "Atari 2600" "Atari 5200" "Atari 7800")
 # Create a list of available game systems (directories inside /userdata/system/game-downloader/links)
 GAME_SYSTEMS=()
 MENU_OPTIONS=()
@@ -117,10 +117,6 @@ while true; do
     if [ "$choice" -eq 0 ]; then
         log_debug "Exit selected. Ending script."
         clear
-        dialog --infobox "Thank you for using Game Downloader! Any issues, please reach out to DTJW92 on Discord!" 10 50
-        sleep 3
-        # Kill the parent process (foreground terminal)
-        kill -9 $(ps -o ppid= -p $$)
         exit 0  # Exit gracefully
     fi
 
