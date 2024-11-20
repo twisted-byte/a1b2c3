@@ -40,31 +40,28 @@ download_game() {
 
     # Extract game info
     echo "DEBUG: Searching for $decoded_name_cleaned in $file" >> "$DEBUG_LOG"
-   game_info=$(grep -F "$decoded_name_cleaned" "$file")
-game_url=$(echo "$game_info" | cut -d '|' -f 2 | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
-game_folder=$(echo "$game_info" | cut -d '|' -f 3 | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
+    game_info=$(grep -F "$decoded_name_cleaned" "$file")
+    game_url=$(echo "$game_info" | cut -d '|' -f 2 | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
+    game_folder=$(echo "$game_info" | cut -d '|' -f 3 | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
 
-# Validate URL and folder
-if [[ -z "$game_url" ]]; then
-    dialog --infobox "Error: Could not find download URL for '$decoded_name_cleaned'." 5 40
-    sleep 2
-    return
-fi
-if [[ -z "$game_folder" ]]; then
-    dialog --infobox "Error: Could not find destination folder for '$decoded_name_cleaned'." 5 40
-    sleep 2
-    return
-fi
-
+    # Validate URL and folder
+    if [[ -z "$game_url" ]]; then
+        dialog --infobox "Error: Could not find download URL for '$decoded_name_cleaned'." 5 40
+        sleep 2
+        return
+    fi
+    if [[ -z "$game_folder" ]]; then
+        dialog --infobox "Error: Could not find destination folder for '$decoded_name_cleaned'." 5 40
+        sleep 2
+        return
+    fi
 
     # Log to download file and queue for download
-  echo "$decoded_name_cleaned|$game_url|$game_folder" >> "/userdata/system/game-downloader/download.txt"
-added_games+=("$decoded_name_cleaned")
-echo "DEBUG: Processed game: $decoded_name_cleaned with URL: $game_url and Folder: $game_folder" >> "$DEBUG_LOG"
-
+    echo "$decoded_name_cleaned|$game_url|$game_folder" >> "/userdata/system/game-downloader/download.txt"
+    added_games+=("$decoded_name_cleaned")
+    echo "DEBUG: Processed game: $decoded_name_cleaned with URL: $game_url and Folder: $game_folder" >> "$DEBUG_LOG"
 }
 
-# Function to search and display games
 # Function to search and display games
 search_games() {
     local search_term="$1"
@@ -81,11 +78,11 @@ search_games() {
             if [[ "$decoded_name_lower" =~ $search_term ]]; then
                 game_name_cleaned=$(clean_name "$decoded_name")
                 
-                # Split each game by extensions and remove backticks
-                game_items=$(echo "$decoded_name" | sed 's/\.chd/.chd\n/g; s/\.zip/.zip\n/g; s/\.iso/.iso\n/g')
+                # Split each game by extensions (.chd, .zip, .iso) and remove backticks
+                game_items=$(echo "$game_name_cleaned" | sed 's/\.chd/.chd\n/g; s/\.zip/.zip\n/g; s/\.iso/.iso\n/g' | sed 's/[\\\"\`]//g')
                 while IFS= read -r game_item; do
                     if [[ -n "$game_item" ]]; then
-                        game_item_cleaned=$(echo "$game_item" | sed 's/[\\\"`]//g' | sed 's/^[[:space:]]*//g' | sed 's/[[:space:]]*$//g')
+                        game_item_cleaned=$(clean_name "$game_item")
                         download_game "$game_item_cleaned" "$file"
                     fi
                 done <<< "$game_items"
