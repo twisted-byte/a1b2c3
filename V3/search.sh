@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Pre-determined base directory for searching, set this as needed
+# Pre-determined base directory for searching
 BASE_DIR="/userdata/system/game-downloader/links"  # Default to current directory if BASE_DIR is not set
 DOWNLOAD_FILE="/userdata/system/game-downloader/download.txt"  # Default to ./download.txt if not set
 
@@ -35,7 +35,7 @@ download_game() {
     return
   fi
 
-  # Find the game URL from the letter file
+  # Find the game URL from the .txt file
   game_url=$(grep -F "$decoded_name_cleaned" "$file" | cut -d '|' -f 2)
 
   if [ -z "$game_url" ]; then
@@ -62,7 +62,7 @@ search_games() {
     # Read each line of the .txt file
     while IFS= read -r line; do
       # Use regex to extract the game name and clean it by removing backticks
-      if [[ "$line" =~ \`([^\\`]+)\|([^|]+)\|([^|]+)\` ]]; then
+      if [[ "$line" =~ `([^\\`]+)\|([^|]+)\|([^|]+)` ]]; then
         game_name="${BASH_REMATCH[1]}"
         url="${BASH_REMATCH[2]}"
         destination="${BASH_REMATCH[3]}"
