@@ -6,69 +6,59 @@ set -u
 
 # Function to search for games and display results in a dialog checklist
 search_games() {
-    # Prompt for the game name using dialog
     game_name=$(dialog --inputbox "Enter game name to search:" 8 40 3>&1 1>&2 2>&3 3>&-)
     if [ -z "$game_name" ]; then
-        dialog --msgbox "No game name entered. Exiting." 8 40
         clear
+        echo "No game name entered. Exiting."
         exit 1
     fi
 
-    # Find and grep for the game name in all .txt files under /userdata/system/game-downloader/links
+    # Find and grep for the game name in all .txt files in subdirectories
     results=$(find /userdata/system/game-downloader/links -type f -name "*.txt" -exec grep -Hn "$game_name" {} \;)
 
-    if [ -z "$results" ]; then
-        dialog --msgbox "No matching games found!" 8 40
-        clear
-        exit 1
-    fi
-
-    # Prepare a temporary file to store game details (URL and destination)
+    # Prepare temporary file
     temp_file=$(mktemp)
 
+    # Prepare checklist items
+    checklist_items=()
     while IFS= read -r line; do
+        # Extract file path, line number, and game data
         file=$(echo "$line" | cut -d: -f1)
-        lineno=$(echo "$line" | cut -d: -f2)
         gameline=$(echo "$line" | cut -d: -f3)
-        gamename=$(echo "$gameline" | awk -F'|' '{print $1}')
-        url=$(echo "$gameline" | awk -F'|' '{print $2}')
-        destination=$(echo "$gameline" | awk -F'|' '{print $3}')
-        
-        # Save game details (URL and destination) to temporary file
+        gamename=$(echo "$gameline" | cut -d'|' -f1 | tr -d '`')  # Remove backticks
+        url=$(echo "$gameline" | cut -d'|' -f2)
+        destination=$(echo "$gameline" | cut -d'|' -f3)
+        folder=$(basename "$(dirname "$file")")  # Get the folder name (not the full path)
+
+        # Save game name, URL, and destination (no folder) to temporary file
         echo "$gamename|$url|$destination" >> "$temp_file"
+
+        # Add only game name and folder name to checklist
+        checklist_items+=("$gamename ($folder)" "off")
     done <<< "$results"
 
-    # Show checklist dialog to select games
-    selected_games=$(dialog --checklist "Select games to save information:" 15 50 8 --file "$temp_file" 3>&1 1>&2 2>&3 3>&-)
-    rm "$temp_file"
+    # Show checklist dialog with only game names and folder names
+    selected_games=$(dialog --checklist "Select games to save information:" 15 50 8 "${checklist_items[@]}" 3>&1 1>&2 2>&3 3>&-)
 
-    if [ -z "$selected_games" ]; then
-        dialog --msgbox "No games selected. Exiting." 8 40
-        clear
-        exit 1
-    fi
+    # Process selected games (from temporary file)
+    for selected_game in $selected_games; do
+        # Read the corresponding line from the temporary file
+        gameline=$(grep -m 1 "^$selected_game|" "$temp_file")
 
-    # Process selected games and call download_game function for each
-    for game in $selected_games; do
-        download_game "$game"
+        # Extract game name, URL, and destination (no folder)
+        gamename=$(echo "$gameline" | cut -d'|' -f1)
+        url=$(echo "$gameline" | cut -d'|' -f2)
+        destination=$(echo "$gameline" | cut -d'|' -f3)
+
+        # Save to download.txt (with the selected games, no folder path)
+        echo "$gamename|$url|$destination" >> /userdata/system/game-downloader/download.txt
     done
 
-    dialog --msgbox "Your selection has been added to the download queue!" 8 40
+    # Clean up temporary file
+    rm "$temp_file"
+
     clear
-}
-
-# Function to save selected game information (no actual download, just saving details)
-download_game() {
-    # Pull game information from the passed game details
-    game_details="$1"
-    
-    # Extract the game details
-    gamename=$(echo "$game_details" | awk -F'|' '{print $1}')
-    url=$(echo "$game_details" | awk -F'|' '{print $2}')
-    destination=$(echo "$game_details" | awk -F'|' '{print $3}')
-
-    # Save the game information to download.txt in the /userdata/system/game-downloader directory
-    echo "$gamename|$url|$destination" >> /userdata/system/game-downloader/download.txt
+    echo "Download process completed."
 }
 
 # Main script execution
