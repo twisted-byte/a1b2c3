@@ -80,7 +80,7 @@ while true; do
   # Check if any games were selected
   if [ -n "$selected_games" ]; then
     # Split the selected games into an array
-    IFS=' ' read -r -a selected_games_array <<< "$selected_games"
+    IFS='.chd|.zip|.iso' read -r -a selected_games_array <<< "$selected_games"
 
     # Call the function to download games and split by extensions
     download_games "${selected_games_array[@]}"
