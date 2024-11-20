@@ -105,6 +105,9 @@ process_download() {
 
     # Remove the line from processing.txt after successful processing
     update_queue_file "$DOWNLOAD_PROCESSING" "$game_name|$url|$folder"
+    
+    # Remove the URL from download.log after successful download
+    sed -i "\|$url|d" "$LOG_FILE"
 }
 
 # Function to unzip files
