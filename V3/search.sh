@@ -90,7 +90,7 @@ search_games() {
 
         for game in $selected_games; do
             # Clean up the selected game name and pass it to download_game
-            game_name=$(echo "$game" | sed 's/["']//g')  # Remove surrounding quotes if present
+            game_name=$(echo "$game" | sed 's/ (.*)//')
             download_game "$game_name" "$file"
         done
     else
