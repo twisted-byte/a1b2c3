@@ -97,11 +97,15 @@ else
     SELECTED_SYSTEM="${GAME_SYSTEMS[$((choice - 1))]}"
     SCRIPT_PATH="${SYSTEM_SCRIPTS[$SELECTED_SYSTEM]}"
     
-    # Check if the script exists and execute it
-    if [ -f "$SCRIPT_PATH" ]; then
-        curl -Ls "$SCRIPT_PATH" | bash
-        
+    # Check if the script path is a URL or a local file
+    if [[ "$SCRIPT_PATH" =~ ^https?:// ]]; then
+        # It's a URL, download it
+        curl -s "$SCRIPT_PATH" -o "/tmp/$SELECTED_SYSTEM.sh" && bash "/tmp/$SELECTED_SYSTEM.sh"
+    elif [ -f "$SCRIPT_PATH" ]; then
+        # It's a local file, execute it
+        bash "$SCRIPT_PATH"
     else
+        # Script doesn't exist
         dialog --msgbox "This game system isn't installed yet!" 10 50
         exit 1
     fi
