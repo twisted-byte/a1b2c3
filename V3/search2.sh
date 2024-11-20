@@ -6,10 +6,11 @@ set -u
 
 # Function to search for games and display results in a dialog checklist
 search_games() {
+    # Prompt for the game name using dialog
     game_name=$(dialog --inputbox "Enter game name to search:" 8 40 3>&1 1>&2 2>&3 3>&-)
     if [ -z "$game_name" ]; then
+        dialog --msgbox "No game name entered. Exiting." 8 40
         clear
-        echo "No game name entered. Exiting."
         exit 1
     fi
 
@@ -41,18 +42,24 @@ search_games() {
     selected_games=$(dialog --checklist "Select games to save information:" 15 50 8 --file "$temp_file" 3>&1 1>&2 2>&3 3>&-)
     rm "$temp_file"
 
+    if [ -z "$selected_games" ]; then
+        dialog --msgbox "No games selected. Exiting." 8 40
+        clear
+        exit 1
+    fi
+
     # Process selected games and call download_game function for each
     for game in $selected_games; do
         download_game "$game"
     done
 
+    dialog --msgbox "Your selection has been added to the download queue!" 8 40
     clear
-    echo "Game information saved."
 }
 
 # Function to save selected game information (no actual download, just saving details)
 download_game() {
-    # Pull game information from the temporary file
+    # Pull game information from the passed game details
     game_details="$1"
     
     # Extract the game details
