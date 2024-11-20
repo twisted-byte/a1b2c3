@@ -34,33 +34,33 @@ SYSTEM_SCRIPTS=(
     ["PS2"]="/path/to/scripts/PS2.sh"
     ["PS3"]="/path/to/scripts/PS3.sh"
     ["PSP"]="/path/to/scripts/PSP.sh"
-    ["PS_Vita"]="/path/to/scripts/PS_Vita.sh"
+    ["PS Vita"]="/path/to/scripts/PS_Vita.sh"
     ["Xbox"]="/path/to/scripts/Xbox.sh"
-    ["Xbox_360"]="/path/to/scripts/Xbox_360.sh"
+    ["Xbox 360"]="/path/to/scripts/Xbox_360.sh"
     ["PC"]="/path/to/scripts/PC.sh"
     ["DOS"]="/path/to/scripts/DOS.sh"
     ["Macintosh"]="/path/to/scripts/Macintosh.sh"
-    ["Game_Boy"]="/path/to/scripts/Game_Boy.sh"
-    ["Game_Boy_Color"]="/path/to/scripts/Game_Boy_Color.sh"
-    ["Game_Boy_Advance"]="/path/to/scripts/Game_Boy_Advance.sh"
-    ["Nintendo_DS"]="/path/to/scripts/Nintendo_DS.sh"
+    ["Game Boy"]="/path/to/scripts/Game_Boy.sh"
+    ["Game Boy Color"]="/path/to/scripts/Game_Boy_Color.sh"
+    ["Game Boy Advance"]="/path/to/scripts/Game_Boy_Advance.sh"
+    ["Nintendo DS"]="/path/to/scripts/Nintendo_DS.sh"
     ["NES"]="/path/to/scripts/NES.sh"
     ["SNES"]="/path/to/scripts/SNES.sh"
-    ["Nintendo_64"]="/path/to/scripts/Nintendo_64.sh"
+    ["Nintendo 64"]="/path/to/scripts/Nintendo_64.sh"
     ["GameCube"]="/path/to/scripts/GameCube.sh"
     ["Wii"]="/path/to/scripts/Wii.sh"
-    ["Game_Gear"]="/path/to/scripts/Game_Gear.sh"
+    ["Game Gear"]="/path/to/scripts/Game_Gear.sh"
     ["Dreamcast"]="/path/to/scripts/Dreamcast.sh"
-    ["Atari_2600"]="/path/to/scripts/Atari_2600.sh"
-    ["Atari_5200"]="/path/to/scripts/Atari_5200.sh"
-    ["Atari_7800"]="/path/to/scripts/Atari_7800.sh"
+    ["Atari 2600"]="/path/to/scripts/Atari_2600.sh"
+    ["Atari 5200"]="/path/to/scripts/Atari_5200.sh"
+    ["Atari 7800"]="/path/to/scripts/Atari_7800.sh"
     ["Saturn"]="/path/to/scripts/Saturn.sh"
-    ["Master_System"]="/path/to/scripts/Master_System.sh"
-    ["Mega_Drive"]="/path/to/scripts/Mega_Drive.sh"
+    ["Master System"]="/path/to/scripts/Master_System.sh"
+    ["Mega Drive"]="/path/to/scripts/Mega_Drive.sh"
 )
 
 # Define the predetermined order for the menu with internal system names
-MENU_ORDER=("PSX" "PS2" "PS3" "PSP" "PS_Vita" "Xbox" "Xbox_360" "PC" "DOS" "Macintosh" "Game_Boy" "Game_Boy_Color" "Game_Boy_Advance" "Nintendo_DS" "NES" "SNES" "Nintendo_64" "GameCube" "Wii" "Game_Gear" "Dreamcast" "Atari_2600" "Atari_5200" "Atari_7800" "Saturn" "Master_System" "Mega_Drive")
+MENU_ORDER=("PSX" "PS2" "PS3" "PSP" "PS Vita" "Xbox" "Xbox 360" "PC" "DOS" "Macintosh" "Game Boy" "Game Boy Color" "Game Boy Advance" "Nintendo DS" "NES" "SNES" "Nintendo 64" "GameCube" "Wii" "Game Gear" "Dreamcast" "Atari 2600" "Atari 5200" "Atari 7800" "Saturn" "Master System" "Mega Drive")
 
 # Create a list of available game systems (directories inside /userdata/system/game-downloader/links)
 GAME_SYSTEMS=()
