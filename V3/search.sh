@@ -70,26 +70,26 @@ search_games() {
 
     search_term=$(echo "$search_term" | tr '[:upper:]' '[:lower:]')
 
-    for file in $(find "$DEST_DIR" -type f -name "*.txt"); do
+    find "$DEST_DIR" -type f -name "*.txt" | while IFS= read -r file; do
         folder_name=$(basename "$(dirname "$file")")
 
-        while IFS="|" read -r decoded_name encoded_url game_download_dir; do
+        grep -i "$search_term" "$file" | while IFS="|" read -r decoded_name encoded_url game_download_dir; do
             decoded_name_lower=$(echo "$decoded_name" | tr '[:upper:]' '[:lower:]')
             if [[ "$decoded_name_lower" =~ $search_term ]]; then
                 game_name_cleaned=$(clean_name "$decoded_name")
                 
-                # Split each game by extensions (.chd, .zip, .iso) and remove backticks
+                # Split each game by extensions and remove backticks
                 game_items=$(echo "$game_name_cleaned" | sed 's/\.chd/.chd\n/g; s/\.zip/.zip\n/g; s/\.iso/.iso\n/g' | sed 's/[\\\"\`]//g')
                 while IFS= read -r game_item; do
                     if [[ -n "$game_item" ]]; then
                         game_item_cleaned=$(clean_name "$game_item")
-                        download_game "$game_item_cleaned" "$file"
+                        download_game "$game_item_cleaned" "$file" &
                     fi
                 done <<< "$game_items"
 
                 results+=("$game_name_cleaned" "($folder_name)" off)
             fi
-        done < "$file"
+        done
     done
 
     wait
@@ -101,7 +101,7 @@ search_games() {
         for game in $selected_games; do
             # Clean up the selected game name and pass it to download_game
             game_name=$(echo "$game" | sed 's/ (.*)//')
-            download_game "$game_name" "$file"
+            download_game "$game_name" "$file" &
         done
     else
         dialog --infobox "No games found for '$search_term'." 5 40
