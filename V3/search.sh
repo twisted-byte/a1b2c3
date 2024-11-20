@@ -25,7 +25,7 @@ search_games() {
 
                 results+=("$game_name_cleaned" "($folder_name)" off)
             fi
-        done < "$file"
+        done<"$file"
     done
 
     wait
