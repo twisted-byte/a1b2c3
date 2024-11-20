@@ -14,9 +14,9 @@ mkdir -p "$STATUS_DIR"
 check_downloads() {
     if [[ -s "$download_file" ]]; then
         # If processing.txt is not empty, display all games currently downloading
-        game_names=$(cut -d '|' -f 1 "$download_file" | tr '\n' '\n')
+        game_names=$(cut -d '|' -f 1 "$download_file" | grep -Eo '\w+\.(chd|iso|zip)' | sort -u | tr '\n' '\n')
         dialog --msgbox "Still downloading:\n$game_names" 10 50
-    else
+    else {
         # If processing.txt is empty, all downloads are processed
         dialog --infobox "Nothing downloading! Update your game list to see your new games! Don't forget to scrape for artwork!" 15 50
         sleep 5
