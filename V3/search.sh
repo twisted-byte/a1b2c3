@@ -54,15 +54,14 @@ download_game() {
 # Function to search for game entries in .txt files and clean the game names
 search_games() {
   local search_dir="$1"
-  local file_pattern="*.txt"  # We are still looking for *.txt files
+  local file_pattern="*.txt"
   game_list=()
 
   # Find all .txt files in the directory and its subdirectories
   find "$search_dir" -type f -name "$file_pattern" | while read -r file; do
-    # Read each line of the .txt file
     while IFS= read -r line; do
-      # Use regex to extract the game name and clean it by removing backticks
-if [[ "$line" =~ \`([^\\`]+)\`\|([^|]+)\|([^|]+) ]]; then
+      # Use regex to extract the game name, URL, and destination
+      if [[ "$line" =~ \`([^\\`]+)\`\|([^|]+)\|([^|]+) ]]; then
         game_name="${BASH_REMATCH[1]}"
         url="${BASH_REMATCH[2]}"
         destination="${BASH_REMATCH[3]}"
@@ -75,6 +74,7 @@ if [[ "$line" =~ \`([^\\`]+)\`\|([^|]+)\|([^|]+) ]]; then
     done < "$file"
   done
 }
+
 
 # Main script execution
 echo "Using base directory: $BASE_DIR"
