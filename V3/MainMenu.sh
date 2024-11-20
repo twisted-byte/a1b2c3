@@ -21,7 +21,7 @@ log_debug "Script started."
 # URLs for external scripts
 declare -A MENU_ITEMS=( 
     [1]="https://raw.githubusercontent.com/DTJW92/game-downloader/main/V3/SystemMenu.sh"  # Select Game Systems
-    [2]="https://raw.githubusercontent.com/DTJW92/game-downloader/main/V3/installsystem2.sh"      # Install a Game System
+    [2]="https://raw.githubusercontent.com/DTJW92/game-downloader/main/V3/installsystem.sh"      # Install a Game System
     [3]="https://raw.githubusercontent.com/DTJW92/game-downloader/main/V3/search.sh"          # Search for a Game
     [4]="https://raw.githubusercontent.com/DTJW92/game-downloader/main/V3/Updater.sh"         # Run Updater
     [5]="https://raw.githubusercontent.com/DTJW92/game-downloader/main/V3/Downloadcheck.sh"   # Status Checker
