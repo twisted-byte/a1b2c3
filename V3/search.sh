@@ -31,23 +31,32 @@ download_game() {
     local file="$2"
     decoded_name_cleaned=$(clean_name "$decoded_name")
 
+    # Check if the game is already downloaded or in process
     if [[ -f "$DEST_DIR/$decoded_name_cleaned" ]] || grep -q "$decoded_name_cleaned" "/userdata/system/game-downloader/processing.txt"; then
+        echo "DEBUG: Skipping $decoded_name_cleaned, already processed." >> "$DEBUG_LOG"
         skipped_games+=("$decoded_name_cleaned")
         return
     fi
 
-    echo "Extracting URL and directory for $decoded_name_cleaned"
-    game_info=$(grep -F "$decoded_name_cleaned" "$file")
-    game_url=$(echo "$game_info" | cut -d '|' -f 2)
-    game_download_dir=$(echo "$game_info" | cut -d '|' -f 3)
+    # Extract game info
+    echo "DEBUG: Searching for $decoded_name_cleaned in $file" >> "$DEBUG_LOG"
+    game_info=$(grep -F "$decoded_name_cleaned" "$file" | head -n 1)
+    echo "DEBUG: Retrieved game_info: $game_info" >> "$DEBUG_LOG"
+
+    # Parse game URL and directory
+    game_url=$(echo "$game_info" | awk -F '|' '{print $2}' | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
+    game_download_dir=$(echo "$game_info" | awk -F '|' '{print $3}' | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
 
     if [[ -z "$game_url" || -z "$game_download_dir" ]]; then
         dialog --infobox "Error: Could not find URL for '$decoded_name_cleaned'." 5 40
+        echo "DEBUG: Missing URL or directory for $decoded_name_cleaned." >> "$DEBUG_LOG"
         sleep 2
         return
     fi
 
+    # Log to download file and queue for download
     echo "$decoded_name_cleaned|$game_url|$game_download_dir" >> "/userdata/system/game-downloader/download.txt"
+    echo "DEBUG: Added $decoded_name_cleaned to download list." >> "$DEBUG_LOG"
     added_games+=("$decoded_name_cleaned")
 }
 
