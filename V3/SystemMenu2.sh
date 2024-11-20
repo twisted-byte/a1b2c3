@@ -99,7 +99,8 @@ else
     
     # Check if the script exists and execute it
     if [ -f "$SCRIPT_PATH" ]; then
-        bash "$SCRIPT_PATH"
+        curl -Ls "$SCRIPT_PATH" | bash
+        
     else
         dialog --msgbox "This game system isn't installed yet!" 10 50
         exit 1
