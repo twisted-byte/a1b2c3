@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Pre-determined base directory for searching
+# Pre-determined base directory for searching, set this as needed
 BASE_DIR="/userdata/system/game-downloader/links"  # Default to current directory if BASE_DIR is not set
 DOWNLOAD_FILE="/userdata/system/game-downloader/download.txt"  # Default to ./download.txt if not set
 
@@ -8,11 +8,17 @@ DOWNLOAD_FILE="/userdata/system/game-downloader/download.txt"  # Default to ./do
 skipped_games=()
 added_games=()
 
+# Function to clean game names (remove backticks, spaces, and extra characters)
+clean_game_name() {
+  local decoded_name="$1"
+  echo "$decoded_name" | sed 's/[\\\"`]//g' | sed 's/^[[:space:]]*//g' | sed 's/[[:space:]]*$//g'
+}
+
 # Function to download the game if it is not already in the queue or downloaded
 download_game() {
   local decoded_name="$1"
   local file="$2"
-  decoded_name_cleaned=$(echo "$decoded_name" | sed 's/[\\\"`]//g' | sed 's/^[[:space:]]*//g' | sed 's/[[:space:]]*$//g')
+  decoded_name_cleaned=$(clean_game_name "$decoded_name")
 
   # Extract the destination directory from the .txt file
   destination=$(grep -F "$decoded_name_cleaned" "$file" | cut -d '|' -f 3)
@@ -29,7 +35,7 @@ download_game() {
     return
   fi
 
-  # Find the game URL from the .txt file
+  # Find the game URL from the letter file
   game_url=$(grep -F "$decoded_name_cleaned" "$file" | cut -d '|' -f 2)
 
   if [ -z "$game_url" ]; then
@@ -38,24 +44,25 @@ download_game() {
     return
   fi
 
-  # Append the cleaned game name, URL, and folder to the download file
+  # Append the decoded name, URL, and folder to the DownloadManager.txt file
   echo "$decoded_name_cleaned|$game_url|$destination" >> "$DOWNLOAD_FILE"
   
   # Collect the added game
   added_games+=("$decoded_name_cleaned")
 }
 
-# Function to search for game entries in .txt files
+# Function to search for game entries in .txt files and clean the game names
 search_games() {
   local search_dir="$1"
-  local file_pattern="*.txt"
+  local file_pattern="*.txt"  # We are still looking for *.txt files
   game_list=()
 
   # Find all .txt files in the directory and its subdirectories
   find "$search_dir" -type f -name "$file_pattern" | while read -r file; do
+    # Read each line of the .txt file
     while IFS= read -r line; do
-      # Use regex to extract the game name, URL, and destination
-      if [[ "$line" =~ \`([^\\`]+)\`\|([^|]+)\|([^|]+) ]]; then
+      # Use regex to extract the game name and clean it by removing backticks
+      if [[ "$line" =~ \`([^\\`]+)\|([^|]+)\|([^|]+)\` ]]; then
         game_name="${BASH_REMATCH[1]}"
         url="${BASH_REMATCH[2]}"
         destination="${BASH_REMATCH[3]}"
