@@ -15,8 +15,8 @@ search_games() {
     # Make search term lowercase to allow case-insensitive search
     search_term=$(echo "$search_term" | tr '[:upper:]' '[:lower:]')
 
-    # Search through all .txt files in DEST_DIR for the term
-    for file in "$DEST_DIR"/*.txt; do
+    # Search through all .txt files in DEST_DIR and its subdirectories
+    find "$DEST_DIR" -type f -name "*.txt" | while read -r file; do
         while IFS="|" read -r decoded_name encoded_url game_download_dir; do
             # Remove backticks from game name
             decoded_name=$(clean_name "$decoded_name")
@@ -46,6 +46,7 @@ search_games() {
         sleep 2
     fi
 }
+
 
 # Function to download the selected game and send the link to the DownloadManager
 download_game() {
