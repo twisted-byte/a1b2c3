@@ -2,19 +2,6 @@
 
 # Paths to files and logs
 DEST_DIR="/userdata/system/game-downloader/links"
-DEBUG_LOG="/userdata/system/game-downloader/debug/search_debug.txt"
-
-# Ensure the debug directory exists
-mkdir -p "$(dirname "$DEBUG_LOG")"
-
-# Clear debug log for a fresh session
-if [ -f "$DEBUG_LOG" ]; then
-    echo "Clearing debug log for the new session." >> "$DEBUG_LOG"
-    > "$DEBUG_LOG"
-fi
-
-# Log script start
-echo "Starting search script at $(date)" >> "$DEBUG_LOG"
 
 # Arrays for tracking games
 added_games=()
@@ -33,13 +20,11 @@ download_game() {
 
     # Check if the game is already downloaded or in process
     if [[ -f "$DEST_DIR/$decoded_name_cleaned" ]] || grep -q "$decoded_name_cleaned" "/userdata/system/game-downloader/processing.txt"; then
-        echo "DEBUG: Skipping $decoded_name_cleaned, already processed." >> "$DEBUG_LOG"
         skipped_games+=("$decoded_name_cleaned")
         return
     fi
 
     # Extract game info
-    echo "DEBUG: Searching for $decoded_name_cleaned in $file" >> "$DEBUG_LOG"
     game_info=$(grep -F "$decoded_name_cleaned" "$file")
     game_url=$(echo "$game_info" | cut -d '|' -f 2 | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
     game_folder=$(echo "$game_info" | cut -d '|' -f 3 | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
