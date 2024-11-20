@@ -18,7 +18,7 @@ search_games() {
     while IFS= read -r line; do
       # Use regex to extract the game name and clean it by removing backticks
      if [[ "$line" =~ \`([^\\`]+)\`\|([^|]+)\|([^|]+) ]]; then
-        game_name="${BASH_REMATCH[1]}"  # The cleaned game name without backticks
+        game_name="${BASH_REMATCH[1]}" 
         url="${BASH_REMATCH[2]}"
         destination="${BASH_REMATCH[3]}"
 
@@ -44,7 +44,7 @@ download_games() {
         if [[ "$file" == *"$game_file"* ]]; then
           # Extract the exact line from the file that matches the game name
           # Format: cleaned game name|download url|destination path
-          line=$(grep -F "\`$game_file\`" "$file")
+          line=$(grep -F ("\`$game_file\`" "$file")
           
           # Clean the line by removing backticks and reformat it
           cleaned_game_name=$(echo "$line" | sed -E 's/`([^`]+)`/\1/')
