@@ -1,4 +1,3 @@
-
 #!/bin/bash
 
 # Ensure clear display
@@ -19,46 +18,84 @@ log_debug() {
 # Log the start of the script
 log_debug "Script started."
 
-# URLs for external scripts
-declare -A MENU_ITEMS=( 
-    [1]="https://raw.githubusercontent.com/DTJW92/game-downloader/main/V3/SystemMenu2.sh"  # Select Game Systems
-    [2]="https://raw.githubusercontent.com/DTJW92/game-downloader/main/V3/installsystem.sh"      # Install a Game System
-    [3]="https://raw.githubusercontent.com/DTJW92/game-downloader/main/V3/search.sh"          # Search for a Game
-    [4]="https://raw.githubusercontent.com/DTJW92/game-downloader/main/V3/Updater.sh"         # Run Updater
-    [5]="https://raw.githubusercontent.com/DTJW92/game-downloader/main/V3/Downloadcheck.sh"   # Status Checker
-    [6]="https://raw.githubusercontent.com/DTJW92/game-downloader/main/V3/uninstall.sh"       # Uninstall Game Downloader
+# Define the base directory for game systems
+BASE_DIR="/userdata/system/game-downloader/links"
+
+# Check if the base directory exists
+if [ ! -d "$BASE_DIR" ]; then
+    dialog --msgbox "Error: The game downloader directory doesn't exist!" 10 50
+    exit 1
+fi
+
+# Define the predetermined scripts to be executed for each system (pulled from installsystem.sh)
+declare -A SYSTEM_SCRIPTS
+SYSTEM_SCRIPTS=(
+    ["PSX"]="https://raw.githubusercontent.com/DTJW92/game-downloader/main/psx-downloader-menu.sh"
+    ["PS2"]="/path/to/scripts/PS2.sh"
+    ["PS3"]="/path/to/scripts/PS3.sh"
+    ["PSP"]="/path/to/scripts/PSP.sh"
+    ["PS_Vita"]="/path/to/scripts/PS_Vita.sh"
+    ["Xbox"]="/path/to/scripts/Xbox.sh"
+    ["Xbox_360"]="/path/to/scripts/Xbox_360.sh"
+    ["PC"]="/path/to/scripts/PC.sh"
+    ["DOS"]="/path/to/scripts/DOS.sh"
+    ["Macintosh"]="/path/to/scripts/Macintosh.sh"
+    ["Game_Boy"]="/path/to/scripts/Game_Boy.sh"
+    ["Game_Boy_Color"]="/path/to/scripts/Game_Boy_Color.sh"
+    ["Game_Boy_Advance"]="/path/to/scripts/Game_Boy_Advance.sh"
+    ["Nintendo_DS"]="/path/to/scripts/Nintendo_DS.sh"
+    ["NES"]="/path/to/scripts/NES.sh"
+    ["SNES"]="/path/to/scripts/SNES.sh"
+    ["Nintendo_64"]="/path/to/scripts/Nintendo_64.sh"
+    ["GameCube"]="/path/to/scripts/GameCube.sh"
+    ["Wii"]="/path/to/scripts/Wii.sh"
+    ["Game_Gear"]="/path/to/scripts/Game_Gear.sh"
+    ["Dreamcast"]="/path/to/scripts/Dreamcast.sh"
+    ["Atari_2600"]="/path/to/scripts/Atari_2600.sh"
+    ["Atari_5200"]="/path/to/scripts/Atari_5200.sh"
+    ["Atari_7800"]="/path/to/scripts/Atari_7800.sh"
+    ["Saturn"]="/path/to/scripts/Saturn.sh"
+    ["Master_System"]="/path/to/scripts/Master_System.sh"
+    ["Mega_Drive"]="/path/to/scripts/Mega_Drive.sh"
 )
 
-# Menu items description
-declare -A MENU_DESCRIPTIONS=( 
-    [1]="Select a Game Systems"
-    [2]="Install a Game System"
-    [3]="Search for a Game"
-    [4]="Run Updater"
-    [5]="Status Checker"
-    [6]="Uninstall Game Downloader"
-)
+# Define the predetermined order for the menu with internal system names
+MENU_ORDER=("PSX" "PS2" "PS3" "PSP" "PS_Vita" "Xbox" "Xbox_360" "PC" "DOS" "Macintosh" "Game_Boy" "Game_Boy_Color" "Game_Boy_Advance" "Nintendo_DS" "NES" "SNES" "Nintendo_64" "GameCube" "Wii" "Game_Gear" "Dreamcast" "Atari_2600" "Atari_5200" "Atari_7800" "Saturn" "Master_System" "Mega_Drive")
+
+# Create a list of available game systems (directories inside /userdata/system/game-downloader/links)
+GAME_SYSTEMS=()
+MENU_OPTIONS=()
+
+# Loop through the predefined systems in the specified order and add them to the menu if the directory exists
+index=1
+for system in "${MENU_ORDER[@]}"; do
+    display_name=$(echo "$system" | tr '_' ' ')
+    if [ -d "$BASE_DIR/$system" ]; then
+        GAME_SYSTEMS+=("$system")
+        MENU_OPTIONS+=("$index" "$display_name")
+    else
+        MENU_OPTIONS+=("$index" "$display_name (Not Installed)")
+    fi
+    ((index++))
+done
+
+# Check if any systems were found
+if [ ${#GAME_SYSTEMS[@]} -eq 0 ]; then
+    dialog --msgbox "No game systems found in $BASE_DIR!" 10 50
+    exit 1
+fi
+
+# Add the option for the user to exit
+MENU_OPTIONS+=("0" "Return")
 
 # Main dialog menu loop
 while true; do
     log_debug "Displaying menu."
 
-    # Define the order explicitly
-    MENU_ORDER=(1 2 3 4 5 6)
-
-    # Dynamically build menu options in the correct order
-    MENU_OPTIONS=()
-    for key in "${MENU_ORDER[@]}"; do
-        MENU_OPTIONS+=("$key" "${MENU_DESCRIPTIONS[$key]}")
-    done
-    
-    # Add Exit option after the main menu items
-    MENU_OPTIONS+=("7" "Exit")  # Add Exit option after the loop
-
     # Display menu
     dialog --clear --backtitle "Game Downloader" \
-           --title "Select a System" \
-           --menu "Choose an option:" 15 50 9 \
+           --title "Select a Game System" \
+           --menu "Choose an option:" 15 50 12 \
            "${MENU_OPTIONS[@]}" \
            2>/tmp/game-downloader-choice
 
@@ -77,8 +114,8 @@ while true; do
         exit 0  # Exit gracefully
     fi
 
-    # Exit logic for option 7
-    if [ "$choice" -eq 7 ]; then
+    # Exit logic for option 0
+    if [ "$choice" -eq 0 ]; then
         log_debug "Exit selected. Ending script."
         clear
         dialog --infobox "Thank you for using Game Downloader! Any issues, please reach out to DTJW92 on Discord!" 10 50
@@ -89,13 +126,22 @@ while true; do
     fi
 
     # Execute the corresponding script for the selected option
-    if [[ -n "${MENU_ITEMS[$choice]}" ]]; then
+    if [[ -n "${SYSTEM_SCRIPTS[${GAME_SYSTEMS[$((choice - 1))]}]}" ]]; then
         log_debug "Running script for option $choice."
-        script_url="${MENU_ITEMS[$choice]}"
-        script_path="/tmp/script.sh"
+        SCRIPT_PATH="${SYSTEM_SCRIPTS[${GAME_SYSTEMS[$((choice - 1))]}]}"
 
-        # Download and execute the script
-        curl -s "$script_url" -o "$script_path" && bash "$script_path"
+        # Check if the script path is a URL or a local file
+        if [[ "$SCRIPT_PATH" =~ ^https?:// ]]; then
+            # It's a URL, download it
+            curl -s "$SCRIPT_PATH" -o "/tmp/${GAME_SYSTEMS[$((choice - 1))]}.sh" && bash "/tmp/${GAME_SYSTEMS[$((choice - 1))]}.sh"
+        elif [ -f "$SCRIPT_PATH" ]; then
+            # It's a local file, execute it
+            bash "$SCRIPT_PATH"
+        else
+            # Script doesn't exist
+            dialog --msgbox "This game system isn't installed yet!" 10 50
+            exit 1
+        fi
         log_debug "Script for option $choice completed."
     else
         log_debug "Invalid option selected: $choice."
