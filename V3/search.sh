@@ -61,13 +61,13 @@ search_games() {
   find "$search_dir" -type f -name "$file_pattern" | while read -r file; do
     while IFS= read -r line; do
       # Use regex to extract the game name, URL, and destination
-    if [[ "$line" =~ \`([^\\`]+)\`\|([^|]+)\|([^|]+) ]]; then
+      if [[ "$line" =~ \`([^\\`]+)\`\|([^|]+)\|([^|]+) ]]; then
         game_name="${BASH_REMATCH[1]}"
         url="${BASH_REMATCH[2]}"
         destination="${BASH_REMATCH[3]}"
 
         # If a search term is provided, only add games that match the search term
-        if [[ -z "$search_term" || "$game_name" =~ $search_term ]]; then
+        if [[ -z "$search_term" || "$game_name" =~ "$search_term" ]]; then
           game_list+=("$game_name|$url|$destination|$file")
         fi
       fi
