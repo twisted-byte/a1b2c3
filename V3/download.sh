@@ -4,7 +4,7 @@
 DOWNLOAD_QUEUE="/userdata/system/game-downloader/download.txt"
 DOWNLOAD_PROCESSING="/userdata/system/game-downloader/processing.txt"
 DEBUG_LOG="/userdata/system/game-downloader/debug/debug.txt"
-LOG_FILE="download.log"  # Added log file for tracking downloads
+LOG_FILE="/userdata/system/game-downloader/download.log"  # Added log file for tracking downloads
 
 # Maximum number of parallel downloads
 MAX_PARALLEL=3
