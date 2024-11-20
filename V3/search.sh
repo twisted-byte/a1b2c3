@@ -1,4 +1,3 @@
-
 #!/bin/bash
 
 # Paths to files and logs
@@ -69,7 +68,7 @@ search_games() {
                 game_name_cleaned=$(clean_name "$decoded_name")
                 
                 # Include the folder name in the result
-                results+=("($folder_name) $game_name_cleaned" "" off)
+                results+=("($folder_name) $game_name_cleaned|$file" "" off)
             fi
         done < <(grep -i "$search_term" "$file")
     done
@@ -80,9 +79,10 @@ search_games() {
         selected_games=$(dialog --title "Search Results" --checklist "Choose games to download" 25 70 10 "${results[@]}" 3>&1 1>&2 2>&3)
         [[ $? -ne 0 ]] && return
         for game in $selected_games; do
-            # Extract the game name without the folder part for download
-            game_name=$(echo "$game" | sed 's/ (.*)//')
-            download_game "$(clean_name "$game_name")" "$file"
+            # Extract the game name and file for download
+            game_name=$(echo "$game" | cut -d '|' -f 1 | sed 's/ (.*)//')
+            game_file=$(echo "$game" | cut -d '|' -f 2)
+            download_game "$(clean_name "$game_name")" "$game_file"
         done
     else
         dialog --infobox "No games found for '$search_term'." 5 40
