@@ -59,7 +59,6 @@ download_game() {
     # Log to download file and queue for download
     echo "$decoded_name_cleaned|$game_url|$game_folder" >> "/userdata/system/game-downloader/download.txt"
     added_games+=("$decoded_name_cleaned")
-    echo "DEBUG: Processed game: $decoded_name_cleaned with URL: $game_url and Folder: $game_folder" >> "$DEBUG_LOG"
 }
 
 # Function to search and display games
