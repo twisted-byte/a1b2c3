@@ -1,9 +1,7 @@
 #!/bin/bash
 
-BASE_URL="https://myrient.erista.me/files/Internet%20Archive/chadmaster/chd_psx_eur/CHD-PSX-EUR/"
-DEST_DIR="/userdata/system/game-downloader/psxlinks"
+DEST_DIR="/userdata/system/game-downloader/links/PSX"
 DOWNLOAD_DIR="/userdata/roms/psx"  # Update this to your desired download directory
-ALLGAMES_FILE="$DEST_DIR/AllGames.txt"  # File containing the full list of games with URLs
 
 # Ensure the download directory exists
 mkdir -p "$DOWNLOAD_DIR"
@@ -11,14 +9,7 @@ mkdir -p "$DOWNLOAD_DIR"
 # Function to display the game list and allow selection
 select_games() {
     local letter="$1"
-    local file
-
-    # Set file path based on the selection
-    if [[ "$letter" == "AllGames" ]]; then
-        file="$ALLGAMES_FILE"
-    else
-        file="$DEST_DIR/${letter}.txt"
-    fi
+    local file="$DEST_DIR/${letter}.txt"
 
     if [[ ! -f "$file" ]]; then
         dialog --infobox "No games found for selection '$letter'." 5 40
@@ -72,8 +63,8 @@ download_game() {
         return
     fi
 
-    # Find the game URL from the AllGames.txt file
-    game_url=$(grep -F "$decoded_name_cleaned" "$ALLGAMES_FILE" | cut -d '|' -f 2)
+    # Find the game URL from the letter file
+    game_url=$(grep -F "$decoded_name_cleaned" "$file" | cut -d '|' -f 2)
 
     if [ -z "$game_url" ]; then
         dialog --infobox "Error: Could not find download URL for '$decoded_name_cleaned'." 5 40
@@ -88,25 +79,21 @@ download_game() {
     added_games+=("$decoded_name_cleaned")
 }
 
-# Function to show the letter selection menu with an "All Games" option
+# Function to show the letter selection menu
 select_letter() {
     letter_list=$(ls "$DEST_DIR" | grep -oP '^[a-zA-Z#]' | sort | uniq)
 
-    # Add "All" option to the menu
-    menu_options=("All" "All Games")
+    menu_options=()
 
     while read -r letter; do
         menu_options+=("$letter" "$letter")
     done <<< "$letter_list"
 
-    selected_letter=$(dialog --title "Select a Letter" --menu "Choose a letter or select 'All Games'" 25 70 10 \
+    selected_letter=$(dialog --title "Select a Letter" --menu "Choose a letter" 25 70 10 \
         "${menu_options[@]}" 3>&1 1>&2 2>&3)
 
     if [ -z "$selected_letter" ]; then
         return 1
-    elif [ "$selected_letter" == "All" ]; then
-        # If "All Games" is selected, link to AllGames.txt
-        select_games "AllGames"
     else
         # Otherwise, proceed with the selected letter
         select_games "$selected_letter"
@@ -146,4 +133,4 @@ done
 # Goodbye message
 echo "Goodbye!"
 
-bash /tmp/GameDownloader.sh
+exec /tmp/GameDownloader.sh
