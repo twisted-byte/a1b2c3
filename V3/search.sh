@@ -9,11 +9,11 @@ DOWNLOAD_FILE="/userdata/system/game-downloader/download.txt"  # Default to ./do
 # Function to search for game entries in .txt files and clean the game names
 search_games() {
   local search_dir="$1"
-  local file_pattern="*.txt"
+  local search_term="$2"
   game_list=()
 
   # Find all .txt files in the directory and its subdirectories
-  find "$search_dir" -type f -name "$file_pattern" | while read -r file; do
+  find "$search_dir" -type f -name "*.txt" | while read -r file; do
     # Read each line of the .txt file
     while IFS= read -r line; do
       # Use regex to extract the game name and clean it by removing backticks
@@ -22,8 +22,10 @@ search_games() {
         url="${BASH_REMATCH[2]}"
         destination="${BASH_REMATCH[3]}"
 
-        # Add the cleaned game name and the file path for dialog
-        game_list+=("$game_name|$url|$destination" "$file")
+        # If a search term is provided, only add games that match the search term
+        if [[ -z "$search_term" || "$game_name" =~ $search_term ]]; then
+          game_list+=("$game_name|$url|$destination" "$file")
+        fi
       fi
     done < "$file"
   done
@@ -61,20 +63,30 @@ echo "Using base directory: $BASE_DIR"
 echo "Saving download list to: $DOWNLOAD_FILE"
 game_list=()
 
-# Search for games and create the game list
-search_games "$BASE_DIR"
+# Ask the user for a search term
+while true; do
+  search_term=$(dialog --inputbox "Enter search term" 10 50 3>&1 1>&2 2>&3)
+  
+  # If the user cancels or enters an empty search term, exit or break out of the loop
+  [[ -z "$search_term" ]] && break
+  
+  # Search for games and create the game list based on the search term
+  search_games "$BASE_DIR" "$search_term"
+  
+  # Use dialog to display a checklist of game names
+  selected_games=$(dialog --checklist "Select games to download" 0 0 10 "${game_list[@]}" 2>&1 >/dev/tty)
 
-# Use dialog to display a checklist of game names
-selected_games=$(dialog --checklist "Select games to download" 0 0 10 "${game_list[@]}" 2>&1 >/dev/tty)
+  # Check if any games were selected
+  if [ -n "$selected_games" ]; then
+    # Split the selected games into an array
+    IFS=' ' read -r -a selected_games_array <<< "$selected_games"
 
-# Check if any games were selected
-if [ -n "$selected_games" ]; then
-  # Split the selected games into an array
-  IFS=' ' read -r -a selected_games_array <<< "$selected_games"
-
-  # Call the function to download games and split by extensions
-  download_games "${selected_games_array[@]}"
-  echo "Download list has been updated in $DOWNLOAD_FILE"
-else
-  echo "No games selected."
-fi
+    # Call the function to download games and split by extensions
+    download_games "${selected_games_array[@]}"
+    echo "Download list has been updated in $DOWNLOAD_FILE"
+    break
+  else
+    echo "No games selected."
+    break
+  fi
+done
