@@ -62,7 +62,7 @@ search_games() {
     # Read each line of the .txt file
     while IFS= read -r line; do
       # Use regex to extract the game name and clean it by removing backticks
-      if [[ "$line" =~ `([^\\`]+)\|([^|]+)\|([^|]+)` ]]; then
+    if [[ "$line" =~ `([^\\`]+)\|([^|]+)\|([^|]+)` ]]; then
         game_name="${BASH_REMATCH[1]}"
         url="${BASH_REMATCH[2]}"
         destination="${BASH_REMATCH[3]}"
