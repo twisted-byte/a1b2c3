@@ -14,7 +14,7 @@ if [ -f "$DEBUG_LOG" ]; then
 fi
 
 # Log script start
-echo "Starting search script at $(date)"
+echo "Starting search script at $(date)" >> "$DEBUG_LOG"
 
 # Arrays for tracking games
 added_games=()
