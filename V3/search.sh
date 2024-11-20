@@ -1,116 +1,80 @@
 #!/bin/bash
 
-DEST_DIR="/userdata/system/game-downloader/links"
+# Pre-determined base directory for searching, set this as needed
+BASE_DIR="/userdata/system/game-downloader/links"  # Default to current directory if BASE_DIR is not set
 
-# Function to clean up game names and remove backticks
-clean_name() {
-    echo "$1" | sed 's/[\\\"`]//g' | sed 's/^[[:space:]]*//g' | sed 's/[[:space:]]*$//g'
-}
+# Predetermined location for download.txt, default is "download.txt" in the current directory
+DOWNLOAD_FILE="/userdata/system/game-downloader/download.txt"  # Default to ./download.txt if not set
 
-# Function to search and display games based on the search term
+# Function to search for game entries in .txt files and clean the game names
 search_games() {
-    local search_term="$1"
-    local results=()
+  local search_dir="$1"
+  local file_pattern="*.txt"
+  game_list=()
 
-    # Make search term lowercase to allow case-insensitive search
-    search_term=$(echo "$search_term" | tr '[:upper:]' '[:lower:]')
+  # Find all .txt files in the directory and its subdirectories
+  find "$search_dir" -type f -name "$file_pattern" | while read -r file; do
+    # Read each line of the .txt file
+    while IFS= read -r line; do
+      # Use regex to extract the game name and clean it by removing backticks
+      if [[ "$line" =~ "`([^`]+)`\|([^|]+)\|([^|]+)" ]]; then
+        game_name="${BASH_REMATCH[1]}"  # The cleaned game name without backticks
+        url="${BASH_REMATCH[2]}"
+        destination="${BASH_REMATCH[3]}"
 
-    # Search through all .txt files in DEST_DIR and its subdirectories
-    find "$DEST_DIR" -type f -name "*.txt" | while read -r file; do
-        while IFS="|" read -r decoded_name encoded_url game_download_dir; do
-            # Remove backticks from game name
-            decoded_name=$(clean_name "$decoded_name")
-            
-            decoded_name_lower=$(echo "$decoded_name" | tr '[:upper:]' '[:lower:]')
-            if [[ "$decoded_name_lower" =~ $search_term ]]; then
-                # Add the game name to the results, and pass the full line to be used for download
-                results+=("$decoded_name" "$file" off)
-            fi
-        done < "$file"
-    done
+        # Add the cleaned game name and the file path for dialog
+        game_list+=("$game_name|$url|$destination" "$file")
+      fi
+    done < "$file"
+  done
+}
 
-    # If there are any results, display them in a checklist for selection
-    if [[ ${#results[@]} -gt 0 ]]; then
-        selected_games=$(dialog --title "Search Results" --checklist "Choose games to download" 25 70 10 "${results[@]}" 3>&1 1>&2 2>&3)
+# Function to send selected games to the download process, with extension splitting
+download_games() {
+  local selected_games=("$@")
+  
+  for game in "${selected_games[@]}"; do
+    # Split game names into individual game files based on .chd, .iso, .zip extensions
+    IFS=$'\n' read -r -d '' -a game_files <<< "$(echo "$game" | grep -oP '.*\.(chd|iso|zip)')"
 
-        if [ -n "$selected_games" ]; then
-            # For each selected game, process and download it
-            for game in $selected_games; do
-                game_name=$(echo "$game" | sed 's/\([^|]*\).*/\1/')
-                game_file=$(echo "$game" | sed 's/[^|]*|\(.*\)/\1/')
-                download_game "$game_name" "$game_file"
-            done
+    # For each split game file, search the file containing the game entry
+    for game_file in "${game_files[@]}"; do
+      # Search for the exact line in the original file that matches the game file name
+      for file in "${game_list[@]}"; do
+        if [[ "$file" == *"$game_file"* ]]; then
+          # Extract the exact line from the file that matches the game name
+          # Format: cleaned game name|download url|destination path
+          line=$(grep -F "`$game_file`" "$file")
+          
+          # Clean the line by removing backticks and reformat it
+          cleaned_game_name=$(echo "$line" | sed -E 's/`([^`]+)`/\1/')
+          echo "$cleaned_game_name" >> "$DOWNLOAD_FILE"
         fi
-    else
-        dialog --infobox "No games found for '$search_term'." 5 40
-        sleep 2
-    fi
+      done
+    done
+  done
 }
 
+# Main script execution
+# If BASE_DIR is not set, it will default to the current directory.
+echo "Using base directory: $BASE_DIR"
+echo "Saving download list to: $DOWNLOAD_FILE"
+game_list=()
 
-# Function to download the selected game and send the link to the DownloadManager
-download_game() {
-    local decoded_name="$1"
-    local game_file="$2"
-    decoded_name_cleaned=$(clean_name "$decoded_name")
+# Search for games and create the game list
+search_games "$BASE_DIR"
 
-    # Check if the game already exists in the download directory
-    if [[ -f "$game_download_dir/$decoded_name_cleaned" ]]; then
-        skipped_games+=("$decoded_name_cleaned")
-        return
-    fi
+# Use dialog to display a checklist of game names
+selected_games=$(dialog --checklist "Select games to download" 0 0 10 "${game_list[@]}" 2>&1 >/dev/tty)
 
-    # Check if the game is already in the download queue (download.txt)
-    if grep -q "$decoded_name_cleaned" "/userdata/system/game-downloader/download.txt"; then
-        skipped_games+=("$decoded_name_cleaned")
-        return
-    fi
+# Check if any games were selected
+if [ -n "$selected_games" ]; then
+  # Split the selected games into an array
+  IFS=' ' read -r -a selected_games_array <<< "$selected_games"
 
-    # Find the game URL and download directory from the specific file
-    game_url=$(grep -F "$decoded_name_cleaned" "$game_file" | cut -d '|' -f 2)
-    game_download_dir=$(grep -F "$decoded_name_cleaned" "$game_file" | cut -d '|' -f 3)
-
-    if [ -z "$game_url" ] || [ -z "$game_download_dir" ]; then
-        dialog --infobox "Error: Could not find download URL or directory for '$decoded_name_cleaned'." 5 40
-        sleep 2
-        return
-    fi
-
-    # Append the decoded name, URL, and folder to the DownloadManager.txt file
-    echo "$decoded_name_cleaned|$game_url|$game_download_dir" >> "/userdata/system/game-downloader/download.txt"
-    
-    # Collect the added game
-    added_games+=("$decoded_name_cleaned")
-}
-
-# Main loop to search and select games
-while true; do
-    search_term=$(dialog --inputbox "Enter search term" 10 50 3>&1 1>&2 2>&3)
-    [[ -z "$search_term" ]] && break
-
-    # Search for games matching the search term
-    search_games "$search_term"
-
-    # Show a message if any games were added to the download list
-    if [ ${#added_games[@]} -gt 0 ]; then
-        dialog --msgbox "Your selection has been added to the download list! Check download status and once it's complete, reload your games list to see the new games!" 10 50
-        # Clear the added games list
-        added_games=()
-    fi
-
-    # Display skipped games message if there are any skipped games
-    if [ ${#skipped_games[@]} -gt 0 ]; then
-        skipped_games_list=$(printf "%s\n" "${skipped_games[@]}" | sed 's/^/• /')
-        dialog --msgbox "The following games already exist in the system and are being skipped:\n\n$skipped_games_list" 15 60
-        skipped_games=()
-    fi
-
-    # Ask user if they want to continue after displaying skipped games
-    dialog --title "Continue?" --yesno "Would you like to search for more games?" 7 50
-    if [ $? -eq 1 ]; then
-        break
-    fi
-done
-
-# Goodbye message
-echo "Goodbye!"
+  # Call the function to download games and split by extensions
+  download_games "${selected_games_array[@]}"
+  echo "Download list has been updated in $DOWNLOAD_FILE"
+else
+  echo "No games selected."
+fi
