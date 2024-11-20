@@ -43,18 +43,22 @@ SYSTEM_SCRIPTS=(
     ["Mega_Drive"]="/path/to/scripts/Mega_Drive.sh"
 )
 
+# Define the predetermined order for the menu with internal system names
+MENU_ORDER=("PSX" "PS2" "PS3" "PSP" "PS_Vita" "Xbox" "Xbox_360" "PC" "DOS" "Macintosh" "Game_Boy" "Game_Boy_Color" "Game_Boy_Advance" "Nintendo_DS" "NES" "SNES" "Nintendo_64" "GameCube" "Wii" "Game_Gear" "Master_System" "Mega_Drive" "Saturn" "Dreamcast" "Atari_2600" "Atari_5200" "Atari_7800")
 # Create a list of available game systems (directories inside /userdata/system/game-downloader/links)
 GAME_SYSTEMS=()
 MENU_OPTIONS=()
 
-# Loop through the predefined systems and add them to the menu if the directory exists
+# Loop through the predefined systems in the specified order and add them to the menu if the directory exists
 index=1
-for system in "${!SYSTEM_SCRIPTS[@]}"; do
+for system in "${MENU_ORDER[@]}"; do
     if [ -d "$BASE_DIR/$system" ]; then
         GAME_SYSTEMS+=("$system")
         MENU_OPTIONS+=("$index" "$system")
-        ((index++))
+    else
+        MENU_OPTIONS+=("$index" "$system (Not Installed)")
     fi
+    ((index++))
 done
 
 # Check if any systems were found
@@ -96,7 +100,7 @@ else
     if [ -f "$SCRIPT_PATH" ]; then
         bash "$SCRIPT_PATH"
     else
-        dialog --msgbox "Error: Script for '$SELECTED_SYSTEM' not found!" 10 50
+        dialog --msgbox "This game system isn't installed yet!" 10 50
         exit 1
     fi
 fi
