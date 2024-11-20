@@ -52,11 +52,12 @@ MENU_OPTIONS=()
 # Loop through the predefined systems in the specified order and add them to the menu if the directory exists
 index=1
 for system in "${MENU_ORDER[@]}"; do
+    display_name=$(echo "$system" | tr '_' ' ')
     if [ -d "$BASE_DIR/$system" ]; then
         GAME_SYSTEMS+=("$system")
-        MENU_OPTIONS+=("$index" "$system")
+        MENU_OPTIONS+=("$index" "$display_name")
     else
-        MENU_OPTIONS+=("$index" "$system (Not Installed)")
+        MENU_OPTIONS+=("$index" "$display_name (Not Installed)")
     fi
     ((index++))
 done
