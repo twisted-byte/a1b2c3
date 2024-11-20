@@ -16,7 +16,7 @@ GAME_SYSTEMS=()
 MENU_OPTIONS=()
 
 # Define the predetermined order for the menu with internal system names
-MENUORDER=("PSX" "PS2" "PS3" "PSP" "PS Vita" "Xbox" "Xbox 360" "PC" "DOS" "Macintosh" "Game Boy" "Game Boy Color" "Game Boy Advance" "Nintendo DS" "NES" "SNES" "Nintendo 64" "GameCube" "Wii" "Game Gear" "Master System" "Mega Drive" "Saturn" "Dreamcast" "Atari 2600" "Atari 5200" "Atari 7800")
+MENUORDER=("PSX" "PS2" "PS3" "PSP" "PS Vita" "Xbox" "Xbox 360" "PC" "DOS" "Macintosh" "Game Boy" "Game Boy Color" "Game Boy Advance" "Nintendo DS" "NES" "SNES" "Nintendo 64" "GameCube" "Wii" "Game Gea[...]")
 
 # Loop through the directories in /userdata/system/game-downloader/links in the predetermined order and add them to the menu
 index=1
@@ -180,7 +180,7 @@ select_letter() {
 
 # Main loop to process selected games
 while true; do
-    echo "Selected System: $SELECTED_SYSTEM"  # Debugging step
+    echo "Selected System: $SELECTED_SYSTEM"
     select_letter
 
     # Show a single message if any games were added to the download list
