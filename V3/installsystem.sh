@@ -87,7 +87,9 @@ dialog --infobox "Installing $selected_system downloader. Please wait..." 10 50
 
 # Download and execute the scraper script
 curl -Ls "$scraper_url" -o /tmp/scraper.sh 
-bash /tmp/scraper.sh  # Run the downloaded scraper and wait for it to complete
+bash /tmp/scraper.sh &  # Run the downloaded scraper and wait for it to complete
+
+wait
 
 # Show completion message once the process is done (after the script finishes)
 dialog --infobox "Installation complete!" 10 50
