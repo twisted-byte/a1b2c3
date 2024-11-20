@@ -70,14 +70,14 @@ search_games() {
 
     for file in $(find "$DEST_DIR" -type f -name "*.txt"); do
         folder_name=$(basename "$(dirname "$file")")
-       
+
         while IFS="|" read -r decoded_name encoded_url game_download_dir; do
             decoded_name_lower=$(echo "$decoded_name" | tr '[:upper:]' '[:lower:]')
             if [[ "$decoded_name_lower" =~ $search_term ]]; then
                 game_name_cleaned=$(clean_name "$decoded_name")
                 
-                # Include the folder name in the result
-                results+=("($folder_name) $game_name_cleaned" "" off)
+                # Store the cleaned game name for processing and the folder name for display
+                results+=("$(clean_name "$decoded_name")" "($folder_name)" off)
             fi
         done < <(grep -i "$search_term" "$file")
     done
@@ -87,10 +87,11 @@ search_games() {
     if [[ ${#results[@]} -gt 0 ]]; then
         selected_games=$(dialog --title "Search Results" --checklist "Choose games to download" 25 70 10 "${results[@]}" 3>&1 1>&2 2>&3)
         [[ $? -ne 0 ]] && return
+
         for game in $selected_games; do
-            # Extract the game name without the folder part for download
-            game_name=$(echo "$game" | sed 's/ (.*)//')
-            download_game "$(clean_name "$game_name")" "$file"
+            # Clean up the selected game name and pass it to download_game
+            game_name=$(echo "$game" | sed 's/["']//g')  # Remove surrounding quotes if present
+            download_game "$game_name" "$file"
         done
     else
         dialog --infobox "No games found for '$search_term'." 5 40
