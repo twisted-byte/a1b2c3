@@ -34,9 +34,10 @@ search_games() {
 # Function to send selected games to the download process, with extension splitting
 download_games() {
   local selected_games=("$@")
-  
+
   for game in "${selected_games[@]}"; do
-    # Split game names into individual game files based on .chd, .iso, .zip extensions
+    # Now, split the game into its constituent game files based on .chd, .iso, .zip extensions.
+    # This will find all extensions and handle them individually while keeping game name intact.
     IFS=$'\n' read -r -d '' -a game_files <<< "$(echo "$game" | grep -oP '.*\.(chd|iso|zip)')"
 
     # For each split game file, search the file containing the game entry
@@ -79,8 +80,8 @@ while true; do
 
   # Check if any games were selected
   if [ -n "$selected_games" ]; then
-    # Split the selected games into an array
-    IFS='.chd|.zip|.iso' read -r -a selected_games_array <<< "$selected_games"
+    # Since the games contain spaces, we'll split the selected games based on the extensions only
+    IFS=$'\n' read -r -d '' -a selected_games_array <<< "$(echo "$selected_games" | grep -oP '.*\.(chd|iso|zip)')"
 
     # Call the function to download games and split by extensions
     download_games "${selected_games_array[@]}"
