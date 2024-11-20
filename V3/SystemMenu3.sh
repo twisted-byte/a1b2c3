@@ -108,8 +108,6 @@ while true; do
     if [ -z "$choice" ]; then
         log_debug "User canceled the dialog."
         clear
-        dialog --infobox "Thank you for using Game Downloader! Any issues, message DTJW92 on Discord!" 10 50
-        sleep 3
         exit 0  # Exit gracefully
     fi
 
