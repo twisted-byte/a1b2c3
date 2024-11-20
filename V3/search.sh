@@ -57,6 +57,7 @@ search_games() {
 
     search_term=$(echo "$search_term" | tr '[:upper:]' '[:lower:]')
 
+    # Search each file in the directory
     for file in $(find "$DEST_DIR" -type f -name "*.txt"); do
         folder_name=$(basename "$(dirname "$file")")
        
@@ -65,9 +66,9 @@ search_games() {
             if [[ "$decoded_name_lower" =~ $search_term ]]; then
                 game_name_cleaned=$(clean_name "$decoded_name")
                 
-                # Store the full line along with the folder name for description purposes
-                # Folder name is only for description, the actual game name will be used for the download list
-                results+=("$game_name_cleaned" "($folder_name)" off)
+                # Store the game name along with its full details (URL and directory) for later processing
+                # Folder name is included only for the checklist description
+                results+=("$game_name_cleaned" "$folder_name|$encoded_url|$game_download_dir" off)
             fi
         done < "$file"
     done
@@ -75,15 +76,19 @@ search_games() {
     wait
 
     if [[ ${#results[@]} -gt 0 ]]; then
+        # Present the search results as a checklist showing only the game name (and folder name for description)
         selected_games=$(dialog --title "Search Results" --checklist "Choose games to download" 25 70 10 "${results[@]}" 3>&1 1>&2 2>&3)
         [[ $? -ne 0 ]] && return
-        for game in $selected_games; do
-            # Extract the actual game name, URL, and download directory, excluding the folder name
-            game_name=$(echo "$game" | cut -d '|' -f 1)
-            game_url=$(echo "$game" | cut -d '|' -f 2)
-            game_download_dir=$(echo "$game" | cut -d '|' -f 3)
 
-            # Pass the correct game info to the download function
+        # Process each selected game
+        for game in $selected_games; do
+            # Extract the game name and associated full data
+            game_name=$(echo "$game" | cut -d '|' -f 1)
+            game_info=$(echo "$game" | cut -d '|' -f 2)
+            game_url=$(echo "$game_info" | cut -d '|' -f 1)
+            game_download_dir=$(echo "$game_info" | cut -d '|' -f 2)
+
+            # Pass the game info to the download function
             download_game "$game_name" "$game_url" "$game_download_dir"
         done
     else
@@ -98,6 +103,7 @@ while true; do
     [[ -z "$search_term" ]] && break
     search_games "$search_term"
 
+    # Display the added games and skipped games
     if [[ ${#added_games[@]} -gt 0 ]]; then
         dialog --msgbox "Added games:\n$(printf "%s\n" "${added_games[@]}")" 10 50
     fi
