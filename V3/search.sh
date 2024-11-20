@@ -9,11 +9,11 @@ DOWNLOAD_FILE="/userdata/system/game-downloader/download.txt"  # Default to ./do
 # Function to search for game entries in .txt files and clean the game names
 search_games() {
   local search_dir="$1"
-  local search_term="$2"
+  local file_pattern="*.txt"  # We are still looking for *.txt files
   game_list=()
 
   # Find all .txt files in the directory and its subdirectories
-  find "$search_dir" -type f -name "*.txt" | while read -r file; do
+  find "$search_dir" -type f -name "$file_pattern" | while read -r file; do
     # Read each line of the .txt file
     while IFS= read -r line; do
       # Use regex to extract the game name and clean it by removing backticks
@@ -65,8 +65,9 @@ game_list=()
 
 # Ask the user for a search term
 while true; do
+  # Prompt the user for a search term
   search_term=$(dialog --inputbox "Enter search term" 10 50 3>&1 1>&2 2>&3)
-  
+
   # If the user cancels or enters an empty search term, exit or break out of the loop
   [[ -z "$search_term" ]] && break
   
