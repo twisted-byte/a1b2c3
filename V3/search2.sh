@@ -52,14 +52,14 @@ search_games() {
         # Save the full line (without file name and line number) to the temp file
         echo "$gameline" >> "$temp_file"
 
-        # Extract game name from gameline (remove backticks if present)
-        gamename=$(echo "$gameline" | cut -d'|' -f1 | tr -d '`')
+        # Extract game name from gameline (keep backticks here for later matching)
+        gamename_with_backticks=$(echo "$gameline" | cut -d'|' -f1)
 
         # Extract folder name for description in the checklist
         folder=$(basename "$(dirname "$file")")
 
-        # Add game name to checklist items, default "off" selection
-        checklist_items+=("$gamename" "$folder" "off")
+        # Add game name with backticks to checklist items, default "off" selection
+        checklist_items+=("$gamename_with_backticks" "$folder" "off")
     done <<< "$results"
 
     # Show dialog checklist for the user to select games
@@ -85,7 +85,7 @@ search_games() {
         # Debugging output to check the selected_game value
         echo "Looking for game: $selected_game"
         
-        # Match the selected game with the line in the temporary file (without strict line beginning match)
+        # Match the selected game with the line in the temporary file (with backticks)
         gameline=$(grep -m 1 "$selected_game|" "$temp_file" || true)
 
         # Debugging output
