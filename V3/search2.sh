@@ -4,6 +4,16 @@
 set -e
 set -u
 
+# Ensure the debug directory exists
+DEBUG_LOG="/userdata/system/game-downloader/debug/search_debug.txt"
+mkdir -p "$(dirname "$DEBUG_LOG")"
+
+# Redirect all stdout and stderr to the debug log file
+exec > >(tee -a "$DEBUG_LOG") 2>&1
+
+# Log a script start message
+echo "Starting search2.sh script at $(date)"
+
 # Function to search for games and display results in a dialog checklist
 search_games() {
     game_name=$(dialog --inputbox "Enter game name to search:" 8 40 3>&1 1>&2 2>&3 3>&-)
@@ -13,8 +23,11 @@ search_games() {
         exit 1
     fi
 
+    echo "Searching for game name: $game_name"
+
     # Find and grep for the game name in all .txt files in subdirectories
     results=$(find /userdata/system/game-downloader/links -type f -name "*.txt" -exec grep -Hn "$game_name" {} \;)
+    echo "Search results: $results"
 
     # Prepare temporary file
     temp_file=$(mktemp)
@@ -37,8 +50,11 @@ search_games() {
         checklist_items+=("$gamename ($folder)" "off")
     done <<< "$results"
 
+    echo "Checklist items: ${checklist_items[@]}"
+
     # Show checklist dialog with only game names and folder names
     selected_games=$(dialog --checklist "Select games to save information:" 15 50 8 "${checklist_items[@]}" 3>&1 1>&2 2>&3 3>&-)
+    echo "Selected games: $selected_games"
 
     # Process selected games (from temporary file)
     for selected_game in $selected_games; do
