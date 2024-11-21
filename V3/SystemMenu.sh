@@ -109,16 +109,24 @@ select_letter() {
 
 # Function to show the system selection menu
 select_system() {
-    system_list=$(ls "$DEST_DIR" | grep -oP '^[a-zA-Z]+' | sort | uniq)
+    # Create a list of available systems from the destination directory
+    system_list=$(ls "$DEST_DIR" | sort | uniq)
 
+    # Prepare menu options from MENU_ORDER that exist in system_list
     menu_options=()
-
     for system in "${MENU_ORDER[@]}"; do
-        if [[ " ${system_list[@]} " =~ " ${system} " ]]; then
+        if echo "$system_list" | grep -qx "$system"; then
             menu_options+=("$system" "$system")
         fi
     done
 
+    # Check if any systems are available for selection
+    if [ ${#menu_options[@]} -eq 0 ]; then
+        dialog --msgbox "No systems are available for selection." 7 50
+        return 1
+    fi
+
+    # Display the system selection menu
     selected_system=$(dialog --title "Select a System" --menu "Choose a system" 25 70 10 \
         "${menu_options[@]}" 3>&1 1>&2 2>&3)
 
@@ -130,7 +138,6 @@ select_system() {
         select_letter
     fi
 }
-
 # Initialize arrays to hold skipped and added games
 skipped_games=()
 added_games=()
