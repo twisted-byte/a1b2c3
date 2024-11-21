@@ -43,11 +43,11 @@ search_games() {
 
     # Process each line in the results and prepare the checklist
     while IFS= read -r line; do
-        file=$(echo "$line" | cut -d: -f1)
-        gameline=$(echo "$line" | cut -d: -f3)
+        # Extract everything after the first colon (remove the file path and line number)
+        gameline=$(echo "$line" | sed 's/^[^:]*://')
 
-        # Extract game name, URL, and destination from gameline (remove backticks if present)
-        gamename=$(echo "$gameline" | cut -d'|' -f1 | tr -d '`')
+        # Extract game name, URL, and destination
+        gamename=$(echo "$gameline" | cut -d'|' -f1 | tr -d '`')  # Remove backticks from the game name
         url=$(echo "$gameline" | cut -d'|' -f2)
         destination=$(echo "$gameline" | cut -d'|' -f3)
 
@@ -55,7 +55,7 @@ search_games() {
         echo "$gamename|$url|$destination" >> "$temp_file"
 
         # Extract folder name for description in the checklist
-        folder=$(basename "$(dirname "$file")")
+        folder=$(basename "$(dirname "$line")")
 
         # Add game name to checklist items, default "off" selection
         checklist_items+=("$gamename" "$folder" "off")
