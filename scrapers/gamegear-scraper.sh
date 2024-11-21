@@ -1,6 +1,6 @@
 #!/bin/bash
 
-BASE_URLS="https://myrient.erista.me/files/No-Intro/Sega%20-%20Game%20Gear/"
+BASE_URLS=("https://myrient.erista.me/files/No-Intro/Sega%20-%20Game%20Gear/")
 DEST_DIR="/userdata/system/game-downloader/links/Game Gear"
 ROM_DIR="/userdata/roms/gamegear"
 EXT=".zip"
