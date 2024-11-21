@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Base URL and destination directory
-BASE_URLS="https://myrient.erista.me/files/Internet%20Archive/chadmaster/dc-chd-zstd-redump/dc-chd-zstd/"
+BASE_URLS=("https://myrient.erista.me/files/Internet%20Archive/chadmaster/dc-chd-zstd-redump/dc-chd-zstd/")
 DEST_DIR="/userdata/system/game-downloader/links/Dreamcast"
 ROM_DIR="/userdata/roms/dreamcast"
 EXT=".chd"
