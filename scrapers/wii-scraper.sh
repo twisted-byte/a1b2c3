@@ -21,12 +21,16 @@ scrape_url() {
     local base_url="$1"
     echo "Scraping URL: $base_url" | tee -a "$LOG_FILE"
 
-    # Fetch the page content
-    local response=$(curl -L -s -f "$base_url")
+    # Fetch the page content with verbose logging
+    local response=$(curl -L -s -f -v "$base_url" 2>&1)
     if [[ $? -ne 0 || -z "$response" ]]; then
         echo "Error: Failed to fetch content from $base_url" | tee -a "$LOG_FILE"
         return
     fi
+
+    # Print the raw response to the terminal for debugging
+    echo "Raw content from $base_url:" | tee -a "$LOG_FILE"
+    echo "$response" | tee -a "$LOG_FILE"
 
     # Extract game file URLs matching the extension
     echo "$response" | grep -oP "(?<=href=\")[^\"]*${EXT}" | while read -r game_url; do
