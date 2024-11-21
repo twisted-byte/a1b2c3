@@ -26,7 +26,7 @@ search_games() {
     echo "Searching for game name: $game_name"
 
     # Find and grep for the game name in all .txt files in subdirectories
-    results=$(find /userdata/system/game-downloader/links -type f -name "*.txt" -exec grep -Hn "$game_name" {} \;)
+    results=$(find /userdata/system/game-downloader/links -type f -name "*.txt" -exec grep -iHn "$game_name" {} \;)
     echo "Search results: $results"
 
     # Prepare temporary file
