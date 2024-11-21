@@ -14,8 +14,6 @@ exec > >(tee -a "$DEBUG_LOG") 2>&1
 # Log a script start message
 echo "Starting search2.sh script at $(date)"
 
-touch /userdata/system/game-downloader/download.txt
-
 # Function to search for games and display results in a dialog checklist
 search_games() {
     # Prompt user for game name to search
@@ -47,15 +45,17 @@ search_games() {
     while IFS= read -r line; do
         file=$(echo "$line" | cut -d: -f1)
         gameline=$(echo "$line" | cut -d: -f3)
-        gamename=$(echo "$gameline" | cut -d'|' -f1 | tr -d '`')  # Remove backticks from the game name
-        url=$(echo "$gameline" | cut -d'|' -f2)
-        destination=$(echo "$gameline" | cut -d'|' -f3)
-        folder=$(basename "$(dirname "$file")")  # Get folder name
-
-        # Save relevant data to a temporary file
-        echo "$gamename|$url|$destination" >> "$temp_file"
         
-        # Add game name to checklist items with folder as description, default "off" selection
+        # Extract game name from gameline (remove backticks if present)
+        gamename=$(echo "$gameline" | cut -d'|' -f1 | tr -d '`')
+
+        # Save the full gameline to the temporary file
+        echo "$gameline" >> "$temp_file"
+
+        # Extract folder name for description in the checklist
+        folder=$(basename "$(dirname "$file")")
+
+        # Add game name to checklist items, default "off" selection
         checklist_items+=("$gamename" "$folder" "off")
     done <<< "$results"
 
@@ -71,27 +71,41 @@ search_games() {
 
     echo "Selected games: $selected_games"
 
-    # Process selected games and save them to download.txt
+    # Initialize a variable to hold the saved games for dialog display
+saved_games=""
+
 for selected_game in $(echo "$selected_games" | sed 's/"//g'); do
     # Match the selected game with the line in the temporary file
     gameline=$(grep -m 1 "^$selected_game|" "$temp_file" || true)
-    
+
     # Debugging output
     echo "Processing selected game: $selected_game"
     echo "Matched line from temp_file: $gameline"
 
     if [ -n "$gameline" ]; then
+        # Extract fields from the matched line
         gamename=$(echo "$gameline" | cut -d'|' -f1)
         url=$(echo "$gameline" | cut -d'|' -f2)
         destination=$(echo "$gameline" | cut -d'|' -f3)
 
-        # Save selected game to download.txt
-        echo "$gamename|$url|$destination" >> /userdata/system/game-downloader/download.txt
+        # Save the full line to download.txt
+        echo "$gameline" >> /userdata/system/game-downloader/download.txt
         echo "Saved $gamename to download.txt"
+
+        # Append the saved game info to the saved_games variable
+        saved_games+="$gamename\n"
     else
         echo "No matching line found for $selected_game"
     fi
 done
+
+# If any games were saved, display them in a dialog message box
+if [ -n "$saved_games" ]; then
+    dialog --msgbox "The following games were saved to the download queue:\n$saved_games" 15 50
+else
+    dialog --msgbox "No games were added to the download queue" 8 40
+fi
+
     # Clean up temporary file
     rm "$temp_file"
 
