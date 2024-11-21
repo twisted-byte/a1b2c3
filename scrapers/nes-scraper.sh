@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Base URL and destination directory
-BASE_URLS="https://myrient.erista.me/files/No-Intro/Nintendo%20-%20Nintendo%20Entertainment%20System%20(Headerless)/"
+BASE_URLS=("https://myrient.erista.me/files/No-Intro/Nintendo%20-%20Nintendo%20Entertainment%20System%20(Headerless)/")
 DEST_DIR="/userdata/system/game-downloader/links/NES"
 ROM_DIR="/userdata/roms/nes"
 EXT=".zip"
