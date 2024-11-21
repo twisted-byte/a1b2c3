@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Base URL and destination directory
-BASE_URL="https://myrient.erista.me/files/No-Intro/Sega%20-%20Mega%20Drive%20-%20Genesis/"
+BASE_URL=("https://myrient.erista.me/files/No-Intro/Sega%20-%20Mega%20Drive%20-%20Genesis/")
 DEST_DIR="/userdata/system/game-downloader/links/Mega Drive"
 ROM_DIR="/userdata/roms/megadrive"
 EXT=".zip"
