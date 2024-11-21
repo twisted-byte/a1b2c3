@@ -85,14 +85,8 @@ search_games() {
         # Debugging output to check the selected_game value
         echo "Looking for game: $selected_game"
         
-        # Escape special characters in the selected game name (including parentheses)
-        escaped_game_name=$(echo "$selected_game" | sed 's/[][\.*^$()|?+]/\\&/g')
-
-        # Debugging output to check the escaped game name
-        echo "Escaped game name: $escaped_game_name"
-        
         # Match the selected game with the line in the temporary file (with backticks)
-        gameline=$(grep -m 1 "$escaped_game_name|" "$temp_file" || true)
+        gameline=$(grep -m 1 "$selected_game|" "$temp_file" || true)
 
         # Debugging output
         echo "Matched line from temp_file: $gameline"
