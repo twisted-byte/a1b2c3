@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Base URL and destination directory
-BASE_URLS="https://myrient.erista.me/files/Redump/Sony%20-%20PlayStation%20Portable/"
+BASE_URLS=("https://myrient.erista.me/files/Redump/Sony%20-%20PlayStation%20Portable/")
 DEST_DIR="/userdata/system/game-downloader/links/PSP"
 ROM_DIR="/userdata/roms/psp"
 EXT=".zip"
