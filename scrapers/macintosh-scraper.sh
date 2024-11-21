@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Base URL and destination directory
-BASE_URLS="https://myrient.erista.me/files/Redump/Apple%20-%20Macintosh/"
+BASE_URLS=("https://myrient.erista.me/files/Redump/Apple%20-%20Macintosh/")
 DEST_DIR="/userdata/system/game-downloader/links/Apple Macintosh"
 ROM_DIR="/userdata/roms/macintosh"
 EXT=".zip"
