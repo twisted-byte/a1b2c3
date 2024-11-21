@@ -74,8 +74,8 @@ search_games() {
     # Initialize a variable to hold the saved games for dialog display
     saved_games=""
 
-    # Loop through selected games and process them
-    for selected_game in $(echo "$selected_games" | sed 's/"//g'); do
+    # Process each selected game (no splitting by spaces, just treat as a single entity)
+    while IFS= read -r selected_game; do
         # Clean the game item (remove unwanted characters and spaces)
         game_item_cleaned=$(echo "$selected_game" | sed 's/[\\\"`]//g' | sed 's/^[[:space:]]*//g' | sed 's/[[:space:]]*$//g')
 
@@ -96,7 +96,7 @@ search_games() {
         else
             echo "No matching line found for $game_item_cleaned"
         fi
-    done
+    done <<< "$selected_games"
 
     # If any games were saved, display them in a dialog message box
     if [ -n "$saved_games" ]; then
