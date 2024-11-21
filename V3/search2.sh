@@ -60,6 +60,13 @@ search_games() {
     # Show dialog checklist for the user to select games
     selected_games=$(dialog --checklist "Select games to save information:" 15 50 8 "${checklist_items[@]}" 2>&1 >/dev/tty)
 
+    # If the user cancels or exits the checklist, the selected_games will be empty
+    if [ -z "$selected_games" ]; then
+        clear
+        echo "No games selected. Exiting."
+        exit 0
+    fi
+
     echo "Selected games: $selected_games"
 
     # Process selected games and save them to download.txt
