@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Base URL and destination directory
-BASE_URLS="https://myrient.erista.me/files/No-Intro/Atari%20-%207800/"
+BASE_URLS=("https://myrient.erista.me/files/No-Intro/Atari%20-%207800/")
 DEST_DIR="/userdata/system/game-downloader/links/Atari 7800"
 ROM_DIR="/userdata/roms/atari7800"
 EXT=".zip"
