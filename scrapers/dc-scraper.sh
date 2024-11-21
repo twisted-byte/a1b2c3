@@ -46,6 +46,8 @@ scrape_url() {
 
         # Save to the appropriate letter-based file
         echo "$quoted_name|$base_url$game_url|$ROM_DIR" >> "$target_file"
+        # Save to AllGames.txt
+echo "$quoted_name|$base_url$game_url|$ROM_DIR" >> "$DEST_DIR/AllGames.txt"
     done
 }
 
