@@ -16,18 +16,22 @@ decode_url() {
 # Function to scrape a given base URL
 scrape_url() {
     local base_url="$1"
-    local page_content=$(curl -s "$base_url")
 
-    echo "$page_content" | grep -oP "(?<=href=\")[^\"]*${EXT}" | while read -r game_url; do
+    # Fetch the page content
+    local response=$(wget -q -O - "$base_url")
+    if [[ $? -ne 0 || -z "$response" ]]; then
+        echo "Error: Failed to fetch content from $base_url"
+        return
+    fi
+
+    # Extract game file URLs matching the extension
+    echo "$response" | grep -oP "(?<=href=\")[^\"]*${EXT}" | while read -r game_url; do
         # Decode the URL
-        decoded_name=$(decode_url "$game_url")
-        
-        # Format the entry with backticks around the decoded name
-        quoted_name="\`$decoded_name\`"
-        # Get the first character of the decoded file name
-        first_char="${decoded_name:0:1}"
-        
-        # Determine the appropriate file based on the first character
+        local decoded_name=$(decode_url "$game_url")
+        local quoted_name="\`$decoded_name\`"
+        local first_char="${decoded_name:0:1}"
+
+        # Determine the target file based on the first character
         if [[ "$first_char" =~ [a-zA-Z] ]]; then
             first_char=$(echo "$first_char" | tr 'a-z' 'A-Z')
             target_file="$DEST_DIR/${first_char}.txt"
@@ -36,17 +40,17 @@ scrape_url() {
         else
             target_file="$DEST_DIR/other.txt"
         fi
+        # Ensure the target file exists
+        [ -f "$target_file" ] || touch "$target_file"
 
         # Check if the game already exists in the target file
-        if grep -q "$quoted_name" "$target_file"; then
-            echo "Skipping $decoded_name as it already exists."
+        if grep -qF "$quoted_name" "$target_file"; then
             continue
         fi
 
-        # Save to the appropriate letter-based file
+        # Add the entry to the target file and master list
         echo "$quoted_name|$base_url$game_url|$ROM_DIR" >> "$target_file"
-        # Save to AllGames.txt
-echo "$quoted_name|$base_url$game_url|$ROM_DIR" >> "$DEST_DIR/AllGames.txt"
+        echo "$quoted_name|$base_url$game_url|$ROM_DIR" >> "$DEST_DIR/AllGames.txt"
     done
 }
 
@@ -54,5 +58,3 @@ echo "$quoted_name|$base_url$game_url|$ROM_DIR" >> "$DEST_DIR/AllGames.txt"
 for url in "${BASE_URLS[@]}"; do
     scrape_url "$url"
 done
-
-echo "Scraping complete!"
