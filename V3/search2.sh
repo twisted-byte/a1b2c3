@@ -75,16 +75,17 @@ search_games() {
     saved_games=""
 
     # Process the selected games
-    # Process the selected games
 while IFS= read -r selected_game; do
-    # Remove quotes from the game name
-    selected_game=$(echo "$selected_game" | sed 's/"//g')
+    # Remove quotes and trim leading/trailing spaces from the game name
+    selected_game=$(echo "$selected_game" | sed 's/"//g' | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
 
-    # Match the selected game with the line in the temporary file
-    gameline=$(grep -m 1 "^$selected_game|" "$temp_file" || true)
+    # Debugging output to check the selected_game value
+    echo "Looking for game: $selected_game"
+    
+    # Match the selected game with the line in the temporary file (without strict line beginning match)
+    gameline=$(grep -m 1 "$selected_game|" "$temp_file" || true)
 
     # Debugging output
-    echo "Processing selected game: $selected_game"
     echo "Matched line from temp_file: $gameline"
 
     if [ -n "$gameline" ]; then
