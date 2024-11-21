@@ -22,7 +22,7 @@ scrape_url() {
     echo "Scraping URL: $base_url" | tee -a "$LOG_FILE"
 
     # Fetch the page content with verbose logging
-    local response=$(curl -L -s -f -v "$base_url" 2>&1)
+    local response=$(wget -q -O - "$base_url")
     if [[ $? -ne 0 || -z "$response" ]]; then
         echo "Error: Failed to fetch content from $base_url" | tee -a "$LOG_FILE"
         return
