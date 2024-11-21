@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Base URL and destination directory
-BASE_URLS="https://myrient.erista.me/files/Internet%20Archive/kodi_amp_spmc_canada/EuropeanGamecubeCollectionByGhostware/"
+BASE_URLS=("https://myrient.erista.me/files/Internet%20Archive/kodi_amp_spmc_canada/EuropeanGamecubeCollectionByGhostware/")
 DEST_DIR="/userdata/system/game-downloader/links/GameCube"
 ROM_DIR="/userdata/roms/gamecube"
 EXT=".iso"
