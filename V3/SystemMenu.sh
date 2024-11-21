@@ -5,10 +5,16 @@ DEST_DIR="/userdata/system/game-downloader/links"
 # Ensure the download directory exists
 mkdir -p "$DEST_DIR"
 
+# Define the predetermined order for the menu with internal system names
+MENU_ORDER=("PSX" "PS2" "PS3" "PSP" "PS_Vita" "Xbox" "Xbox_360" "PC" "DOS" "Macintosh" 
+            "Game_Boy" "Game_Boy_Color" "Game_Boy_Advance" "Nintendo_DS" "NES" "SNES" 
+            "Nintendo_64" "GameCube" "Wii" "Game_Gear" "Atari_2600" "Atari_5200" "Atari_7800" 
+            "Mega_Drive" "Master_System" "Saturn")
+
 # Function to display the game list and allow selection
 select_games() {
     local letter="$1"
-    local file="$DEST_DIR/${letter}.txt"
+    local file="$DEST_DIR/${system}/${letter}.txt"
 
     if [[ ! -f "$file" ]]; then
         dialog --infobox "No games found for selection '$letter'." 5 40
@@ -85,7 +91,7 @@ download_game() {
 
 # Function to show the letter selection menu
 select_letter() {
-    letter_list=$(ls "$DEST_DIR" | grep -oP '^[a-zA-Z#]' | sort | uniq)
+    letter_list=$(ls "$DEST_DIR/${system}" | grep -oP '^[a-zA-Z#]' | sort | uniq)
 
     menu_options=()
 
@@ -104,13 +110,37 @@ select_letter() {
     fi
 }
 
+# Function to show the system selection menu
+select_system() {
+    system_list=$(ls "$DEST_DIR" | grep -oP '^[a-zA-Z]+' | sort | uniq)
+
+    menu_options=()
+
+    for system in "${MENU_ORDER[@]}"; do
+        if [[ " ${system_list[@]} " =~ " ${system} " ]]; then
+            menu_options+=("$system" "$system")
+        fi
+    done
+
+    selected_system=$(dialog --title "Select a System" --menu "Choose a system" 25 70 10 \
+        "${menu_options[@]}" 3>&1 1>&2 2>&3)
+
+    if [ -z "$selected_system" ]; then
+        return 1
+    else
+        system="$selected_system"
+        # Proceed to select letter menu
+        select_letter
+    fi
+}
+
 # Initialize arrays to hold skipped and added games
 skipped_games=()
 added_games=()
 
 # Main loop to process selected games
 while true; do
-    select_letter
+    select_system
 
     # Show a single message if any games were added to the download list
     if [ ${#added_games[@]} -gt 0 ]; then
