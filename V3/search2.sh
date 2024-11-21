@@ -72,17 +72,26 @@ search_games() {
     echo "Selected games: $selected_games"
 
     # Process selected games and save them to download.txt
-    for selected_game in $selected_games; do
-        # Match the selected game with the line in the temporary file
-        gameline=$(grep -m 1 "^$selected_game|" "$temp_file")
+for selected_game in $(echo "$selected_games" | sed 's/"//g'); do
+    # Match the selected game with the line in the temporary file
+    gameline=$(grep -m 1 "^$selected_game|" "$temp_file" || true)
+    
+    # Debugging output
+    echo "Processing selected game: $selected_game"
+    echo "Matched line from temp_file: $gameline"
+
+    if [ -n "$gameline" ]; then
         gamename=$(echo "$gameline" | cut -d'|' -f1)
         url=$(echo "$gameline" | cut -d'|' -f2)
         destination=$(echo "$gameline" | cut -d'|' -f3)
 
         # Save selected game to download.txt
         echo "$gamename|$url|$destination" >> /userdata/system/game-downloader/download.txt
-    done
-
+        echo "Saved $gamename to download.txt"
+    else
+        echo "No matching line found for $selected_game"
+    fi
+done
     # Clean up temporary file
     rm "$temp_file"
 
