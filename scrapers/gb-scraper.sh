@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Base URL and destination directory
-BASE_URLS="https://myrient.erista.me/files/No-Intro/Nintendo%20-%20Game%20Boy/"
+BASE_URLS=("https://myrient.erista.me/files/No-Intro/Nintendo%20-%20Game%20Boy/")
 DEST_DIR="/userdata/system/game-downloader/links/Game Boy"
 ROM_DIR="/userdata/roms/gb"
 EXT=".zip"
