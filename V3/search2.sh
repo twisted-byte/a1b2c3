@@ -44,7 +44,7 @@ search_games() {
     # Process each line in the results and prepare the checklist
     while IFS= read -r line; do
         file=$(echo "$line" | cut -d: -f1)      # File name
-        gameline=$(echo "$line" | cut -d: -f3)  # The actual game data
+        gameline=$(echo "$line" | cut -d: -f3-) # The actual game data (everything after the colon)
 
         # Log the search result before saving it to the temp file
         echo "Search result: $gameline" >> "$DEBUG_LOG"
@@ -92,8 +92,11 @@ search_games() {
         echo "Matched line from temp_file: $gameline"
 
         if [ -n "$gameline" ]; then
-            # Remove backticks from the game name
-            gamename=$(echo "$gameline" | cut -d'|' -f1 | tr -d '`')
+            # Extract game name (with backticks) before removing backticks
+            gamename_with_backticks=$(echo "$gameline" | cut -d'|' -f1)
+
+            # Remove backticks from the game name for the final save
+            gamename=$(echo "$gamename_with_backticks" | tr -d '`')
 
             # Save the full line to download.txt
             echo "$gameline" >> /userdata/system/game-downloader/download.txt
