@@ -1,173 +1,116 @@
 #!/bin/bash
 
-DEST_DIR="/userdata/system/game-downloader/links"
+# Exit on error or undefined variable
+set -e
+set -u
 
-# Ensure the download directory exists
-mkdir -p "$DEST_DIR"
+# Ensure the debug directory exists
+DEBUG_LOG="/userdata/system/game-downloader/debug/search_debug.txt"
+mkdir -p "$(dirname "$DEBUG_LOG")"
 
-# Define the predetermined order for the menu with internal system names
-MENU_ORDER=("PSX" "PS2" "PS3" "PSP" "PS Vita" "Xbox" "Xbox 360" "PC" "DOS" "Macintosh" "Game Boy" "Game Boy Color" "Game Boy Advance" "Nintendo DS" "NES" "SNES" "Nintendo 64" "GameCube" "Wii" "Game Gear" "Master System" "Mega Drive" "Saturn" "Dreamcast" "Atari 2600" "Atari 5200" "Atari 7800")
+# Redirect all stdout and stderr to the debug log file
+exec > >(tee -a "$DEBUG_LOG") 2>&1
 
-# Function to display the game list and allow selection
-select_games() {
-    local letter="$1"
-    local file="$DEST_DIR/${system}/${letter}.txt"
+# Log a script start message
+echo "Starting search2.sh script at $(date)"
 
-    if [[ ! -f "$file" ]]; then
-        dialog --infobox "No games found for selection '$letter'." 5 40
-        sleep 2
-        return
+# Function to search for games and display results in a dialog checklist
+search_games() {
+    # Prompt user for game name to search
+    game_name=$(dialog --inputbox "Enter game name to search:" 8 40 2>&1 >/dev/tty)
+    if [ -z "$game_name" ]; then
+        clear
+        echo "No game name entered. Exiting."
+        exit 1
     fi
 
-    # Read the list of games from the file and prepare the dialog input
-    local game_list=()
-    while IFS="|" read -r decoded_name encoded_url download_dir; do
-        game_list+=("$decoded_name" "" off)
-    done < "$file"
+    echo "Searching for game name: $game_name"
 
-    selected_games=$(dialog --title "Select Games" --checklist "Choose games to download" 25 70 10 \
-        "${game_list[@]}" 3>&1 1>&2 2>&3)
-
-    if [ -z "$selected_games" ]; then
-        return
-    fi
-
-    IFS=$'\n'
-    for game in $selected_games; do
-        # Split game by .chd, .iso, or .zip to treat each game as a separate item
-        game_items=$(echo "$game" | sed 's/\.chd/.chd\n/g;s/\.iso/.iso\n/g;s/\.zip/.zip\n/g')
-        while IFS= read -r game_item; do
-            if [[ -n "$game_item" ]]; then
-                game_item_cleaned=$(echo "$game_item" | sed 's/[\\\"`]//g' | sed 's/^[[:space:]]*//g' | sed 's/[[:space:]]*$//g')
-                if [[ -n "$game_item_cleaned" ]]; then
-                    download_game "$game_item_cleaned" "$file"
-                fi
-            fi
-        done <<< "$game_items"
-    done
-}
-
-# Function to download the selected game and send the link to the DownloadManager
-download_game() {
-    local decoded_name="$1"
-    local file="$2"
-    decoded_name_cleaned=$(echo "$decoded_name" | sed 's/[\\\"`]//g' | sed 's/^[[:space:]]*//g' | sed 's/[[:space:]]*$//g')
-
-    # Find the game URL and download directory from the letter file
-    game_info=$(grep -F "$decoded_name_cleaned" "$file")
-    game_url=$(echo "$game_info" | cut -d '|' -f 2)
-    download_dir=$(echo "$game_info" | cut -d '|' -f 3)
-
-    if [ -z "$game_url" ]; then
-        dialog --infobox "Error: Could not find download URL for '$decoded_name_cleaned'." 5 40
-        sleep 2
-        return
-    fi
-
-    # Ensure the download directory exists
-    mkdir -p "$download_dir"
-
-    # Check if the game already exists in the download directory
-    if [[ -f "$download_dir/$decoded_name_cleaned" ]]; then
-        skipped_games+=("$decoded_name_cleaned")
-        return
-    fi
-
-    # Check if the game is already in the download queue (download.txt)
-    if grep -q "$decoded_name_cleaned" "/userdata/system/game-downloader/download.txt"; then
-        skipped_games+=("$decoded_name_cleaned")
-        return
-    fi
-
-    # Append the decoded name, URL, and folder to the DownloadManager.txt file
-    echo "$decoded_name_cleaned|$game_url|$download_dir" >> "/userdata/system/game-downloader/download.txt"
+    # Search for game in AllGames.txt files under the specified directory
+    results=$(find /userdata/system/game-downloader/links -type f -name "AllGames.txt" -exec grep -iHn "$game_name" {} \;)
     
-    # Collect the added game
-    added_games+=("$decoded_name_cleaned")
-}
-
-# Function to show the letter selection menu
-select_letter() {
-    letter_list=$(ls "$DEST_DIR/${system}" | grep -oP '^[a-zA-Z#]' | sort | uniq)
-
-    menu_options=()
-
-    while read -r letter; do
-        menu_options+=("$letter" "$letter")
-    done <<< "$letter_list"
-
-    selected_letter=$(dialog --title "Select a Letter" --menu "Choose a letter" 25 70 10 \
-        "${menu_options[@]}" 3>&1 1>&2 2>&3)
-
-    if [ -z "$selected_letter" ]; then
-        return 1
-    else
-        # Otherwise, proceed with the selected letter
-        select_games "$selected_letter"
+    # If no results, show a message and exit
+    if [ -z "$results" ]; then
+        dialog --msgbox "No games found matching \"$game_name\"." 8 40
+        return
     fi
-}
 
-# Function to show the system selection menu
-select_system() {
-    # Create a list of available systems from the destination directory
-    system_list=$(ls "$DEST_DIR" | sort | uniq)
+    echo "Search results: $results"
 
-    # Prepare menu options from MENU_ORDER that exist in system_list
-    menu_options=()
-    for system in "${MENU_ORDER[@]}"; do
-        if echo "$system_list" | grep -qx "$system"; then
-            menu_options+=("$system" "$system")
+    # Prepare temporary file and checklist items array
+    temp_file=$(mktemp)
+    checklist_items=()
+
+    # Process each line in the results and prepare the checklist
+    while IFS= read -r line; do
+        file=$(echo "$line" | cut -d: -f1)
+        gameline=$(echo "$line" | cut -d: -f3)
+
+        # Extract game name from gameline (remove backticks if present)
+        gamename=$(echo "$gameline" | cut -d'|' -f1 | tr -d '`')
+
+        # Save the full gameline to the temporary file
+        echo "$gameline" >> "$temp_file"
+
+        # Extract folder name for description in the checklist
+        folder=$(basename "$(dirname "$file")")
+
+        # Add game name to checklist items, default "off" selection
+        checklist_items+=("$gamename" "$folder" "off")
+    done <<< "$results"
+
+    # Show dialog checklist for the user to select games
+    selected_games=$(dialog --checklist "Select games to save information:" 15 50 8 "${checklist_items[@]}" 2>&1 >/dev/tty)
+
+    # If the user cancels or exits the checklist, the selected_games will be empty
+    if [ -z "$selected_games" ]; then
+        clear
+        echo "No games selected. Exiting."
+        exit 0
+    fi
+
+    echo "Selected games: $selected_games"
+
+    # Initialize a variable to hold the saved games for dialog display
+    saved_games=""
+
+    # Loop through selected games and process them
+    for selected_game in $(echo "$selected_games" | sed 's/"//g'); do
+        # Clean the game item (remove unwanted characters and spaces)
+        game_item_cleaned=$(echo "$selected_game" | sed 's/[\\\"`]//g' | sed 's/^[[:space:]]*//g' | sed 's/[[:space:]]*$//g')
+
+        # Match the cleaned game name with the line in the temporary file
+        gameline=$(grep -m 1 "^$game_item_cleaned|" "$temp_file" || true)
+
+        # Debugging output
+        echo "Processing selected game: $game_item_cleaned"
+        echo "Matched line from temp_file: $gameline"
+
+        if [ -n "$gameline" ]; then
+            # Save the full line to download.txt
+            echo "$gameline" >> /userdata/system/game-downloader/download.txt
+            echo "Saved $game_item_cleaned to download.txt"
+
+            # Append the saved game info to the saved_games variable
+            saved_games+="$game_item_cleaned\n"
+        else
+            echo "No matching line found for $game_item_cleaned"
         fi
     done
 
-    # Check if any systems are available for selection
-    if [ ${#menu_options[@]} -eq 0 ]; then
-        dialog --msgbox "No systems are available for selection." 7 50
-        return 1
-    fi
-
-    # Display the system selection menu
-    selected_system=$(dialog --title "Select a System" --menu "Choose a system" 25 70 10 \
-        "${menu_options[@]}" 3>&1 1>&2 2>&3)
-
-    if [ -z "$selected_system" ]; then
-        return 1
+    # If any games were saved, display them in a dialog message box
+    if [ -n "$saved_games" ]; then
+        dialog --msgbox "The following games were saved to the download queue:\n$saved_games" 15 50
     else
-        system="$selected_system"
-        # Proceed to select letter menu
-        select_letter
+        dialog --msgbox "No games were added to the download queue" 8 40
     fi
+
+    # Clean up temporary file
+    rm "$temp_file"
+
+    clear
+    echo "Download process completed."
 }
-# Initialize arrays to hold skipped and added games
-skipped_games=()
-added_games=()
 
-# Main loop to process selected games
-while true; do
-    select_system
-
-    # Show a single message if any games were added to the download list
-    if [ ${#added_games[@]} -gt 0 ]; then
-        dialog --msgbox "Your selection has been added to the download list! Check download status and once it's complete, reload your games list to see the new games!" 10 50
-        # Clear the added games list
-        added_games=()
-    fi
-
-    # Display skipped games message if there are any skipped games
-    if [ ${#skipped_games[@]} -gt 0 ]; then
-        skipped_games_list=$(printf "%s\n" "${skipped_games[@]}" | sed 's/^/• /')
-        dialog --msgbox "The following games already exist in the system and are being skipped:\n\n$skipped_games_list" 15 60
-        skipped_games=()
-    fi
-
-    # Ask user if they want to continue after displaying skipped games
-    dialog --title "Continue?" --yesno "Would you like to select some more games?" 7 50
-    if [ $? -eq 1 ]; then
-        break
-    fi
-done
-
-# Goodbye message
-echo "Goodbye!"
-
-exec /tmp/GameDownloader.sh
+# Execute the search_games function
+search_games
