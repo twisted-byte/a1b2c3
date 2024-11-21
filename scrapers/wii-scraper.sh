@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Base URL and destination directory
-BASE_URLS="https://myrient.erista.me/files/Redump/Nintendo%20-%20Wii%20-%20NKit%20RVZ%20[zstd-19-128k]/"
+BASE_URLS=("https://myrient.erista.me/files/Redump/Nintendo%20-%20Wii%20-%20NKit%20RVZ%20[zstd-19-128k]/")
 DEST_DIR="/userdata/system/game-downloader/links/Wii"
 ROM_DIR="/userdata/roms/wii"
 EXT=".zip"
