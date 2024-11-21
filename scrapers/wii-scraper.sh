@@ -19,6 +19,15 @@ scrape_url() {
     local base_url="$1"
     local page_content=$(curl -s "$base_url")
 
+    # Debugging: Print the base URL and its content
+    echo "Scraping URL: $base_url"
+    echo "Page content length: ${#page_content}"
+    
+    if [[ -z "$page_content" ]]; then
+        echo "Error: No content retrieved from $base_url"
+        return
+    fi
+
     echo "$page_content" | grep -oP "(?<=href=\")[^\"]*${EXT}" | while read -r game_url; do
         # Decode the URL
         decoded_name=$(decode_url "$game_url")
