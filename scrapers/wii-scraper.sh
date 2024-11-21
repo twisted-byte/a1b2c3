@@ -17,7 +17,7 @@ decode_url() {
 # Function to scrape a given base URL
 scrape_url() {
     local base_url="$1"
-    local response=$(curl -L -s -D - "$base_url")
+    local response=$(curl -L -D - "$base_url")
     local page_content=$(echo "$response" | sed -n '/^\r$/,$p')
 
     # Debugging: Print the base URL, status code, and response headers
