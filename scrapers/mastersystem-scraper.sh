@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Base URL and destination directory
-BASE_URLS="https://myrient.erista.me/files/No-Intro/Sega%20-%20Master%20System%20-%20Mark%20III/"
+BASE_URLS=("https://myrient.erista.me/files/No-Intro/Sega%20-%20Master%20System%20-%20Mark%20III/")
 DEST_DIR="/userdata/system/game-downloader/links/Master System"
 ROM_DIR="/userdata/roms/mastersystem"
 EXT=".zip"
