@@ -1,7 +1,7 @@
 
 #!/bin/bash
 
-BASE_URLS="https://myrient.erista.me/files/No-Intro/Nintendo%20-%20Nintendo%2064%20(ByteSwapped)/"
+BASE_URLS=("https://myrient.erista.me/files/No-Intro/Nintendo%20-%20Nintendo%2064%20(ByteSwapped)/")
 DEST_DIR="/userdata/system/game-downloader/links/Nintendo 64"
 ROM_DIR="/userdata/roms/n64"
 EXT=".zip"
