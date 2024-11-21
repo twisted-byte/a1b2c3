@@ -6,10 +6,8 @@ DEST_DIR="/userdata/system/game-downloader/links"
 mkdir -p "$DEST_DIR"
 
 # Define the predetermined order for the menu with internal system names
-MENU_ORDER=("PSX" "PS2" "PS3" "PSP" "PS_Vita" "Xbox" "Xbox_360" "PC" "DOS" "Macintosh" 
-            "Game_Boy" "Game_Boy_Color" "Game_Boy_Advance" "Nintendo_DS" "NES" "SNES" 
-            "Nintendo_64" "GameCube" "Wii" "Game_Gear" "Atari_2600" "Atari_5200" "Atari_7800" 
-            "Mega_Drive" "Master_System" "Saturn")
+MENU_ORDER=("PSX" "PS2" "PS3" "PSP" "PS_Vita" "Xbox" "Xbox_360" "PC" "DOS" "Macintosh" "Game_Boy" "Game_Boy_Color" "Game_Boy_Advance" "Nintendo_DS" "NES" "SNES" "Nintendo_64" "GameCube" "Wii" "Game_Gear" "Master_System" "Mega_Drive" "Saturn" "Dreamcast" "Atari_2600" "Atari_5200" "Atari_7800")
+
 
 # Function to display the game list and allow selection
 select_games() {
