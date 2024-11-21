@@ -6,7 +6,7 @@ DEST_DIR="/userdata/system/game-downloader/links"
 mkdir -p "$DEST_DIR"
 
 # Define the predetermined order for the menu with internal system names
-MENU_ORDER=("PSX" "PS2" "PS3" "PSP" "PS Vita" "Xbox" "Xbox 360" "PC" "DOS" "Macintosh" "Game Boy" "Game Boy Color" "Game Boy Advance" "Nintendo DS" "NES" "SNES" "Nintendo 64" "GameCube" "Wii" "Game Gear" "Master System" "Mega Drive" "Saturn" "Dreamcast" "Atari 2600" "Atari 5200" "Atari 7800")
+MENU_ORDER=("PSX" "PS2" "PS3" "PSP" "PS Vita" "Xbox" "Xbox 360" "PC" "DOS" "Macintosh" "Game Boy" "Game Boy Color" "Game Boy Advance" "Nintendo DS" "NES" "SNES" "Nintendo 64" "GameCube" "Wii" "Game Ge[...]
 
 
 # Function to display the game list and allow selection
@@ -35,8 +35,8 @@ select_games() {
 
     IFS=$'\n'
     for game in $selected_games; do
-        # Split game by .chd to treat each game as a separate item
-        game_items=$(echo "$game" | sed 's/\.chd/.chd\n/g')
+        # Split game by .chd, .iso, or .zip to treat each game as a separate item
+        game_items=$(echo "$game" | sed 's/\.chd/.chd\n/g;s/\.iso/.iso\n/g;s/\.zip/.zip\n/g')
         while IFS= read -r game_item; do
             if [[ -n "$game_item" ]]; then
                 game_item_cleaned=$(echo "$game_item" | sed 's/[\\\"`]//g' | sed 's/^[[:space:]]*//g' | sed 's/[[:space:]]*$//g')
