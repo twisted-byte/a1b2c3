@@ -43,14 +43,17 @@ search_games() {
 
     # Process each line in the results and prepare the checklist
     while IFS= read -r line; do
-        file=$(echo "$line" | cut -d: -f1)
-        gameline=$(echo "$line" | cut -d: -f3)
-        
+        file=$(echo "$line" | cut -d: -f1)      # File name
+        gameline=$(echo "$line" | cut -d: -f3)  # The actual game data
+
+        # Log the search result before saving it to the temp file
+        echo "Search result: $gameline" >> "$DEBUG_LOG"
+
+        # Save the full line (without file name and line number) to the temp file
+        echo "$gameline" >> "$temp_file"
+
         # Extract game name from gameline (remove backticks if present)
         gamename=$(echo "$gameline" | cut -d'|' -f1 | tr -d '`')
-
-        # Save the full gameline to the temporary file
-        echo "$gameline" >> "$temp_file"
 
         # Extract folder name for description in the checklist
         folder=$(basename "$(dirname "$file")")
@@ -74,26 +77,35 @@ search_games() {
     # Initialize a variable to hold the saved games for dialog display
     saved_games=""
 
-# Process each line in the results and prepare the checklist
-while IFS= read -r line; do
-    file=$(echo "$line" | cut -d: -f1)
-    gameline=$(echo "$line" | cut -d: -f3)
-    
-    # Extract game name from gameline (remove backticks if present)
-    gamename=$(echo "$gameline" | cut -d'|' -f1 | tr -d '`')
+    # Process selected games
+    while IFS= read -r selected_game; do
+        # Remove quotes and trim leading/trailing spaces from the game name
+        selected_game=$(echo "$selected_game" | sed 's/"//g' | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
 
-    # Save the full gameline to the temporary file
-    echo "$gameline" >> "$temp_file"
-    
-    # Log the gameline that is being saved to temp_file
-    echo "Saved to temp_file: $gameline" >> "$DEBUG_LOG"
+        # Debugging output to check the selected_game value
+        echo "Looking for game: $selected_game"
+        
+        # Match the selected game with the line in the temporary file (without strict line beginning match)
+        gameline=$(grep -m 1 "$selected_game|" "$temp_file" || true)
 
-    # Extract folder name for description in the checklist
-    folder=$(basename "$(dirname "$file")")
+        # Debugging output
+        echo "Matched line from temp_file: $gameline"
 
-    # Add game name to checklist items, default "off" selection
-    checklist_items+=("$gamename" "$folder" "off")
-done <<< "$results"
+        if [ -n "$gameline" ]; then
+            # Remove backticks from the game name
+            gamename=$(echo "$gameline" | cut -d'|' -f1 | tr -d '`')
+
+            # Save the full line to download.txt
+            echo "$gameline" >> /userdata/system/game-downloader/download.txt
+            echo "Saved $gamename to download.txt"
+
+            # Append the saved game info to the saved_games variable
+            saved_games+="$gamename\n"
+        else
+            echo "No matching line found for $selected_game"
+        fi
+    done <<< "$selected_games"
+
     # If any games were saved, display them in a dialog message box
     if [ -n "$saved_games" ]; then
         dialog --msgbox "The following games were saved to the download queue:\n$saved_games" 15 50
