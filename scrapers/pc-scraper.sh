@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Base URL and destination directory
-BASE_URLS="https://myrient.erista.me/files/Redump/IBM%20-%20PC%20compatible/"
+BASE_URLS=("https://myrient.erista.me/files/Redump/IBM%20-%20PC%20compatible/")
 DEST_DIR="/userdata/system/game-downloader/links/PC"
 ROM_DIR="/userdata/saves/flatpak/data"
 EXT=".zip"
