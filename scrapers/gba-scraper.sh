@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Base URL and destination directory
-BASE_URLS="https://myrient.erista.me/files/No-Intro/Nintendo%20-%20Game%20Boy%20Advance/"
+BASE_URLS=("https://myrient.erista.me/files/No-Intro/Nintendo%20-%20Game%20Boy%20Advance/")
 DEST_DIR="/userdata/system/game-downloader/links/Game Boy Advance"
 ROM_DIR="/userdata/roms/gba"  # Fixed missing closing quote
 EXT=".zip"
