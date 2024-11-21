@@ -14,6 +14,8 @@ exec > >(tee -a "$DEBUG_LOG") 2>&1
 # Log a script start message
 echo "Starting search2.sh script at $(date)"
 
+touch /userdata/system/game-downloader/download.txt
+
 # Function to search for games and display results in a dialog checklist
 search_games() {
     # Prompt user for game name to search
