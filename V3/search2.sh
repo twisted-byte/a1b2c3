@@ -75,31 +75,34 @@ search_games() {
     saved_games=""
 
     # Process the selected games
-    for selected_game in $(echo "$selected_games" | sed 's/"//g'); do
-        # Match the selected game with the line in the temporary file
-        gameline=$(grep -m 1 "^$selected_game|" "$temp_file" || true)
+    # Process the selected games
+while IFS= read -r selected_game; do
+    # Remove quotes from the game name
+    selected_game=$(echo "$selected_game" | sed 's/"//g')
 
-        # Debugging output
-        echo "Processing selected game: $selected_game"
-        echo "Matched line from temp_file: $gameline"
+    # Match the selected game with the line in the temporary file
+    gameline=$(grep -m 1 "^$selected_game|" "$temp_file" || true)
 
-        if [ -n "$gameline" ]; then
-            # Extract fields from the matched line
-            gamename=$(echo "$gameline" | cut -d'|' -f1)
-            url=$(echo "$gameline" | cut -d'|' -f2)
-            destination=$(echo "$gameline" | cut -d'|' -f3)
+    # Debugging output
+    echo "Processing selected game: $selected_game"
+    echo "Matched line from temp_file: $gameline"
 
-            # Save the full line to download.txt
-            echo "$gameline" >> /userdata/system/game-downloader/download.txt
-            echo "Saved $gamename to download.txt"
+    if [ -n "$gameline" ]; then
+        # Extract fields from the matched line
+        gamename=$(echo "$gameline" | cut -d'|' -f1)
+        url=$(echo "$gameline" | cut -d'|' -f2)
+        destination=$(echo "$gameline" | cut -d'|' -f3)
 
-            # Append the saved game info to the saved_games variable
-            saved_games+="$gamename\n"
-        else
-            echo "No matching line found for $selected_game"
-        fi
-    done
+        # Save the full line to download.txt
+        echo "$gameline" >> /userdata/system/game-downloader/download.txt
+        echo "Saved $gamename to download.txt"
 
+        # Append the saved game info to the saved_games variable
+        saved_games+="$gamename\n"
+    else
+        echo "No matching line found for $selected_game"
+    fi
+done <<< "$selected_games"
     # If any games were saved, display them in a dialog message box
     if [ -n "$saved_games" ]; then
         dialog --msgbox "The following games were saved to the download queue:\n$saved_games" 15 50
