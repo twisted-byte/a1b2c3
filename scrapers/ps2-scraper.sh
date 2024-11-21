@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Base URL and destination directory
-BASE_URLS="https://myrient.erista.me/files/Redump/Sony%20-%20PlayStation%202/"
+BASE_URLS=("https://myrient.erista.me/files/Redump/Sony%20-%20PlayStation%202/")
 DEST_DIR="/userdata/system/game-downloader/links/PS2"
 ROM_DIR="/userdata/roms/ps2"  # Fixed missing closing quote
 EXT=".zip"
