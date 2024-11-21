@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Base URL and destination directory
-BASE_URLS="https://myrient.erista.me/files/Internet%20Archive/sketch_the_cow/Total_DOS_Collection_Release_16_March_2019/Games/Images/CD/"
+BASE_URLS=("https://myrient.erista.me/files/Internet%20Archive/sketch_the_cow/Total_DOS_Collection_Release_16_March_2019/Games/Images/CD/")
 DEST_DIR="/userdata/system/game-downloader/links/MS-DOS"
 ROM_DIR="/userdata/roms/dos"
 EXT=".zip"
