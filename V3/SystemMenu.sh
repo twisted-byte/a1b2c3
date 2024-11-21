@@ -1,79 +1,10 @@
 #!/bin/bash
-# Ensure clear display
-clear
 
-# Define the base directory for game systems
-BASE_DIR="/userdata/system/game-downloader/links"
-
-# Check if the base directory exists
-if [ ! -d "$BASE_DIR" ]; then
-    dialog --msgbox "Error: The game downloader directory doesn't exist!" 10 50
-    exec /tmp/GameDownloader.sh
-fi
-
-# Create a list of available game systems (directories inside /userdata/system/game-downloader/links)
-GAME_SYSTEMS=()
-MENU_OPTIONS=()
-
-# Define the predetermined order for the menu with internal system names
-MENUORDER=("PSX" "PS2" "PS3" "PSP" "PS Vita" "Xbox" "Xbox 360" "PC" "DOS" "Macintosh" "Game Boy" "Game Boy Color" "Game Boy Advance" "Nintendo DS" "NES" "SNES" "Nintendo 64" "GameCube" "Wii" "Game Gea[...]")
-
-# Loop through the directories in /userdata/system/game-downloader/links in the predetermined order and add them to the menu
-index=1
-for system in "${MENUORDER[@]}"; do
-    if [ -d "$BASE_DIR/$system" ]; then
-        GAME_SYSTEMS+=("$system")
-        MENU_OPTIONS+=("$index" "$system")
-        ((index++))
-    fi
-done
-
-# Check if any systems were found
-if [ ${#GAME_SYSTEMS[@]} -eq 0 ]; then
-    dialog --msgbox "No game systems found in $BASE_DIR!" 10 50
-    exec /tmp/GameDownloader.sh
-fi
-
-# Add the option for the user to exit
-MENU_OPTIONS=("0" "Return" "${MENU_OPTIONS[@]}")
-
-# Main dialog menu with loop to keep the menu active until a valid choice is selected
-dialog --clear --backtitle "Game Downloader" \
-       --title "Select a Game System" \
-       --menu "Choose an option:" 15 50 12 \
-       "${MENU_OPTIONS[@]}" 2>/tmp/game-downloader-choice
-
-choice=$(< /tmp/game-downloader-choice)
-rm /tmp/game-downloader-choice
-
-# Check if the user canceled the dialog (no choice selected)
-if [ -z "$choice" ]; then
-    clear
-    dialog --infobox "Thank you for using Game Downloader! Any issues, message DTJW92 on Discord!" 10 50
-    sleep 3
-    exec /tmp/GameDownloader.sh  # Exit the script when Cancel is clicked or no option is selected
-fi
-
-# Execute the corresponding action based on user choice
-if [ "$choice" -eq 0 ]; then
-    clear
-    exec /tmp/GameDownloader.sh  # Execute the main menu script
-    exit 0  # In case exec fails, exit the script
-else
-    # Get the selected game system
-    SELECTED_SYSTEM="${GAME_SYSTEMS[$((choice - 1))]}"
-fi
-
-# Define directories and files
-DEST_DIR="$BASE_DIR/$SELECTED_SYSTEM"
-DOWNLOAD_DIR="$DEST_DIR"  # Download directory
+DEST_DIR="/userdata/system/game-downloader/links/PSX"
+DOWNLOAD_DIR="/userdata/roms/psx"  # Update this to your desired download directory
 
 # Ensure the download directory exists
 mkdir -p "$DOWNLOAD_DIR"
-
-# Initialize arrays to hold skipped and added games
-skipped_games=()
-added_games=()
 
 # Function to display the game list and allow selection
 select_games() {
@@ -101,27 +32,27 @@ select_games() {
 
     IFS=$'\n'
     for game in $selected_games; do
-        # Split game by .chd, .zip, or .iso to treat each game as a separate item
-        game_items=$(echo "$game" | sed 's/\.chd/.chd\n/g; s/\.zip/.zip\n/g; s/\.iso/.iso\n/g')
+        # Split game by .chd to treat each game as a separate item
+        game_items=$(echo "$game" | sed 's/\.chd/.chd\n/g')
         while IFS= read -r game_item; do
             if [[ -n "$game_item" ]]; then
                 game_item_cleaned=$(echo "$game_item" | sed 's/[\\\"`]//g' | sed 's/^[[:space:]]*//g' | sed 's/[[:space:]]*$//g')
                 if [[ -n "$game_item_cleaned" ]]; then
-                    download_game "$game_item_cleaned" "$file"
+                    download_game "$game_item_cleaned"
                 fi
             fi
         done <<< "$game_items"
     done
 }
 
+
 # Function to download the selected game and send the link to the DownloadManager
 download_game() {
     local decoded_name="$1"
-    local file="$2"
     decoded_name_cleaned=$(echo "$decoded_name" | sed 's/[\\\"`]//g' | sed 's/^[[:space:]]*//g' | sed 's/[[:space:]]*$//g')
 
     # Check if the game already exists in the download directory
-    if [[ -f "$game_folder/$decoded_name_cleaned" ]]; then
+    if [[ -f "$DOWNLOAD_DIR/$decoded_name_cleaned" ]]; then
         skipped_games+=("$decoded_name_cleaned")
         return
     fi
@@ -132,10 +63,8 @@ download_game() {
         return
     fi
 
-    # Find the game URL and folder from the selected letter .txt file
-    game_info=$(grep -F "$decoded_name_cleaned" "$file")
-    game_url=$(echo "$game_info" | cut -d '|' -f 2)
-    game_folder=$(echo "$game_info" | cut -d '|' -f 3)
+    # Find the game URL from the letter file
+    game_url=$(grep -F "$decoded_name_cleaned" "$file" | cut -d '|' -f 2)
 
     if [ -z "$game_url" ]; then
         dialog --infobox "Error: Could not find download URL for '$decoded_name_cleaned'." 5 40
@@ -143,14 +72,8 @@ download_game() {
         return
     fi
 
-    if [ -z "$game_folder" ]; then
-        dialog --infobox "Error: Could not find destination folder for '$decoded_name_cleaned'." 5 40
-        sleep 2
-        return
-    fi
-
-    # Append the decoded name, URL, and folder to the download.txt file
-    echo "$decoded_name_cleaned|$game_url|$game_folder" >> "/userdata/system/game-downloader/download.txt"
+    # Append the decoded name, URL, and folder to the DownloadManager.txt file
+    echo "$decoded_name_cleaned|$game_url|$DOWNLOAD_DIR" >> "/userdata/system/game-downloader/download.txt"
     
     # Collect the added game
     added_games+=("$decoded_name_cleaned")
@@ -169,18 +92,21 @@ select_letter() {
     selected_letter=$(dialog --title "Select a Letter" --menu "Choose a letter" 25 70 10 \
         "${menu_options[@]}" 3>&1 1>&2 2>&3)
 
-    # If "Return" is selected, return to the system selection
-    if [ "$selected_letter" == "Return" ]; then
-        return 1  # Return to the system selection
+    if [ -z "$selected_letter" ]; then
+        return 1
     else
         # Otherwise, proceed with the selected letter
         select_games "$selected_letter"
     fi
 }
 
+
+# Initialize arrays to hold skipped and added games
+skipped_games=()
+added_games=()
+
 # Main loop to process selected games
 while true; do
-    echo "Selected System: $SELECTED_SYSTEM"
     select_letter
 
     # Show a single message if any games were added to the download list
@@ -205,5 +131,6 @@ while true; do
 done
 
 # Goodbye message
-clear
+echo "Goodbye!"
+
 exec /tmp/GameDownloader.sh
