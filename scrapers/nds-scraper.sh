@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Base URL and destination directory
-BASE_URLS="https://myrient.erista.me/files/No-Intro/Nintendo%20-%20Nintendo%20DS%20(Decrypted)/"
+BASE_URLS=("https://myrient.erista.me/files/No-Intro/Nintendo%20-%20Nintendo%20DS%20(Decrypted)/")
 DEST_DIR="/userdata/system/game-downloader/links/Nintendo DS"
 ROM_DIR="/userdata/roms/nds"
 EXT=".zip"
