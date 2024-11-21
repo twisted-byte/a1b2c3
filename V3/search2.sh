@@ -43,23 +43,20 @@ search_games() {
 
     # Process each line in the results and prepare the checklist
     while IFS= read -r line; do
-        file=$(echo "$line" | cut -d: -f1)      # File name
-        gameline=$(echo "$line" | cut -d: -f3-) # The actual game data (everything after the colon)
+        file=$(echo "$line" | cut -d: -f1)
+        gameline=$(echo "$line" | cut -d: -f3)
 
-        # Log the search result before saving it to the temp file
-        echo "Search result: $gameline" >> "$DEBUG_LOG"
+        # Extract game name from gameline (remove backticks if present)
+        gamename=$(echo "$gameline" | cut -d'|' -f1 | tr -d '`')
 
-        # Save the full line (without file name and line number) to the temp file
+        # Save the full gameline to the temporary file
         echo "$gameline" >> "$temp_file"
-
-        # Extract game name from gameline (keep backticks here for later matching)
-        gamename_with_backticks=$(echo "$gameline" | cut -d'|' -f1)
 
         # Extract folder name for description in the checklist
         folder=$(basename "$(dirname "$file")")
 
-        # Add game name with backticks to checklist items, default "off" selection
-        checklist_items+=("$gamename_with_backticks" "$folder" "off")
+        # Add game name to checklist items, default "off" selection
+        checklist_items+=("$gamename" "$folder" "off")
     done <<< "$results"
 
     # Show dialog checklist for the user to select games
@@ -77,37 +74,29 @@ search_games() {
     # Initialize a variable to hold the saved games for dialog display
     saved_games=""
 
-    # Process selected games
-    while IFS= read -r selected_game; do
-        # Remove quotes and trim leading/trailing spaces from the game name
-        selected_game=$(echo "$selected_game" | sed 's/"//g' | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
+    # Loop through selected games and process them
+    for selected_game in $(echo "$selected_games" | sed 's/"//g'); do
+        # Clean the game item (remove unwanted characters and spaces)
+        game_item_cleaned=$(echo "$selected_game" | sed 's/[\\\"`]//g' | sed 's/^[[:space:]]*//g' | sed 's/[[:space:]]*$//g')
 
-        # Debugging output to check the selected_game value
-        echo "Looking for game: $selected_game"
-        
-        # Match the selected game with the line in the temporary file (with backticks)
-        gameline=$(grep -m 1 "$selected_game|" "$temp_file" || true)
+        # Match the cleaned game name with the line in the temporary file
+        gameline=$(grep -m 1 "^$game_item_cleaned|" "$temp_file" || true)
 
         # Debugging output
+        echo "Processing selected game: $game_item_cleaned"
         echo "Matched line from temp_file: $gameline"
 
         if [ -n "$gameline" ]; then
-            # Extract game name (with backticks) before removing backticks
-            gamename_with_backticks=$(echo "$gameline" | cut -d'|' -f1)
-
-            # Remove backticks from the game name for the final save
-            gamename=$(echo "$gamename_with_backticks" | tr -d '`')
-
             # Save the full line to download.txt
             echo "$gameline" >> /userdata/system/game-downloader/download.txt
-            echo "Saved $gamename to download.txt"
+            echo "Saved $game_item_cleaned to download.txt"
 
             # Append the saved game info to the saved_games variable
-            saved_games+="$gamename\n"
+            saved_games+="$game_item_cleaned\n"
         else
-            echo "No matching line found for $selected_game"
+            echo "No matching line found for $game_item_cleaned"
         fi
-    done <<< "$selected_games"
+    done
 
     # If any games were saved, display them in a dialog message box
     if [ -n "$saved_games" ]; then
