@@ -46,11 +46,13 @@ search_games() {
         file=$(echo "$line" | cut -d: -f1)
         gameline=$(echo "$line" | cut -d: -f3)
 
-        # Extract game name from gameline (remove backticks if present)
+        # Extract game name, URL, and destination from gameline (remove backticks if present)
         gamename=$(echo "$gameline" | cut -d'|' -f1 | tr -d '`')
+        url=$(echo "$gameline" | cut -d'|' -f2)
+        destination=$(echo "$gameline" | cut -d'|' -f3)
 
-        # Save the full gameline to the temporary file
-        echo "$gameline" >> "$temp_file"
+        # Save only relevant data (game name, url, destination) to the temporary file
+        echo "$gamename|$url|$destination" >> "$temp_file"
 
         # Extract folder name for description in the checklist
         folder=$(basename "$(dirname "$file")")
