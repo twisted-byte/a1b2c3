@@ -77,7 +77,7 @@ for system in $choices; do
 
     # Download and execute the scraper script
     curl -Ls "$scraper_url" -o /tmp/scraper.sh 
-    bash /tmp/scraper.sh &  # Run the downloaded scraper and wait for it to complete
+    bash /tmp/scraper.sh > /dev/null 2>&1 &  # Run the downloaded scraper and wait for it to complete
     
     wait
     # Show completion message once the process is done (after the script finishes)
