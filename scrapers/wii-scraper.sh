@@ -5,11 +5,9 @@ BASE_URLS=("https://myrient.erista.me/files/Redump/Nintendo%20-%20Wii%20-%20NKit
 DEST_DIR="/userdata/system/game-downloader/links/Wii"
 ROM_DIR="/userdata/roms/wii"
 EXT=".zip"
-LOG_FILE="$DEST_DIR/scrape_log.txt"
 
-# Ensure the destination directory and log file exist
+# Ensure the destination directory exists
 mkdir -p "$DEST_DIR"
-touch "$LOG_FILE"
 
 # Function to decode URL (ASCII decode)
 decode_url() {
@@ -19,18 +17,13 @@ decode_url() {
 # Function to scrape a given base URL
 scrape_url() {
     local base_url="$1"
-    echo "Scraping URL: $base_url" | tee -a "$LOG_FILE"
 
-    # Fetch the page content with verbose logging
+    # Fetch the page content
     local response=$(wget -q -O - "$base_url")
     if [[ $? -ne 0 || -z "$response" ]]; then
-        echo "Error: Failed to fetch content from $base_url" | tee -a "$LOG_FILE"
+        echo "Error: Failed to fetch content from $base_url"
         return
     fi
-
-    # Print the raw response to the terminal for debugging
-    echo "Raw content from $base_url:" | tee -a "$LOG_FILE"
-    echo "$response" | tee -a "$LOG_FILE"
 
     # Extract game file URLs matching the extension
     echo "$response" | grep -oP "(?<=href=\")[^\"]*${EXT}" | while read -r game_url; do
@@ -53,14 +46,12 @@ scrape_url() {
 
         # Check if the game already exists in the target file
         if grep -qF "$quoted_name" "$target_file"; then
-            echo "Skipping $decoded_name as it already exists." | tee -a "$LOG_FILE"
             continue
         fi
 
         # Add the entry to the target file and master list
         echo "$quoted_name|$base_url$game_url|$ROM_DIR" >> "$target_file"
         echo "$quoted_name|$base_url$game_url|$ROM_DIR" >> "$DEST_DIR/AllGames.txt"
-        echo "Added: $decoded_name" | tee -a "$LOG_FILE"
     done
 }
 
@@ -68,5 +59,3 @@ scrape_url() {
 for url in "${BASE_URLS[@]}"; do
     scrape_url "$url"
 done
-
-echo "Scraping complete!" | tee -a "$LOG_FILE"
