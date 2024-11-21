@@ -17,14 +17,13 @@ decode_url() {
 # Function to scrape a given base URL
 scrape_url() {
     local base_url="$1"
-    local response=$(curl -L -s -D - "$base_url")
-    local headers=$(echo "$response" | sed -n '/^\r$/q;p')
-    local page_content=$(echo "$response" | sed -n '/^\r$/,$p')
+    local response=$(curl -L -s "$base_url")
 
-    # Debugging: Print the base URL, status code, and response headers
-    echo "Scraping URL: $base_url"
-    echo "Response headers:"
-    echo "$headers"
+    # Print the raw content to the terminal
+    echo "Raw content from $base_url:"
+    echo "$response"
+
+    local page_content="$response"
     echo "Page content length: ${#page_content}"
     
     if [[ -z "$page_content" ]]; then
