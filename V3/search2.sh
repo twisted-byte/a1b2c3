@@ -105,6 +105,7 @@ folder=$(basename "$(dirname "$file_path")")  # Extract the folder name of the f
     rm "$temp_file"
 
     clear
+}
 
 # Execute the search_games function
 search_games
