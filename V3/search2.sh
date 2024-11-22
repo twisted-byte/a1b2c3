@@ -74,7 +74,8 @@ folder=$(basename "$(dirname "$file_path")")  # Extract the folder name of the f
     saved_games=""
 
     # Process each selected game (handle full name including spaces properly)
-    IFS=$'\n' # Ensure proper handling of selections with spaces
+    # Process each selected game (handle full name including spaces properly)
+IFS=$'\n' # Ensure proper handling of selections with spaces
 
 # Adjust to split the input based on .zip, .iso, or .chd
 selected_games=$(echo "$selected_games" | sed 's/\.zip/\.zip\n/g; s/\.iso/\.iso\n/g; s/\.chd/\.chd\n/g' | sed '/^$/d')
@@ -99,17 +100,20 @@ for selected_game in $selected_games; do
         # Save the game line to download.txt
         echo "$gameline" >> /userdata/system/game-downloader/download.txt
         echo "Saved $game_item_cleaned to download.txt"
+
+        # Append the saved game info to the saved_games variable for final display
+        saved_games+="$game_item_cleaned\n"
     else
         echo "No matching line found for $game_item_cleaned"
     fi
 done
 
-    # If any games were saved, display them in a dialog message box
-    if [ -n "$saved_games" ]; then
-        dialog --msgbox "The following games were saved to the download queue:\n$saved_games" 15 50
-    else
-        dialog --msgbox "No games were added to the download queue" 8 40
-    fi
+# If any games were saved, display them in a dialog message box
+if [ -n "$saved_games" ]; then
+    dialog --msgbox "The following games were saved to the download queue:\n$saved_games" 15 50
+else
+    dialog --msgbox "No games were added to the download queue" 8 40
+fi
 
     # Clean up temporary file
     rm "$temp_file"
