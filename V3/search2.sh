@@ -44,7 +44,7 @@ search_games() {
     # Process each line in the results and prepare the checklist
     while IFS= read -r line; do
         # Strip file path and line number, leaving only the content after the first colon
-        gameline=$(echo "$line" | sed 's/^[^:]*://')  # Remove file path and line number
+        gameline=$(echo "$line" | sed 's/^[^:]*://')
 
         # Extract game name, URL, and destination from the gameline
         gamename=$(echo "$gameline" | cut -d'|' -f1 | tr -d '`')  # Remove backticks from the game name
