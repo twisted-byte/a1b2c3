@@ -62,7 +62,7 @@ folder=$(basename "$(dirname "$file_path")")  # Extract the folder name of the f
     done <<< "$results"
 
     # Show dialog checklist for the user to select games
-    selected_games=$(dialog --checklist "Select games to save information:" 15 50 8 "${checklist_items[@]}" 2>&1 >/dev/tty)
+    selected_games=$(dialog --checklist "Select games to save information:" 15 80 8 "${checklist_items[@]}" 2>&1 >/dev/tty)
 
     # If the user cancels or exits the checklist, the selected_games will be empty
     if [ -z "$selected_games" ]; then
