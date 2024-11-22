@@ -24,7 +24,6 @@ search_games() {
         exit 1
     fi
 
-    echo "Searching for game name: $game_name"
 
     # Search for game in AllGames.txt files under the specified directory
     results=$(find /userdata/system/game-downloader/links -type f -name "AllGames.txt" -exec grep -iHn "$game_name" {} \; 2>/dev/null)
@@ -35,7 +34,6 @@ search_games() {
         return
     fi
 
-    echo "Search results: $results"
 
     # Prepare temporary file and checklist items array
     temp_file=$(mktemp)
@@ -71,7 +69,6 @@ folder=$(basename "$(dirname "$file_path")")  # Extract the folder name of the f
         exit 0
     fi
 
-    echo "Selected games: $selected_games"
 
     # Initialize a variable to hold the saved games for dialog display
     saved_games=""
@@ -85,14 +82,10 @@ folder=$(basename "$(dirname "$file_path")")  # Extract the folder name of the f
         # Match the cleaned game name with the line in the temporary file
         gameline=$(grep -m 1 "^$game_item_cleaned|" "$temp_file" || true)
 
-        # Debugging output
-        echo "Processing selected game: $game_item_cleaned"
-        echo "Matched line from temp_file: $gameline"
 
         if [ -n "$gameline" ]; then
             # Save the full line to download.txt
             echo "$gameline" >> /userdata/system/game-downloader/download.txt
-            echo "Saved $game_item_cleaned to download.txt"
 
             # Append the saved game info to the saved_games variable
             saved_games+="$game_item_cleaned\n"
@@ -112,8 +105,6 @@ folder=$(basename "$(dirname "$file_path")")  # Extract the folder name of the f
     rm "$temp_file"
 
     clear
-    echo "Download process completed."
-}
 
 # Execute the search_games function
 search_games
