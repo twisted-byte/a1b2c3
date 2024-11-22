@@ -77,11 +77,17 @@ folder=$(basename "$(dirname "$file_path")")  # Extract the folder name of the f
     IFS=$'\n' # Ensure proper handling of selections with spaces
 
 # Adjust to split the input based on .zip, .iso, or .chd
-selected_games=$(echo "$selected_games" | sed 's/\.zip/\.zip\n/g; s/\.iso/\.iso\n/g; s/\.chd/\.chd\n/g')
+selected_games=$(echo "$selected_games" | sed 's/\.zip/\.zip\n/g; s/\.iso/\.iso\n/g; s/\.chd/\.chd\n/g' | sed '/^$/d')
 
 for selected_game in $selected_games; do
     # Remove unwanted characters (like quotes) and trim whitespace
     game_item_cleaned=$(echo "$selected_game" | sed 's/[\\\"`]//g' | sed 's/^[[:space:]]*//g' | sed 's/[[:space:]]*$//g')
+
+    # Skip empty selections
+    if [ -z "$game_item_cleaned" ]; then
+        echo "Skipped empty selection."
+        continue
+    fi
 
     # Debugging output
     echo "Processing cleaned selection: $game_item_cleaned"
