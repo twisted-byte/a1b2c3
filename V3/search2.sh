@@ -54,8 +54,8 @@ search_games() {
         # Save the cleaned data to the temporary file
         echo "$gamename|$url|$destination" >> "$temp_file"
 
-        # Extract folder name for description in the checklist
-        folder=$(basename "$(dirname "$line")")
+       file_path=$(echo "$line" | cut -d':' -f1)  # Extract the file path before the first colon
+folder=$(basename "$(dirname "$file_path")")  # Extract the folder name of the file path
 
         # Add game name to checklist items, default "off" selection
         checklist_items+=("$gamename" "$folder" "off")
