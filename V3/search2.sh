@@ -27,7 +27,7 @@ search_games() {
     echo "Searching for game name: $game_name"
 
     # Search for game in AllGames.txt files under the specified directory
-    results=$(find /userdata/system/game-downloader/links -type f -name "AllGames.txt" -exec grep -iHn "$game_name" {} \;)
+    results=$(find /userdata/system/game-downloader/links -type f -name "AllGames.txt" -exec grep -iHn "$game_name" {} \; 2>/dev/null)
     
     # If no results, show a message and exit
     if [ -z "$results" ]; then
