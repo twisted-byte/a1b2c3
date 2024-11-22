@@ -74,25 +74,29 @@ folder=$(basename "$(dirname "$file_path")")  # Extract the folder name of the f
     saved_games=""
 
     # Process each selected game (handle full name including spaces properly)
-    IFS=$'\n' # Ensure the game names are handled correctly (one per line, even if they have spaces)
-    for selected_game in $selected_games; do
-        # Clean the game item (remove unwanted characters and spaces)
-        game_item_cleaned=$(echo "$selected_game" | sed 's/[\\\"`]//g' | sed 's/^[[:space:]]*//g' | sed 's/[[:space:]]*$//g')
+    IFS=$'\n' # Ensure proper handling of selections with spaces
 
-        # Match the cleaned game name with the line in the temporary file
-        gameline=$(grep -m 1 "^$game_item_cleaned|" "$temp_file" || true)
+# Adjust to split the input based on .zip, .iso, or .chd
+selected_games=$(echo "$selected_games" | sed 's/\.zip/\.zip\n/g; s/\.iso/\.iso\n/g; s/\.chd/\.chd\n/g')
 
+for selected_game in $selected_games; do
+    # Remove unwanted characters (like quotes) and trim whitespace
+    game_item_cleaned=$(echo "$selected_game" | sed 's/[\\\"`]//g' | sed 's/^[[:space:]]*//g' | sed 's/[[:space:]]*$//g')
 
-        if [ -n "$gameline" ]; then
-            # Save the full line to download.txt
-            echo "$gameline" >> /userdata/system/game-downloader/download.txt
+    # Debugging output
+    echo "Processing cleaned selection: $game_item_cleaned"
 
-            # Append the saved game info to the saved_games variable
-            saved_games+="$game_item_cleaned\n"
-        else
-            echo "No matching line found for $game_item_cleaned"
-        fi
-    done
+    # Match the cleaned game name with the line in the temporary file
+    gameline=$(grep -m 1 "^$game_item_cleaned|" "$temp_file" || true)
+
+    if [ -n "$gameline" ]; then
+        # Save the game line to download.txt
+        echo "$gameline" >> /userdata/system/game-downloader/download.txt
+        echo "Saved $game_item_cleaned to download.txt"
+    else
+        echo "No matching line found for $game_item_cleaned"
+    fi
+done
 
     # If any games were saved, display them in a dialog message box
     if [ -n "$saved_games" ]; then
