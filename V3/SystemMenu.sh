@@ -88,21 +88,30 @@ download_game() {
 
 # Function to show the letter selection menu
 select_letter() {
-    letter_list=$(ls "$DEST_DIR/${system}" | grep -oP '^[a-zA-Z#]' | sort | uniq)
+    # Extract files starting with A-Z or "other.txt" and process them
+    letter_list=$(ls "$DEST_DIR/${system}" | grep -E '^[a-zA-Z]|^other\.txt' | sed 's/^other\.txt/other/' | grep -oE '^[a-zA-Z#]+')
 
+    # Separate "other" and other letters
+    letters=$(echo "$letter_list" | grep -v '^other$' | sort)
+    other=$(echo "$letter_list" | grep '^other$')
+
+    # Combine sorted letters with "other" at the end
+    combined_list=$(echo -e "$letters\n$other")
+
+    # Prepare menu options
     menu_options=()
-
     while read -r letter; do
         menu_options+=("$letter" "$letter")
-    done <<< "$letter_list"
+    done <<< "$combined_list"
 
+    # Display the menu
     selected_letter=$(dialog --title "Select a Letter" --menu "Choose a letter" 25 70 10 \
         "${menu_options[@]}" 3>&1 1>&2 2>&3)
 
     if [ -z "$selected_letter" ]; then
         return 1
     else
-        # Otherwise, proceed with the selected letter
+        # Proceed with the selected letter
         select_games "$selected_letter"
     fi
 }
