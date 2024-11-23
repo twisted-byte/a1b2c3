@@ -88,8 +88,8 @@ download_game() {
 
 # Function to show the letter selection menu
 select_letter() {
-    # Extract files starting with A-Z or "other.txt" and process them
-    letter_list=$(ls "$DEST_DIR/${system}" | grep -E '^[a-zA-Z]|^other\.txt' | sed 's/^other\.txt/other/' | grep -oE '^[a-zA-Z#]+')
+    # Extract files starting with A-Z or "other.txt", exclude "AllGames.txt"
+    letter_list=$(ls "$DEST_DIR/${system}" | grep -E '^[a-zA-Z]|^other\.txt' | grep -v '^AllGames\.txt$' | sed 's/^other\.txt/other/' | grep -oE '^[a-zA-Z#]+')
 
     # Separate "other" and other letters
     letters=$(echo "$letter_list" | grep -v '^other$' | sort)
