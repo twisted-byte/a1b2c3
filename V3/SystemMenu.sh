@@ -116,7 +116,7 @@ select_system() {
     menu_options=()
     for system in "${MENU_ORDER[@]}"; do
         if echo "$system_list" | grep -qx "$system"; then
-            menu_options+=("$system" "$system")
+            menu_options+=("$system" "")
         fi
     done
 
