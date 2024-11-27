@@ -9,6 +9,10 @@ LOG_FILE="/userdata/system/game-downloader/download.log"  # Added log file for t
 # Maximum number of parallel downloads
 MAX_PARALLEL=3
 
+# Directories for PC downloads and installer destination
+PC_DOWNLOADS_DIR="/userdata/system/game-downloader/pc"
+INSTALLERS_DIR="/userdata/roms/windows_installers"
+
 # Ensure debug directory exists
 mkdir -p "$(dirname "$DEBUG_LOG")"
 
@@ -144,37 +148,66 @@ process_unzip() {
 
 # Function to check and move .iso files
 move_iso_files() {
-    src_dir="/userdata/saves/flatpak/data"
-    dest_dir="/userdata/roms/windows_installers"
-    find "$src_dir" -type f -name "*.iso" -exec mv {} "$dest_dir" \;
+    find "$PC_DOWNLOADS_DIR" -type f -name "*.bin" | while read bin_file; do
+        cue_file="${bin_file%.bin}.cue"
+        if [ -f "$cue_file" ]; then
+            convert_to_iso "$bin_file" "$cue_file"
+        fi
+    done
 }
 
-# Call move_iso_files function
-move_iso_files
+# Function to convert bin/cue to iso using bchuck
+convert_to_iso() {
+    local bin_file="$1"
+    local cue_file="$2"
+    local iso_file="${bin_file%.bin}.iso"
 
-# Graceful exit handling
-trap 'echo "Cleaning up and exiting."; exit 0' SIGINT SIGTERM
+    # Run bchuck conversion
+    echo "Converting $bin_file and $cue_file to $iso_file"
+    bchuck -c "$cue_file" -o "$iso_file"
 
-# Check internet connection before starting
-check_internet
-if [ $? -ne 0 ]; then
-    echo "No internet connection found. Exiting script."
-    exit 1
-fi
+    if [ $? -eq 0 ]; then
+        echo "Conversion successful: $iso_file"
+        # Move ISO to the installers directory
+        mv "$iso_file" "$INSTALLERS_DIR"
+        echo "Moved $iso_file to $INSTALLERS_DIR"
+    else
+        echo "Failed to convert $bin_file and $cue_file to ISO."
+    fi
+}
 
-# Function to manage parallel downloads
+# Function to adjust parallel downloads dynamically based on system load
+adjust_parallel_downloads() {
+    local load=$(uptime | awk -F'load average: ' '{print $2}' | cut -d',' -f1 | xargs)
+    local max_cpu=$(nproc)
+
+    # Reduce parallel downloads if system load is higher than half CPU count
+    if (( $(echo "$load > $max_cpu / 2" | bc -l) )); then
+        MAX_PARALLEL=$((MAX_PARALLEL - 1))
+        echo "System load high ($load), reducing parallel downloads to $MAX_PARALLEL."
+    else
+        MAX_PARALLEL=$((MAX_PARALLEL + 1))
+        echo "System load low ($load), increasing parallel downloads to $MAX_PARALLEL."
+    fi
+
+    # Ensure MAX_PARALLEL stays within reasonable bounds
+    MAX_PARALLEL=$((MAX_PARALLEL < 1 ? 1 : MAX_PARALLEL))
+    MAX_PARALLEL=$((MAX_PARALLEL > 5 ? 5 : MAX_PARALLEL))  # Cap at 5
+}
+
+# Parallel downloads with dynamic adjustment
 parallel_downloads() {
     local pids=()  # Array to hold background process IDs
 
     while IFS='|' read -r game_name url folder; do
+        # Adjust parallelism based on system load
+        adjust_parallel_downloads
+
         echo "Starting parallel download for: $game_name | $url | $folder"
-        
+
         # Move the line to processing.txt and remove from download.txt
         echo "$game_name|$url|$folder" >> "$DOWNLOAD_PROCESSING"
         update_queue_file "$DOWNLOAD_QUEUE" "$game_name|$url|$folder"
-
-        # Log the download URL
-        log_download "$url"
 
         # Launch download in the background
         process_download "$game_name" "$url" "$folder" &
@@ -182,14 +215,11 @@ parallel_downloads() {
         # Track the background process
         pids+=($!)
 
-        # Limit to MAX_PARALLEL downloads
+        # Wait if reaching the parallel limit
         if [[ ${#pids[@]} -ge $MAX_PARALLEL ]]; then
-            # Wait for one of the processes to finish before starting a new one
             wait -n
-            # Remove finished process IDs from the array
             pids=($(jobs -rp))
         fi
-
     done < "$DOWNLOAD_QUEUE"
 
     # Wait for all remaining processes to finish
@@ -205,6 +235,9 @@ while true; do
     else
         echo "No downloads found in queue."
     fi
+
+    # Move and convert PC downloads
+    move_iso_files
 
     # Pause before checking again
     sleep 10
