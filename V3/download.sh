@@ -16,6 +16,21 @@ INSTALLERS_DIR="/userdata/roms/windows_installers"
 # Ensure debug directory exists
 mkdir -p "$(dirname "$DEBUG_LOG")"
 
+# Check for bchunk in /usr/bin, download it if not found
+check_bchunk() {
+    if ! command -v bchunk &> /dev/null; then
+        echo "bchunk not found, downloading..."
+        wget -q "https://github.com/DTJW92/game-downloader/raw/main/V3/bchunk" -O /usr/bin/bchunk
+        chmod +x /usr/bin/bchunk
+        echo "bchunk downloaded and installed."
+    else
+        echo "bchunk already installed."
+    fi
+}
+
+# Call the function to check for bchunk
+check_bchunk
+
 # Clear debug log for a fresh session
 if [ -f "$DEBUG_LOG" ]; then
     echo "Clearing debug log for the new session." >> "$DEBUG_LOG"
@@ -68,7 +83,6 @@ resume_downloads() {
 # Start resuming downloads
 resume_downloads
 
-# Function to process individual downloads
 # Function to process individual downloads
 process_download() {
     local game_name="$1"
@@ -222,6 +236,7 @@ parallel_downloads() {
         fi
     done < "$DOWNLOAD_QUEUE"
 
+    #
     # Wait for all remaining processes to finish
     wait
 }
