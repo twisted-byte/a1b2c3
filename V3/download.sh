@@ -69,6 +69,7 @@ resume_downloads() {
 resume_downloads
 
 # Function to process individual downloads
+# Function to process individual downloads
 process_download() {
     local game_name="$1"
     local url="$2"
@@ -96,15 +97,14 @@ process_download() {
 
     echo "Download succeeded for $game_name."
 
-    # Handle file based on its extension
-    if [[ "$game_name" == *.zip ]]; then
+    # Check if we need to unzip based on the folder path (exclude unzipping for specific systems)
+    if [[ "$game_name" == *.zip && ! "$folder" =~ ^/userdata/roms/(psvita|dos|atari2600|atari5200|atari7800) ]]; then
+        # If it's a .zip and not in one of the excluded systems, unzip it
         process_unzip "$game_name" "$temp_path" "$folder"
-    elif [[ "$game_name" == *.chd || "$game_name" == *.iso ]]; then
-        echo "Skipping extraction for $game_name. Moving file to destination."
-        mv "$temp_path" "$folder"
     else
-        echo "Unsupported file type for $game_name. Skipping."
-        rm "$temp_path"  # Clean up the downloaded file
+        # If it's in one of the excluded systems or not a .zip, just move it
+        echo "Skipping unzip for $game_name in $folder."
+        mv "$temp_path" "$folder"
     fi
 
     # Remove the line from processing.txt after successful processing
