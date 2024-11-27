@@ -156,7 +156,7 @@ move_iso_files() {
     done
 }
 
-# Function to convert bin/cue to iso using bchuck
+# Function to convert bin/cue to iso using bchunk
 convert_to_iso() {
     local bin_file="$1"
     local cue_file="$2"
@@ -164,7 +164,7 @@ convert_to_iso() {
 
     # Run bchuck conversion
     echo "Converting $bin_file and $cue_file to $iso_file"
-    bchuck -c "$cue_file" -o "$iso_file"
+    bchunk "$bin_file" "$cue_file" "$iso_file"
 
     if [ $? -eq 0 ]; then
         echo "Conversion successful: $iso_file"
