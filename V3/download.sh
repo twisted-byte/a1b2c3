@@ -174,22 +174,35 @@ move_iso_files() {
 convert_to_iso() {
     local bin_file="$1"
     local cue_file="$2"
-    local iso_file="${bin_file%.bin}.iso"
+    local iso_file="${bin_file%.bin}.iso"  # Set the expected ISO name based on the .bin file name
+    local game_folder="/userdata/system/game-downloader/pc/$(basename "$bin_file" .bin)"  # Game folder path based on .bin file name
 
-    # Run bchuck conversion
+    # Run bchunk conversion
     echo "Converting $bin_file and $cue_file to $iso_file"
     bchunk "$bin_file" "$cue_file" "$iso_file"
 
     if [ $? -eq 0 ]; then
         echo "Conversion successful: $iso_file"
+        
+        # Check if the output file is named incorrectly (e.g., .iso01.iso)
+        if [[ -f "${iso_file}01.iso" ]]; then
+            mv "${iso_file}01.iso" "$iso_file"  # Rename to the correct file name
+            echo "Renamed to correct ISO name: $iso_file"
+        fi
+        
         # Move ISO to the installers directory
         mv "$iso_file" "$INSTALLERS_DIR"
         echo "Moved $iso_file to $INSTALLERS_DIR"
+
+        # Remove the game folder after successful conversion and move
+        if [ -d "$game_folder" ]; then
+            rm -rf "$game_folder"
+            echo "Removed game folder: $game_folder"
+        fi
     else
         echo "Failed to convert $bin_file and $cue_file to ISO."
     fi
 }
-
 # Function to adjust parallel downloads dynamically based on system load
 adjust_parallel_downloads() {
     local load=$(uptime | awk -F'load average: ' '{print $2}' | cut -d',' -f1 | xargs)
