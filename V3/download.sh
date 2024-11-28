@@ -4,7 +4,7 @@
 DOWNLOAD_QUEUE="/userdata/system/game-downloader/download.txt"
 DOWNLOAD_PROCESSING="/userdata/system/game-downloader/processing.txt"
 DEBUG_LOG="/userdata/system/game-downloader/debug/debug.txt"
-LOG_FILE="/userdata/system/game-downloader/download.log"  # Added log file for tracking downloads
+LOG_FILE="/userdata/system/game-downloader/download.log"  # Log file for tracking downloads
 
 # Maximum number of parallel downloads
 MAX_PARALLEL=3
@@ -13,8 +13,10 @@ MAX_PARALLEL=3
 PC_DOWNLOADS_DIR="/userdata/system/game-downloader/pc"
 INSTALLERS_DIR="/userdata/roms/windows_installers"
 
-# Ensure debug directory exists
+# Ensure directories exist
 mkdir -p "$(dirname "$DEBUG_LOG")"
+mkdir -p "$(dirname "$LOG_FILE")"
+mkdir -p "$PC_DOWNLOADS_DIR"
 
 # Check for bchunk in /usr/bin, download it if not found
 check_bchunk() {
@@ -37,135 +39,64 @@ if [ -f "$DEBUG_LOG" ]; then
     > "$DEBUG_LOG"
 fi
 
+# Create log file if it doesn't exist
+if [ ! -f "$LOG_FILE" ]; then
+    echo "Creating log file at $LOG_FILE"
+    touch "$LOG_FILE"
+    chmod 644 "$LOG_FILE"
+fi
+
 # Redirect stdout and stderr to debug log
 exec > "$DEBUG_LOG" 2>&1
 
 # Log script start
 echo "Starting game downloader script at $(date)"
 
-# Function to check for active internet connection
-check_internet() {
-    echo "Checking internet connection..."
-    if curl -s --head --connect-timeout 5 http://www.google.com | grep "200 OK" > /dev/null; then
-        echo "Internet connection is active."
-        return 0
-    else
-        echo "No internet connection found."
-        return 1
-    fi
-}
-
-# Function to update queue files safely
-update_queue_file() {
-    local file="$1"
-    local line_to_exclude="$2"
-    awk -v pattern="$line_to_exclude" '!index($0, pattern)' "$file" > temp && mv temp "$file"
-}
-
-# Log download function
+# Function to log downloads
 log_download() {
-    url=$1
-    echo "$url" >> "$LOG_FILE"
-}
-
-# Function to resume downloads
-resume_downloads() {
-    if [ -f "$LOG_FILE" ]; then
-        while IFS= read -r url; do
-            wget -c "$url"
-            if [ $? -eq 0 ]; then
-                sed -i "\|$url|d" "$LOG_FILE"
-            fi
-        done < "$LOG_FILE"
+    local url="$1"
+    if [ -n "$url" ]; then
+        echo "Logging URL to $LOG_FILE: $url"
+        echo "$url" >> "$LOG_FILE"
+    else
+        echo "log_download called with empty URL."
     fi
 }
 
-# Start resuming downloads
-resume_downloads
-
-# Function to process individual downloads
+# Function to process downloads
 process_download() {
     local game_name="$1"
     local url="$2"
     local folder="$3"
-
-    game_name=$(echo "$game_name" | sed 's/[\"]//g')
     local temp_path="/userdata/system/game-downloader/$game_name"
 
-    # Check for existing partial download
-    if [ -f "$temp_path" ]; then
-        echo "Resuming partial download for $game_name..."
+    game_name=$(echo "$game_name" | sed 's/[\"]//g')
+
+    if [ ! -f "$temp_path" ]; then
+        echo "Starting download for $game_name..."
+        wget --tries=5 -c "$url" -O "$temp_path"
+        if [ $? -eq 0 ]; then
+            echo "Download succeeded for $game_name."
+        else
+            echo "Download failed for $game_name."
+        fi
     else
-        echo "$game_name|$url|$folder" >> "$DOWNLOAD_PROCESSING"
-        echo "Started download for $game_name... Logging to processing.txt"
-        update_queue_file "$DOWNLOAD_QUEUE" "$game_name|$url|$folder"
-        echo "Starting new download for $game_name..."
+        echo "Resuming download for $game_name..."
     fi
 
-    # Download with retry and resume logic
-    wget --tries=5 -c "$url" -O "$temp_path" >> "$DEBUG_LOG" 2>&1
-    if [ $? -ne 0 ]; then
-        echo "Download failed for $game_name. Check debug log for details."
-        return
-    fi
-
-    echo "Download succeeded for $game_name."
-
-    # Check if we need to unzip based on the folder path (exclude unzipping for specific systems)
-    if [[ "$game_name" == *.zip && ! "$folder" =~ ^/userdata/roms/(psvita|dos|atari2600|atari5200|atari7800) ]]; then
-        # If it's a .zip and not in one of the excluded systems, unzip it
-        process_unzip "$game_name" "$temp_path" "$folder"
-    else
-        # If it's in one of the excluded systems or not a .zip, just move it
-        echo "Skipping unzip for $game_name in $folder."
-        mv "$temp_path" "$folder"
-    fi
-
-    # Remove the line from processing.txt after successful processing
-    update_queue_file "$DOWNLOAD_PROCESSING" "$game_name|$url|$folder"
-    
-    # Remove the URL from download.log after successful download
+    # Log download completion
     sed -i "\|$url|d" "$LOG_FILE"
-}
-
-# Function to unzip files
-process_unzip() {
-    local game_name="$1"
-    local temp_path="$2"
-    local folder="$3"
-
-    local game_name_no_ext="${game_name%.zip}"
-    local game_folder="/userdata/system/game-downloader/$game_name_no_ext"
-
-    # Clean up existing directory if necessary
-    if [ -d "$game_folder" ]; then
-        echo "Directory $game_folder exists. Cleaning up."
-        rm -rf "$game_folder"
-    fi
-    mkdir -p "$game_folder"
-
-    echo "Unzipping $game_name..."
-    unzip -q "$temp_path" -d "$game_folder"
-    if [ $? -ne 0 ]; then
-        echo "Unzip failed for $game_name."
-        return
-    fi
-
-    # Move unzipped files to target folder
-    mv "$game_folder" "$folder"
-    echo "Moved unzipped files for $game_name to $folder."
-
-    # Remove the .zip file after successful extraction
-    rm "$temp_path"
-    echo "Removed .zip file: $temp_path."
 }
 
 # Function to check and move .iso files
 move_iso_files() {
+    echo "Searching for .bin files in $PC_DOWNLOADS_DIR..."
     find "$PC_DOWNLOADS_DIR" -type f -name "*.bin" | while read bin_file; do
         cue_file="${bin_file%.bin}.cue"
         if [ -f "$cue_file" ]; then
             convert_to_iso "$bin_file" "$cue_file"
+        else
+            echo "No matching .cue for $bin_file"
         fi
     done
 }
@@ -174,97 +105,37 @@ move_iso_files() {
 convert_to_iso() {
     local bin_file="$1"
     local cue_file="$2"
-    local iso_file="${bin_file%.bin}.iso"  # Set the expected ISO name based on the .bin file name
-    local game_folder="/userdata/system/game-downloader/pc/$(basename "$bin_file" .bin)"  # Game folder path based on .bin file name
-
-    # Run bchunk conversion
-    echo "Converting $bin_file and $cue_file to $iso_file"
+    local iso_file="${bin_file%.bin}.iso"
+    echo "Converting $bin_file and $cue_file to $iso_file using bchunk."
     bchunk "$bin_file" "$cue_file" "$iso_file"
-
     if [ $? -eq 0 ]; then
         echo "Conversion successful: $iso_file"
-        
-        # Check if the output file is named incorrectly (e.g., .iso01.iso)
-        if [[ -f "${iso_file}01.iso" ]]; then
-            mv "${iso_file}01.iso" "$iso_file"  # Rename to the correct file name
-            echo "Renamed to correct ISO name: $iso_file"
-        fi
-        
-        # Move ISO to the installers directory
         mv "$iso_file" "$INSTALLERS_DIR"
-        echo "Moved $iso_file to $INSTALLERS_DIR"
-
-        # Remove the game folder after successful conversion and move
-        if [ -d "$game_folder" ]; then
-            rm -rf "$game_folder"
-            echo "Removed game folder: $game_folder"
-        fi
     else
-        echo "Failed to convert $bin_file and $cue_file to ISO."
+        echo "Conversion failed for $bin_file and $cue_file."
     fi
 }
-# Function to adjust parallel downloads dynamically based on system load
-adjust_parallel_downloads() {
-    local load=$(uptime | awk -F'load average: ' '{print $2}' | cut -d',' -f1 | xargs)
-    local max_cpu=$(nproc)
 
-    # Reduce parallel downloads if system load is higher than half CPU count
-    if (( $(echo "$load > $max_cpu / 2" | bc -l) )); then
-        MAX_PARALLEL=$((MAX_PARALLEL - 1))
-        echo "System load high ($load), reducing parallel downloads to $MAX_PARALLEL."
-    else
-        MAX_PARALLEL=$((MAX_PARALLEL + 1))
-        echo "System load low ($load), increasing parallel downloads to $MAX_PARALLEL."
-    fi
-
-    # Ensure MAX_PARALLEL stays within reasonable bounds
-    MAX_PARALLEL=$((MAX_PARALLEL < 1 ? 1 : MAX_PARALLEL))
-    MAX_PARALLEL=$((MAX_PARALLEL > 5 ? 5 : MAX_PARALLEL))  # Cap at 5
-}
-
-# Parallel downloads with dynamic adjustment
+# Parallel downloads
 parallel_downloads() {
-    local pids=()  # Array to hold background process IDs
-
     while IFS='|' read -r game_name url folder; do
-        # Adjust parallelism based on system load
-        adjust_parallel_downloads
-
-        echo "Starting parallel download for: $game_name | $url | $folder"
-
-        # Move the line to processing.txt and remove from download.txt
-        echo "$game_name|$url|$folder" >> "$DOWNLOAD_PROCESSING"
-        update_queue_file "$DOWNLOAD_QUEUE" "$game_name|$url|$folder"
-
-        # Launch download in the background
-        process_download "$game_name" "$url" "$folder" &
-
-        # Track the background process
-        pids+=($!)
-
-        # Wait if reaching the parallel limit
-        if [[ ${#pids[@]} -ge $MAX_PARALLEL ]]; then
-            wait -n
-            pids=($(jobs -rp))
+        if [[ -n "$game_name" && -n "$url" ]]; then
+            echo "Processing download: $game_name | $url | $folder"
+            process_download "$game_name" "$url" "$folder"
         fi
     done < "$DOWNLOAD_QUEUE"
-
-    #
-    # Wait for all remaining processes to finish
-    wait
 }
 
 # Continuous script loop
 while true; do
     echo "Checking for new downloads at $(date)"
-
     if [[ -f "$DOWNLOAD_QUEUE" && -s "$DOWNLOAD_QUEUE" ]]; then
         parallel_downloads
     else
         echo "No downloads found in queue."
     fi
 
-    # Move and convert PC downloads
+    # Check for .bin files and convert to .iso
     move_iso_files
 
     # Pause before checking again
