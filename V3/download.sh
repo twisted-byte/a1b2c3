@@ -136,17 +136,18 @@ process_unzip() {
 
 # Function to move and convert .bin/.cue to .iso
 move_iso_files() {
-    # Search for .bin files recursively in the PC_DOWNLOADS_DIR
-    find "$PC_DOWNLOADS_DIR" -type f -name "*.bin" | while read bin_file; do
-        # Get the corresponding .cue file
-        cue_file="${bin_file%.bin}.cue"
-        
-        # Check if the .cue file exists
-        if [ -f "$cue_file" ]; then
-            # Call the conversion function for the .bin/.cue pair
+    # Search for .cue files recursively in the PC_DOWNLOADS_DIR
+    find "$PC_DOWNLOADS_DIR" -type f -name "*.cue" | while read cue_file; do
+        # Check for the first .bin file referenced in the .cue file
+        bin_file=$(grep -i "FILE" "$cue_file" | awk -F'"' '{print $2}' | head -n 1)
+
+        # If the .bin file exists relative to the .cue file's location
+        if [ -f "$(dirname "$cue_file")/$bin_file" ]; then
+            bin_file="$(dirname "$cue_file")/$bin_file"
+            # Call the conversion function with the .bin and .cue file
             convert_to_iso "$bin_file" "$cue_file"
         else
-            echo "Cue file not found for $bin_file, skipping."
+            echo "Referenced .bin file ($bin_file) not found for $cue_file. Skipping."
         fi
     done
 }
