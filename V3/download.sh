@@ -136,18 +136,19 @@ process_unzip() {
 
 # Function to move and convert .bin/.cue to .iso
 move_iso_files() {
-    # Search for .cue files recursively in the PC_DOWNLOADS_DIR
-    find "$PC_DOWNLOADS_DIR" -type f -name "*.cue" | while read cue_file; do
-        # Check for the first .bin file referenced in the .cue file
-        bin_file=$(grep -i "FILE" "$cue_file" | awk -F'"' '{print $2}' | head -n 1)
+    find "$PC_DOWNLOADS_DIR" -type f -name "*.bin" | while read bin_file; do
+        # Identify the folder containing the .bin file
+        bin_folder=$(dirname "$bin_file")
 
-        # If the .bin file exists relative to the .cue file's location
-        if [ -f "$(dirname "$cue_file")/$bin_file" ]; then
-            bin_file="$(dirname "$cue_file")/$bin_file"
-            # Call the conversion function with the .bin and .cue file
+        # Locate the .cue file in the same folder as the .bin file
+        cue_file=$(find "$bin_folder" -maxdepth 1 -type f -name "*.cue" | head -n 1)
+
+        # If a .cue file exists, process the .bin/.cue pair
+        if [ -n "$cue_file" ]; then
+            echo "Found matching .cue for $bin_file: $cue_file"
             convert_to_iso "$bin_file" "$cue_file"
         else
-            echo "Referenced .bin file ($bin_file) not found for $cue_file. Skipping."
+            echo "No .cue file found for $bin_file. Skipping."
         fi
     done
 }
@@ -156,32 +157,29 @@ move_iso_files() {
 convert_to_iso() {
     local bin_file="$1"
     local cue_file="$2"
-    local iso_file="${bin_file%.bin}.iso"  # Set the expected ISO name based on the .bin file name
-    local game_folder="${bin_file%/*}"    # Parent folder of the .bin file
-    
-    # Run bchunk conversion
-    echo "Converting $bin_file and $cue_file to $iso_file"
-    bchunk "$bin_file" "$cue_file" "${bin_file%.bin}"
+    local iso_file="${cue_file%.cue}.iso"  # Set the ISO name based on the .cue file's name (without extension)
+
+    echo "Converting .bin/.cue pair to $iso_file"
+
+    # Run bchunk conversion to create a single .iso from all .bin files listed in the .cue file
+    bchunk "$bin_file" "$cue_file" "$iso_file"
 
     if [ $? -eq 0 ]; then
         echo "Conversion successful: $iso_file"
         
-        # Check if the output file is named incorrectly (e.g., .iso01.iso)
-        if [[ -f "${iso_file}01.iso" ]]; then
-            mv "${iso_file}01.iso" "$iso_file"  # Rename to the correct file name
-            echo "Renamed to correct ISO name: $iso_file"
-        fi
-        
-        # Move the ISO file to the installers directory
+        # Move the ISO to the installers directory
         mv "$iso_file" "$INSTALLERS_DIR"
         echo "Moved $iso_file to $INSTALLERS_DIR"
 
-        # Remove the original .bin, .cue, and parent game folder
+        # Clean up all the .bin and .cue files after successful conversion
         rm -f "$bin_file" "$cue_file"
-        rm -rf "$game_folder"
-        echo "Removed game folder: $game_folder"
+        local game_folder=$(dirname "$bin_file")
+        if [ -d "$game_folder" ]; then
+            rm -rf "$game_folder"
+            echo "Cleaned up folder: $game_folder"
+        fi
     else
-        echo "Failed to convert $bin_file and $cue_file to ISO."
+        echo "Conversion failed for $bin_file using $cue_file"
     fi
 }
 
