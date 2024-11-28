@@ -146,7 +146,7 @@ move_iso_files() {
         # If a .cue file exists, process the .bin/.cue pair
         if [ -n "$cue_file" ]; then
             echo "Found matching .cue for $bin_file: $cue_file"
-            convert_to_iso "$bin_file" "$cue_file"
+            convert_to_iso "$bin_file" "$cue_file" "$bin_folder"
         else
             echo "No .cue file found for $bin_file. Skipping."
         fi
@@ -157,26 +157,41 @@ move_iso_files() {
 convert_to_iso() {
     local bin_file="$1"
     local cue_file="$2"
-    local iso_file="${cue_file%.cue}.iso"  # Set the ISO name based on the .cue file's name (without extension)
+    local bin_folder="$3"
+    
+    # Set the base name for the ISO based on the .cue file (remove the .cue extension)
+    local iso_base_name="${cue_file%.cue}"
+    
+    # Run bchunk conversion to create all related files (e.g., .iso01.iso, .iso02.cdr, etc.)
+    echo "Converting .bin/.cue pair to $iso_base_name.iso"
 
-    echo "Converting .bin/.cue pair to $iso_file"
-
-    # Run bchunk conversion to create a single .iso from all .bin files listed in the .cue file
-    bchunk "$bin_file" "$cue_file" "$iso_file"
+    bchunk "$bin_file" "$cue_file" "$iso_base_name"
 
     if [ $? -eq 0 ]; then
-        echo "Conversion successful: $iso_file"
-        
-        # Move the ISO to the installers directory
-        mv "$iso_file" "$INSTALLERS_DIR"
-        echo "Moved $iso_file to $INSTALLERS_DIR"
+        echo "Conversion successful."
 
-        # Clean up all the .bin and .cue files after successful conversion
-        rm -f "$bin_file" "$cue_file"
-        local game_folder=$(dirname "$bin_file")
-        if [ -d "$game_folder" ]; then
-            rm -rf "$game_folder"
-            echo "Cleaned up folder: $game_folder"
+        # Create a subfolder in the installers directory named after the original bin folder
+        local install_folder="$INSTALLERS_DIR/$(basename "$bin_folder")"
+        mkdir -p "$install_folder"
+
+        # Move all files created by bchunk (e.g., .iso, .cdr) to the new folder
+        find "$bin_folder" -type f -name "*.iso*" -o -name "*.cdr" -exec mv {} "$install_folder" \;
+
+        # Check if the move was successful
+        if [ $? -eq 0 ]; then
+            echo "Moved ISO files to $install_folder"
+
+            # Clean up original .bin, .cue, and the folder containing them after successful move
+            rm -f "$bin_file" "$cue_file"
+            echo "Removed original files: $bin_file and $cue_file"
+
+            # Only remove the folder if it no longer contains any .bin or .cue files
+            if [ -z "$(find "$bin_folder" -type f -name "*.bin" -o -name "*.cue")" ]; then
+                rm -rf "$bin_folder"
+                echo "Removed original folder: $bin_folder"
+            fi
+        else
+            echo "Failed to move ISO files to $install_folder"
         fi
     else
         echo "Conversion failed for $bin_file using $cue_file"
