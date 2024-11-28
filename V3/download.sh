@@ -136,11 +136,17 @@ process_unzip() {
 
 # Function to move and convert .bin/.cue to .iso
 move_iso_files() {
-    echo "Checking for .bin files in $PC_DOWNLOADS_DIR..."
+    # Search for .bin files recursively in the PC_DOWNLOADS_DIR
     find "$PC_DOWNLOADS_DIR" -type f -name "*.bin" | while read bin_file; do
-        local cue_file="${bin_file%.bin}.cue"
+        # Get the corresponding .cue file
+        cue_file="${bin_file%.bin}.cue"
+        
+        # Check if the .cue file exists
         if [ -f "$cue_file" ]; then
+            # Call the conversion function for the .bin/.cue pair
             convert_to_iso "$bin_file" "$cue_file"
+        else
+            echo "Cue file not found for $bin_file, skipping."
         fi
     done
 }
@@ -149,15 +155,32 @@ move_iso_files() {
 convert_to_iso() {
     local bin_file="$1"
     local cue_file="$2"
-    local iso_file="${bin_file%.bin}.iso"
-
+    local iso_file="${bin_file%.bin}.iso"  # Set the expected ISO name based on the .bin file name
+    local game_folder="${bin_file%/*}"    # Parent folder of the .bin file
+    
+    # Run bchunk conversion
     echo "Converting $bin_file and $cue_file to $iso_file"
-    bchunk "$bin_file" "$cue_file" "${iso_file%.iso}"
+    bchunk "$bin_file" "$cue_file" "${bin_file%.bin}"
+
     if [ $? -eq 0 ]; then
+        echo "Conversion successful: $iso_file"
+        
+        # Check if the output file is named incorrectly (e.g., .iso01.iso)
+        if [[ -f "${iso_file}01.iso" ]]; then
+            mv "${iso_file}01.iso" "$iso_file"  # Rename to the correct file name
+            echo "Renamed to correct ISO name: $iso_file"
+        fi
+        
+        # Move the ISO file to the installers directory
         mv "$iso_file" "$INSTALLERS_DIR"
+        echo "Moved $iso_file to $INSTALLERS_DIR"
+
+        # Remove the original .bin, .cue, and parent game folder
         rm -f "$bin_file" "$cue_file"
+        rm -rf "$game_folder"
+        echo "Removed game folder: $game_folder"
     else
-        echo "Conversion failed for $bin_file and $cue_file."
+        echo "Failed to convert $bin_file and $cue_file to ISO."
     fi
 }
 
