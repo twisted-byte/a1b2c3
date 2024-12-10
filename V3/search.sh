@@ -54,30 +54,29 @@ search_games() {
     # Initialize a variable to hold the saved games for dialog display
     saved_games=""
 
-    IFS=$'\n'
-    selected_games=$(echo "$selected_games" | sed 's/[()]/\n/g' | sed '/^$/d')
+   IFS=$'\n'
+selected_games=$(echo "$selected_games" | sed 's/\.zip/\.zip\n/g; s/\.iso/\.iso\n/g; s/\.chd/\.chd\n/g' | sed '/^$/d')
 
-    for selected_game in $selected_games; do
-        game_item_cleaned=$(echo "$selected_game" | sed 's/[\\\"`]//g' | sed 's/^[[:space:]]*//g' | sed 's/[[:space:]]*$//g')
+for selected_game in $selected_games; do
+    game_item_cleaned=$(echo "$selected_game" | sed 's/[\\\"`]//g' | sed 's/^[[:space:]]*//g' | sed 's/[[:space:]]*$//g')
 
-        if [ -z "$game_item_cleaned" ]; then
-            continue
-        fi
-
-        # Match game name and system in the temporary file
-        gameline=$(grep -m 1 "^$game_item_cleaned|" "$temp_file" || true)
-
-        if [ -n "$gameline" ]; then
-            echo "$gameline" >> /userdata/system/game-downloader/download.txt
-            saved_games+="$game_item_cleaned\n"
-        fi
-    done
-
-    if [ -n "$saved_games" ]; then
-        dialog --msgbox "The following games were saved to the download queue:\n$saved_games" 15 50
-    else
-        dialog --msgbox "No games were added to the download queue" 8 40
+    if [ -z "$game_item_cleaned" ]; then
+        continue
     fi
+
+    gameline=$(grep -m 1 "^$game_item_cleaned|" "$temp_file" || true)
+
+    if [ -n "$gameline" ]; then
+        echo "$gameline" >> /userdata/system/game-downloader/download.txt
+        saved_games+="$game_item_cleaned\n"
+    fi
+done
+
+if [ -n "$saved_games" ]; then
+    dialog --msgbox "The following games were saved to the download queue:\n$saved_games" 15 50
+else
+    dialog --msgbox "No games were added to the download queue" 8 40
+fi
 
     # Clean up temporary file
     rm "$temp_file"
