@@ -15,7 +15,7 @@ check_downloads() {
         dialog --msgbox "Still downloading:\n$game_names" 10 50
     else 
         # If processing.txt is empty, all downloads are processed
-        dialog --infobox "Nothing downloading! Update your game list to see your new games! Don't forget to scrape for artwork!" 15 50
+        dialog --msgbox "Nothing downloading! Update your game list to see your new games! Don't forget to scrape for artwork!" 10 50
         sleep 5
     fi
 }
