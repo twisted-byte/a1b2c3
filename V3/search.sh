@@ -91,7 +91,7 @@ search_games() {
         echo "Processing cleaned selection: $game_item_cleaned"
         
         # Match the cleaned game name with the line in the temporary file using the correct format
-      gameline=$(grep -m 1 -F "^$folder - $gamename|" "$temp_file" || true)
+      gameline=$(grep -m 1 -F "$folder - $gamename" "$temp_file" || true)
 
         if [ -n "$gameline" ]; then
             # Save the game line to download.txt
