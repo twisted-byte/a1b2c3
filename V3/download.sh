@@ -73,6 +73,9 @@ process_download() {
     game_name=$(echo "$game_name" | sed 's/[\"]//g')
     local temp_path="/userdata/system/game-downloader/$game_name"
 
+    # Ensure the temporary directory exists
+    mkdir -p "$(dirname "$temp_path")"
+
     # Check for existing partial download
     if [ -f "$temp_path" ]; then
         echo "Resuming partial download for $game_name..."
@@ -109,6 +112,7 @@ process_download() {
     # Remove the URL from download.log after successful download
     sed -i "\|$url|d" "$LOG_FILE"
 }
+
 
 # Function to unzip files
 process_unzip() {
