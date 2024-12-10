@@ -51,7 +51,7 @@ search_games() {
         echo "$folder - $gamename|$url|$destination" >> "$temp_file"
         
         # Add game name to menu items
-        menu_items+=("$folder - $gamename" "$folder - $gamename")
+        menu_items+=("$folder - $gamename" "")
     done <<< "$results"
 
     # Debugging: Print the contents of the temporary file
