@@ -89,7 +89,8 @@ search_games() {
 
         # Debugging output
         echo "Processing cleaned selection: $game_item_cleaned"
-        # Match the cleaned game name with the line in the temporary file
+        
+        # Match the cleaned game name with the line in the temporary file using the correct format
         gameline=$(grep -m 1 "^$folder|$game_item_cleaned|" "$temp_file" || true)
 
         if [ -n "$gameline" ]; then
