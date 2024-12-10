@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Set the display environment variable
-DISPLAY=:0.0
+export DISPLAY=:0.0
 
 # Define the local path to save GameDownloader.sh
 LOCAL_SCRIPT_PATH="/tmp/GameDownloader.sh"
