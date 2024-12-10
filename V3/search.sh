@@ -95,7 +95,7 @@ search_games() {
 
         if [ -n "$gameline" ]; then
             # Save the game line to download.txt
-            echo "$gameline" >> /userdata/system/game-downloader/download.txt
+            echo "$gamename|$url|$destination" >> /userdata/system/game-downloader/download.txt
             echo "Saved $game_item_cleaned to download.txt"
             # Append the saved game info to the saved_games variable for final display
             saved_games+="$game_item_cleaned\n"
