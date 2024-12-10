@@ -95,11 +95,11 @@ search_games() {
 
         if [ -n "$gameline" ]; then
         
-        gamename=$(echo "$gameline" | cut -d'|' -f1 | sed 's/^[^ ]* - //') 
-        url=$(echo "$gameline" | cut -d'|' -f2)
-        destination=$(echo "$gameline" | cut -d'|' -f3)
+        gamename2=$(echo "$gameline" | cut -d'|' -f1 | sed 's/^[^ ]* - //') 
+        url2=$(echo "$gameline" | cut -d'|' -f2)
+        destination2=$(echo "$gameline" | cut -d'|' -f3)
             # Save the exact match game line to download.txt
-            echo "$gamename|$url|$destination" >> /userdata/system/game-downloader/download.txt
+            echo "$gamename2|$url2|$destination2" >> /userdata/system/game-downloader/download.txt
             echo "Saved $game_item_cleaned to download.txt"
             # Append the saved game info to the saved_games variable for final display
             saved_games+="$game_item_cleaned\n"
