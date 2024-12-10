@@ -43,10 +43,13 @@ search_games() {
         gamename=$(echo "$gameline" | cut -d'|' -f1 | tr -d '`')  # Remove backticks from the game name
         url=$(echo "$gameline" | cut -d'|' -f2)
         destination=$(echo "$gameline" | cut -d'|' -f3)
-        # Save the cleaned data to the temporary file
-        echo "$gamename|$url|$destination" >> "$temp_file"
+        # Extract the file path and folder name from the line before saving to the temp file
         file_path=$(echo "$line" | cut -d':' -f1)  # Extract the file path before the first colon
         folder=$(basename "$(dirname "$file_path")")  # Extract the folder name of the file path
+        
+        # Save the folder, game name, URL, and destination to the temporary file
+        echo "$folder|$gamename|$url|$destination" >> "$temp_file"
+        
         # Add game name to checklist items, default "off" selection
         checklist_items+=("$folder - $gamename" "" "off")
     done <<< "$results"
