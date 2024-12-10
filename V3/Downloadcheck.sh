@@ -1,8 +1,5 @@
 #!/bin/bash
 
-# Set the display environment variable for GUI-based applications
-export DISPLAY=:0.0
-
 # Main entry: specify download file
 download_file="/userdata/system/game-downloader/processing.txt"
 
