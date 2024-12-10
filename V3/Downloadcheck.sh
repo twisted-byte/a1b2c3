@@ -16,13 +16,11 @@ check_downloads() {
     else 
         # If processing.txt is empty, all downloads are processed
         dialog --msgbox "Nothing downloading! Update your game list to see your new games! Don't forget to scrape for artwork!" 10 50
-        sleep 5
     fi
 }
 
 # Start showing download progress
 check_downloads
-sleep 3
 
 # Optionally, call GameDownloader.sh after progress is done
 exec /tmp/GameDownloader.sh
