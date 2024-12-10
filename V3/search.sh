@@ -38,18 +38,23 @@ search_games() {
     # Process each line in the results and prepare the checklist
     while IFS= read -r line; do
         # Strip file path and line number, leaving only the content after the first colon
-       gameline=$(echo "$line" | sed 's/^[^:]*:[^:]*://')
+        gameline=$(echo "$line" | sed 's/^[^:]*:[^:]*://')
         # Extract game name, URL, and destination from the gameline
         gamename=$(echo "$gameline" | cut -d'|' -f1 | tr -d '`')  # Remove backticks from the game name
         url=$(echo "$gameline" | cut -d'|' -f2)
         destination=$(echo "$gameline" | cut -d'|' -f3)
         # Save the cleaned data to the temporary file
         echo "$gamename|$url|$destination" >> "$temp_file"
-       file_path=$(echo "$line" | cut -d':' -f1)  # Extract the file path before the first colon
-folder=$(basename "$(dirname "$file_path")")  # Extract the folder name of the file path
+        file_path=$(echo "$line" | cut -d':' -f1)  # Extract the file path before the first colon
+        folder=$(basename "$(dirname "$file_path")")  # Extract the folder name of the file path
         # Add game name to checklist items, default "off" selection
         checklist_items+=("$folder - $gamename" "" "off")
     done <<< "$results"
+
+    # Debugging: Print the contents of the temporary file
+    echo "Contents of temp file ($temp_file):"
+    cat "$temp_file"
+    echo "End of temp file contents."
 
     # Show dialog checklist for the user to select games
     selected_games=$(dialog --checklist "Select games to save information:" 15 60 8 "${checklist_items[@]}" 2>&1 >/dev/tty)
@@ -65,43 +70,42 @@ folder=$(basename "$(dirname "$file_path")")  # Extract the folder name of the f
     saved_games=""
 
     # Process each selected game (handle full name including spaces properly)
-    # Process each selected game (handle full name including spaces properly)
-IFS=$'\n' # Ensure proper handling of selections with spaces
-# Adjust to split the input based on .zip, .iso, or .chd
-selected_games=$(echo "$selected_games" | sed 's/\.zip/\.zip\n/g; s/\.iso/\.iso\n/g; s/\.chd/\.chd\n/g' | sed '/^$/d')
+    IFS=$'\n' # Ensure proper handling of selections with spaces
+    # Adjust to split the input based on .zip, .iso, or .chd
+    selected_games=$(echo "$selected_games" | sed 's/\.zip/\.zip\n/g; s/\.iso/\.iso\n/g; s/\.chd/\.chd\n/g' | sed '/^$/d')
 
-for selected_game in $selected_games; do
-    # Remove unwanted characters (like quotes) and trim whitespace
-    game_item_cleaned=$(echo "$selected_game" | sed 's/[\\\"`]//g' | sed 's/^[[:space:]]*//g' | sed 's/[[:space:]]*$//g')
+    for selected_game in $selected_games; do
+        # Remove unwanted characters (like quotes) and trim whitespace
+        game_item_cleaned=$(echo "$selected_game" | sed 's/[\\\"`]//g' | sed 's/^[[:space:]]*//g' | sed 's/[[:space:]]*$//g')
 
-    # Skip empty selections
-    if [ -z "$game_item_cleaned" ]; then
-        echo "Skipped empty selection."
-        continue
-    fi
+        # Skip empty selections
+        if [ -z "$game_item_cleaned" ]; then
+            echo "Skipped empty selection."
+            continue
+        fi
 
-    # Debugging output
-    echo "Processing cleaned selection: $game_item_cleaned"
-    # Match the cleaned game name with the line in the temporary file
-    gameline=$(grep -m 1 "^$folder|$game_item_cleaned|" "$temp_file" || true)
+        # Debugging output
+        echo "Processing cleaned selection: $game_item_cleaned"
+        # Match the cleaned game name with the line in the temporary file
+        gameline=$(grep -m 1 "^$folder|$game_item_cleaned|" "$temp_file" || true)
 
-    if [ -n "$gameline" ]; then
-        # Save the game line to download.txt
-        echo "$gameline" >> /userdata/system/game-downloader/download.txt
-        echo "Saved $game_item_cleaned to download.txt"
-        # Append the saved game info to the saved_games variable for final display
-        saved_games+="$game_item_cleaned\n"
+        if [ -n "$gameline" ]; then
+            # Save the game line to download.txt
+            echo "$gameline" >> /userdata/system/game-downloader/download.txt
+            echo "Saved $game_item_cleaned to download.txt"
+            # Append the saved game info to the saved_games variable for final display
+            saved_games+="$game_item_cleaned\n"
+        else
+            echo "No matching line found for $game_item_cleaned"
+        fi
+    done
+
+    # If any games were saved, display them in a dialog message box
+    if [ -n "$saved_games" ]; then
+        dialog --msgbox "The following games were saved to the download queue:\n$saved_games" 15 50
     else
-        echo "No matching line found for $game_item_cleaned"
+        dialog --msgbox "No games were added to the download queue" 8 40
     fi
-done
-
-# If any games were saved, display them in a dialog message box
-if [ -n "$saved_games" ]; then
-    dialog --msgbox "The following games were saved to the download queue:\n$saved_games" 15 50
-else
-    dialog --msgbox "No games were added to the download queue" 8 40
-fi
 
     # Clean up temporary file
     rm "$temp_file"
