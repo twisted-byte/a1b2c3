@@ -89,18 +89,22 @@ search_games() {
 
         # Debugging output
         echo "Processing cleaned selection: $game_item_cleaned"
-        
-        # Match the cleaned game name with the line in the temporary file using the correct format
-      gameline=$(grep -m 1 "^$folder - $gamename$" "$temp_file" || true)
+
+        # Match the cleaned game name with the entire line in the temporary file using the exact format
+        gameline=$(grep -m 1 -F "$folder - $gamename" "$temp_file" || true)
 
         if [ -n "$gameline" ]; then
-            # Save the game line to download.txt
+        
+        gamename=$(echo "$gameline" | cut -d'|' -f1 | sed 's/^[^ ]* - //') 
+        url=$(echo "$gameline" | cut -d'|' -f2)
+        destination=$(echo "$gameline" | cut -d'|' -f3)
+            # Save the exact match game line to download.txt
             echo "$gamename|$url|$destination" >> /userdata/system/game-downloader/download.txt
             echo "Saved $game_item_cleaned to download.txt"
             # Append the saved game info to the saved_games variable for final display
             saved_games+="$game_item_cleaned\n"
         else
-            echo "No matching line found for $game_item_cleaned"
+            echo "No exact match found for $game_item_cleaned"
         fi
     done
 
