@@ -48,7 +48,7 @@ search_games() {
         folder=$(basename "$(dirname "$file_path")")  # Extract the folder name of the file path
         
         # Save the folder, game name, URL, and destination to the temporary file
-        echo "$folder|$gamename|$url|$destination" >> "$temp_file"
+        echo "$folder - $gamename|$url|$destination" >> "$temp_file"
         
         # Add game name to checklist items, default "off" selection
         checklist_items+=("$folder - $gamename" "" "off")
