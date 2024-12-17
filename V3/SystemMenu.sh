@@ -89,15 +89,14 @@ download_game() {
 # Function to show the letter selection menu
 select_letter() {
     # Extract files starting with A-Z or "other.txt", exclude "AllGames.txt"
-    letter_list=$(ls "$DEST_DIR/${system}" | grep -E '^[a-zA-Z]|^other\.txt|^AllGames\.txt' | sed 's/^other\.txt/other/' | sed 's/^AllGames\.txt/AllGames/' | grep -oE '^[a-zA-Z#]+')
+    letter_list=$(ls "$DEST_DIR/${system}" | grep -E '^[a-zA-Z]|^other\.txt' | grep -v '^AllGames\.txt$' | sed 's/^other\.txt/other/' | grep -oE '^[a-zA-Z#]+')
 
-    # Separate "AllGames", "other", and other letters
-    all=$(echo "$letter_list" | grep '^AllGames$')
-    letters=$(echo "$letter_list" | grep -v '^other$' | grep -v '^AllGames$' | sort)
+    # Separate "other" and other letters
+    letters=$(echo "$letter_list" | grep -v '^other$' | sort)
     other=$(echo "$letter_list" | grep '^other$')
 
-    # Combine "AllGames" at the top, sorted letters, and "other" at the end
-    combined_list=$(echo -e "$all\n$letters\n$other")
+    # Combine sorted letters with "other" at the end
+    combined_list=$(echo -e "$letters\n$other")
 
     # Prepare menu options
     menu_options=()
@@ -116,7 +115,6 @@ select_letter() {
         select_games "$selected_letter"
     fi
 }
-
 
 # Function to show the system selection menu
 select_system() {
