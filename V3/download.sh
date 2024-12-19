@@ -9,6 +9,10 @@ LOG_FILE="/userdata/system/game-downloader/download.log"  # Added log file for t
 # Maximum number of parallel downloads
 MAX_PARALLEL=3
 
+if [[ "$1" != "start" ]]; then
+  exit 0
+fi
+
 # Ensure debug directory exists
 mkdir -p "$(dirname "$DEBUG_LOG")"
 
