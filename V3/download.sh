@@ -4,7 +4,7 @@
 DOWNLOAD_QUEUE="/userdata/system/game-downloader/download.txt"
 DOWNLOAD_PROCESSING="/userdata/system/game-downloader/processing.txt"
 DEBUG_LOG="/userdata/system/game-downloader/debug/debug.txt"
-LOG_FILE="/userdata/system/game-downloader/download.log"  # Added log file for tracking downloads
+LOG_FILE="/userdata/system/game-downloader/download.log"
 SERVICE_STATUS_FILE="/userdata/system/game-downloader/downloader_service_status"
 
 # Maximum number of parallel downloads (initial value)
@@ -57,7 +57,6 @@ get_dynamic_parallel_limit() {
     local cpu_count=$(nproc)  # Number of CPU cores
 
     # Calculate the dynamic parallel limit
-    # Assuming each core can handle a load of 1. Adjust this multiplier if needed.
     local limit=$(echo "$cpu_count / $load" | bc -l)
 
     # Ensure at least one download runs, and cap at a max limit (e.g., 10)
@@ -218,6 +217,7 @@ parallel_downloads() {
 
                 # Start the download in the background
                 process_download "$game_name" "$url" "$folder" &
+
                 pids+=($!)
 
                 # Limit to dynamically calculated parallel downloads
