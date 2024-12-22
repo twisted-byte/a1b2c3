@@ -83,14 +83,14 @@ process_download() {
     mkdir -p "$(dirname "$temp_path")"
 
     # Mark the download as "downloading"
-    sed -i "s|$game_name|$game_name|downloading|" "$DOWNLOAD_PROCESSING"
+    sed -i "$game_name|$game_name|downloading|" "$DOWNLOAD_PROCESSING"
 
     # Resume or start download
     echo "Downloading $game_name..."
     wget --tries=5 -c "$url" -O "$temp_path"
     if [ $? -ne 0 ]; then
         echo "Download failed for $game_name. Logging as incomplete."
-        sed -i "s|$game_name|$game_name|incomplete|" "$DOWNLOAD_PROCESSING"
+        sed -i "$game_name|$game_name|incomplete|" "$DOWNLOAD_PROCESSING"
         return 1
     fi
 
@@ -100,7 +100,7 @@ process_download() {
     if ! validate_checksum "$temp_path" "$checksum_file"; then
         echo "Invalid checksum for $game_name. Removing file and marking as incomplete."
         rm "$temp_path"
-        sed -i "s|$game_name|$game_name|incomplete|" "$DOWNLOAD_PROCESSING"
+        sed -i "$game_name|$game_name|incomplete|" "$DOWNLOAD_PROCESSING"
         return 1
     fi
 
@@ -116,7 +116,7 @@ process_download() {
     fi
 
     # Mark the download as "complete"
-    sed -i "s|$game_name|$game_name|complete|" "$DOWNLOAD_PROCESSING"
+    sed -i "$game_name|$game_name|complete|" "$DOWNLOAD_PROCESSING"
 }
 
 # Function to unzip files
