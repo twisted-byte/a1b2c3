@@ -114,7 +114,7 @@ process_download() {
     fi
 
     # Log progress in processing.txt
-    echo "Starting download for $game_name from $url" >> "$DOWNLOAD_PROCESSING"
+    echo "$game_name|$url|$folder" >> "$DOWNLOAD_PROCESSING"
 
     wget --tries=5 -c "$url" -O "$temp_path" >> "$DEBUG_LOG" 2>&1
     if [ $? -ne 0 ]; then
