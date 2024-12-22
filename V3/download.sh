@@ -1,4 +1,4 @@
-F#!/bin/bash
+#!/bin/bash
 
 # Paths to files and logs
 DOWNLOAD_QUEUE="/userdata/system/game-downloader/download.txt"
@@ -8,6 +8,7 @@ SERVICE_STATUS_FILE="/userdata/system/game-downloader/downloader_service_status"
 
 # Maximum number of parallel downloads (initial value)
 MAX_PARALLEL=3
+
 # Ensure debug directory exists
 mkdir -p "$(dirname "$DEBUG_LOG")"
 
@@ -111,6 +112,9 @@ process_download() {
     else
         echo "Starting new download for $game_name..."
     fi
+
+    # Log progress in processing.txt
+    echo "Starting download for $game_name from $url" >> "$DOWNLOAD_PROCESSING"
 
     wget --tries=5 -c "$url" -O "$temp_path" >> "$DEBUG_LOG" 2>&1
     if [ $? -ne 0 ]; then
