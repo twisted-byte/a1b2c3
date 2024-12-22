@@ -7,8 +7,7 @@ DEBUG_LOG="/userdata/system/game-downloader/debug/debug.txt"
 LOG_FILE="/userdata/system/game-downloader/download.log"  # Added log file for tracking downloads
 SERVICE_STATUS_FILE="/userdata/system/game-downloader/downloader_service_status"
 
-
-# Maximum number of parallel downloads
+# Maximum number of parallel downloads (initial value)
 MAX_PARALLEL=3
 
 if [[ "$1" != "start" ]]; then
@@ -55,6 +54,28 @@ log_download() {
     echo "$url" >> "$LOG_FILE"
 }
 
+# Function to dynamically adjust the number of parallel downloads based on system load
+get_dynamic_parallel_limit() {
+    # Get the 1-minute load average
+    local load=$(awk '{print $1}' /proc/loadavg)
+    local cpu_count=$(nproc)  # Number of CPU cores
+
+    # Calculate the dynamic parallel limit
+    # Assuming each core can handle a load of 1. Adjust this multiplier if needed.
+    local limit=$(echo "$cpu_count / $load" | bc -l)
+
+    # Ensure at least one download runs, and cap at a max limit (e.g., 10)
+    if (( $(echo "$limit < 1" | bc -l) )); then
+        limit=1
+    elif (( $(echo "$limit > 10" | bc -l) )); then
+        limit=10
+    fi
+
+    # Convert to an integer (round down)
+    echo "${limit%.*}"
+}
+
+# Function to resume downloads
 resume_downloads() {
     if [ -f "$DOWNLOAD_PROCESSING" ]; then
         while IFS='|' read -r game_name url folder; do
@@ -84,7 +105,6 @@ resume_downloads() {
         echo "No downloads to resume in $DOWNLOAD_PROCESSING."
     fi
 }
-
 
 # Start resuming downloads
 resume_downloads
@@ -127,8 +147,6 @@ process_download() {
     # Remove entry from processing.txt after successful processing
     update_queue_file "$DOWNLOAD_PROCESSING" "$game_name|$url|$folder"
 }
-
-
 
 # Function to unzip files
 process_unzip() {
@@ -186,8 +204,11 @@ parallel_downloads() {
     local pids=()
 
     while true; do
+        # Dynamically adjust the parallel limit
+        local dynamic_parallel_limit=$(get_dynamic_parallel_limit)
+        echo "Dynamic parallel limit: $dynamic_parallel_limit"
+
         if [[ -f "$DOWNLOAD_QUEUE" && -s "$DOWNLOAD_QUEUE" ]]; then
-            # Read the download tasks from the queue
             while IFS='|' read -r game_name url folder; do
                 # Skip if already in processing.txt
                 if grep -qF "$url" "$DOWNLOAD_PROCESSING"; then
@@ -201,12 +222,10 @@ parallel_downloads() {
 
                 # Start the download in the background
                 process_download "$game_name" "$url" "$folder" &
-
-                # Track the process ID
                 pids+=($!)
 
-                # Limit to MAX_PARALLEL downloads
-                if [[ ${#pids[@]} -ge $MAX_PARALLEL ]]; then
+                # Limit to dynamically calculated parallel downloads
+                if [[ ${#pids[@]} -ge $dynamic_parallel_limit ]]; then
                     wait -n
                     pids=($(jobs -rp))
                 fi
@@ -218,8 +237,6 @@ parallel_downloads() {
         sleep 1
     done
 }
-
-
 
 # Service control logic (start/stop/restart/status)
 case "$1" in
@@ -235,17 +252,17 @@ case "$1" in
             sleep 10
         done
         ;;
- stop)
-    echo "Stopping downloader script..."
-    pkill -f "$(basename $0)"
-    # Wait for all child processes to exit
-    wait
-    if [[ $? -eq 0 ]]; then
-        echo "Downloader stopped successfully."
-    else
-        echo "Failed to stop the downloader."
-    fi
-    ;;
+    stop)
+        echo "Stopping downloader script..."
+        pkill -f "$(basename $0)"
+        # Wait for all child processes to exit
+        wait
+        if [[ $? -eq 0 ]]; then
+            echo "Downloader stopped successfully."
+        else
+            echo "Failed to stop the downloader."
+        fi
+        ;;
     restart)
         echo "Restarting downloader script..."
         "$0" stop
@@ -257,9 +274,9 @@ case "$1" in
             exit 0
         else
             echo "Downloader is stopped. Updating now"
-          curl -L https://bit.ly/BatoceraGD | bash
-          exit 1
-      fi
+            curl -L https://bit.ly/BatoceraGD | bash
+            exit 1
+        fi
         ;;
     *)
         echo "Usage: $0 {start|stop|restart|status}"
