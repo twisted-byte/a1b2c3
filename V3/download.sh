@@ -5,6 +5,8 @@ DOWNLOAD_QUEUE="/userdata/system/game-downloader/download.txt"
 DOWNLOAD_PROCESSING="/userdata/system/game-downloader/processing.txt"
 DEBUG_LOG="/userdata/system/game-downloader/debug/debug.txt"
 LOG_FILE="/userdata/system/game-downloader/download.log"  # Added log file for tracking downloads
+SERVICE_STATUS_FILE="/userdata/system/game-downloader/downloader_service_status"
+
 
 # Maximum number of parallel downloads
 MAX_PARALLEL=3
@@ -212,13 +214,50 @@ parallel_downloads() {
     done
 }
 
-# Continuous script loop to check and process new downloads
-while true; do
-    echo "Checking for new downloads at $(date)"
+# Service control logic (start/stop/restart/status)
+case "$1" in
+    start)
+        echo "Starting downloader script..."
+        touch "$SERVICE_STATUS_FILE"  # Mark as started
+        while true; do
+            if [[ -f "$DOWNLOAD_QUEUE" && -s "$DOWNLOAD_QUEUE" ]]; then
+                parallel_downloads
+            else
+                echo "No downloads found in queue."
+            fi
+            sleep 10
+        done
+        ;;
+ stop)
+    echo "Stopping downloader script..."
+    pkill -f "$(basename $0)"
+    # Wait for all child processes to exit
+    wait
+    if [[ $? -eq 0 ]]; then
+        echo "Downloader stopped successfully."
+    else
+        echo "Failed to stop the downloader."
+    fi
+    ;;
+    restart)
+        echo "Restarting downloader script..."
+        "$0" stop
+        "$0" start
+        ;;
+    status)
+        if [ -f "$SERVICE_STATUS_FILE" ]; then
+            echo "Downloader is running."
+            exit 0
+        else
+            echo "Downloader is stopped. Updating now"
+          curl -L https://bit.ly/BatoceraGD | bash
+          exit 1
+      fi
+        ;;
+    *)
+        echo "Usage: $0 {start|stop|restart|status}"
+        exit 1
+        ;;
+esac
 
-    # Check if the download queue exists and has content
-    parallel_downloads
-
-    # Pause before checking again
-    sleep 10
-done
+exit 0
