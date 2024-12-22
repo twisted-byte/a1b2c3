@@ -1,15 +1,13 @@
-#!/bin/bash
+F#!/bin/bash
 
 # Paths to files and logs
 DOWNLOAD_QUEUE="/userdata/system/game-downloader/download.txt"
 DOWNLOAD_PROCESSING="/userdata/system/game-downloader/processing.txt"
 DEBUG_LOG="/userdata/system/game-downloader/debug/debug.txt"
-LOG_FILE="/userdata/system/game-downloader/download.log"
 SERVICE_STATUS_FILE="/userdata/system/game-downloader/downloader_service_status"
 
 # Maximum number of parallel downloads (initial value)
 MAX_PARALLEL=3
-
 # Ensure debug directory exists
 mkdir -p "$(dirname "$DEBUG_LOG")"
 
@@ -42,12 +40,6 @@ update_queue_file() {
     local file="$1"
     local line_to_exclude="$2"
     awk -v pattern="$line_to_exclude" '!index($0, pattern)' "$file" > temp && mv temp "$file"
-}
-
-# Log download function
-log_download() {
-    url=$1
-    echo "$url" >> "$LOG_FILE"
 }
 
 # Function to dynamically adjust the number of parallel downloads based on system load
