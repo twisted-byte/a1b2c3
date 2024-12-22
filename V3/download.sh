@@ -10,10 +10,6 @@ SERVICE_STATUS_FILE="/userdata/system/game-downloader/downloader_service_status"
 # Maximum number of parallel downloads (initial value)
 MAX_PARALLEL=3
 
-if [[ "$1" != "start" ]]; then
-  exit 0
-fi
-
 # Ensure debug directory exists
 mkdir -p "$(dirname "$DEBUG_LOG")"
 
@@ -243,6 +239,11 @@ case "$1" in
     start)
         echo "Starting downloader script..."
         touch "$SERVICE_STATUS_FILE"  # Mark as started
+
+        # Ensure we resume any downloads that were interrupted
+        resume_downloads
+
+        # Start the parallel download process
         while true; do
             if [[ -f "$DOWNLOAD_QUEUE" && -s "$DOWNLOAD_QUEUE" ]]; then
                 parallel_downloads
@@ -283,5 +284,3 @@ case "$1" in
         exit 1
         ;;
 esac
-
-exit 0
