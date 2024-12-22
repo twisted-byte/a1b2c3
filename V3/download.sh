@@ -57,7 +57,7 @@ log_download() {
 resume_downloads() {
     if [ -f "$LOG_FILE" ]; then
         while IFS= read -r url; do
-            wget -c "$url"
+            wget -c "$url" -o "$temp_path"
             if [ $? -eq 0 ]; then
                 sed -i "\|$url|d" "$LOG_FILE"
             fi
@@ -174,45 +174,50 @@ fi
 parallel_downloads() {
     local pids=()  # Array to hold background process IDs
 
-    while IFS='|' read -r game_name url folder; do
-        echo "Starting parallel download for: $game_name | $url | $folder"
-        
-        # Move the line to processing.txt and remove from download.txt
-        echo "$game_name|$url|$folder" >> "$DOWNLOAD_PROCESSING"
-        update_queue_file "$DOWNLOAD_QUEUE" "$game_name|$url|$folder"
+    # Loop continuously to process download queue
+    while true; do
+        # If there's something to download in the queue, process it
+        if [[ -f "$DOWNLOAD_QUEUE" && -s "$DOWNLOAD_QUEUE" ]]; then
+            # Read the next download line from the queue
+            while IFS='|' read -r game_name url folder; do
+                echo "Starting parallel download for: $game_name | $url | $folder"
+                
+                # Move the line to processing.txt and remove from download.txt
+                echo "$game_name|$url|$folder" >> "$DOWNLOAD_PROCESSING"
+                update_queue_file "$DOWNLOAD_QUEUE" "$game_name|$url|$folder"
 
-        # Log the download URL
-        log_download "$url"
+                # Log the download URL
+                log_download "$url"
 
-        # Launch download in the background
-        process_download "$game_name" "$url" "$folder" &
+                # Launch download in the background
+                process_download "$game_name" "$url" "$folder" &
 
-        # Track the background process
-        pids+=($!)
+                # Track the background process
+                pids+=($!)
 
-        # Limit to MAX_PARALLEL downloads
-        if [[ ${#pids[@]} -ge $MAX_PARALLEL ]]; then
-            # Wait for one of the processes to finish before starting a new one
-            wait -n
-            # Remove finished process IDs from the array
-            pids=($(jobs -rp))
+                # Limit to MAX_PARALLEL downloads
+                if [[ ${#pids[@]} -ge $MAX_PARALLEL ]]; then
+                    # Wait for any process to finish before starting a new one
+                    wait -n
+                    # Remove finished process IDs from the array
+                    pids=($(jobs -rp))
+                fi
+            done < "$DOWNLOAD_QUEUE"
+        else
+            echo "No downloads found in queue."
         fi
 
-    done < "$DOWNLOAD_QUEUE"
-
-    # Wait for all remaining processes to finish
-    wait
+        # Pause briefly before checking again
+        sleep 1
+    done
 }
 
-# Continuous script loop
+# Continuous script loop to check and process new downloads
 while true; do
     echo "Checking for new downloads at $(date)"
 
-    if [[ -f "$DOWNLOAD_QUEUE" && -s "$DOWNLOAD_QUEUE" ]]; then
-        parallel_downloads
-    else
-        echo "No downloads found in queue."
-    fi
+    # Check if the download queue exists and has content
+    parallel_downloads
 
     # Pause before checking again
     sleep 10
