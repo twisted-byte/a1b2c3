@@ -55,69 +55,79 @@ log_download() {
     echo "$url" >> "$LOG_FILE"
 }
 
-# Function to resume downloads
 resume_downloads() {
-    if [ -f "$LOG_FILE" ]; then
-        while IFS= read -r url; do
-            wget -c "$url" -o "$temp_path"
-            if [ $? -eq 0 ]; then
-                sed -i "\|$url|d" "$LOG_FILE"
+    if [ -f "$DOWNLOAD_PROCESSING" ]; then
+        while IFS='|' read -r game_name url folder; do
+            # Check if the process is already downloading this file
+            if ps aux | grep -F "$url" | grep -v "grep" > /dev/null; then
+                echo "Skipping ongoing download for: $url"
+                continue
             fi
-        done < "$LOG_FILE"
+
+            # Check if the temporary file exists (indicates a partial download)
+            local temp_path="/userdata/system/game-downloader/$game_name"
+            if [ -f "$temp_path" ]; then
+                echo "Resuming download for $game_name from $url..."
+                wget -c "$url" -O "$temp_path"
+                if [ $? -eq 0 ]; then
+                    echo "Resumed and completed download for $game_name."
+                    # Remove entry from processing.txt after successful download
+                    update_queue_file "$DOWNLOAD_PROCESSING" "$game_name|$url|$folder"
+                    # Proceed with file handling (unzip or move)
+                    process_download "$game_name" "$url" "$folder"
+                else
+                    echo "Failed to resume download for $game_name."
+                fi
+            fi
+        done < "$DOWNLOAD_PROCESSING"
+    else
+        echo "No downloads to resume in $DOWNLOAD_PROCESSING."
     fi
 }
+
 
 # Start resuming downloads
 resume_downloads
 
-# Function to process individual downloads
 process_download() {
     local game_name="$1"
     local url="$2"
     local folder="$3"
 
-    game_name=$(echo "$game_name" | sed 's/[\"]//g')
     local temp_path="/userdata/system/game-downloader/$game_name"
 
-    # Ensure the temporary directory exists
     mkdir -p "$(dirname "$temp_path")"
 
-    # Check for existing partial download
+    # Start or resume download
     if [ -f "$temp_path" ]; then
         echo "Resuming partial download for $game_name..."
     else
-        echo "$game_name|$url|$folder" >> "$DOWNLOAD_PROCESSING"
-        echo "Started download for $game_name... Logging to processing.txt"
-        update_queue_file "$DOWNLOAD_QUEUE" "$game_name|$url|$folder"
         echo "Starting new download for $game_name..."
     fi
 
-    # Download with retry and resume logic
     wget --tries=5 -c "$url" -O "$temp_path" >> "$DEBUG_LOG" 2>&1
     if [ $? -ne 0 ]; then
         echo "Download failed for $game_name. Check debug log for details."
         return
     fi
 
-    echo "Download succeeded for $game_name."
+    echo "Download completed for $game_name."
 
-    # Handle file based on its extension
+    # Handle the downloaded file
     if [[ "$game_name" == *.zip ]]; then
         process_unzip "$game_name" "$temp_path" "$folder"
     elif [[ "$game_name" == *.chd || "$game_name" == *.iso ]]; then
-        echo "Skipping extraction for $game_name. Moving file to destination."
         mv "$temp_path" "$folder"
+        echo "Moved $game_name to $folder."
     else
         echo "Unsupported file type for $game_name. Skipping."
-        rm "$temp_path"  # Clean up the downloaded file
+        rm "$temp_path"
     fi
 
-    # Remove the line from processing.txt after successful processing
+    # Remove entry from processing.txt after successful processing
     update_queue_file "$DOWNLOAD_PROCESSING" "$game_name|$url|$folder"
-    
-    # Remove the URL from download.log after successful download
-    sed -i "\|$url|d" "$LOG_FILE"
 }
+
 
 
 # Function to unzip files
@@ -172,36 +182,32 @@ if [ $? -ne 0 ]; then
     exit 1
 fi
 
-# Function to manage parallel downloads
 parallel_downloads() {
-    local pids=()  # Array to hold background process IDs
+    local pids=()
 
-    # Loop continuously to process download queue
     while true; do
-        # If there's something to download in the queue, process it
         if [[ -f "$DOWNLOAD_QUEUE" && -s "$DOWNLOAD_QUEUE" ]]; then
-            # Read the next download line from the queue
+            # Read the download tasks from the queue
             while IFS='|' read -r game_name url folder; do
-                echo "Starting parallel download for: $game_name | $url | $folder"
-                
-                # Move the line to processing.txt and remove from download.txt
+                # Skip if already in processing.txt
+                if grep -qF "$url" "$DOWNLOAD_PROCESSING"; then
+                    echo "Skipping duplicate download for: $url"
+                    continue
+                fi
+
+                # Move the task to processing.txt
                 echo "$game_name|$url|$folder" >> "$DOWNLOAD_PROCESSING"
                 update_queue_file "$DOWNLOAD_QUEUE" "$game_name|$url|$folder"
 
-                # Log the download URL
-                log_download "$url"
-
-                # Launch download in the background
+                # Start the download in the background
                 process_download "$game_name" "$url" "$folder" &
 
-                # Track the background process
+                # Track the process ID
                 pids+=($!)
 
                 # Limit to MAX_PARALLEL downloads
                 if [[ ${#pids[@]} -ge $MAX_PARALLEL ]]; then
-                    # Wait for any process to finish before starting a new one
                     wait -n
-                    # Remove finished process IDs from the array
                     pids=($(jobs -rp))
                 fi
             done < "$DOWNLOAD_QUEUE"
@@ -209,10 +215,11 @@ parallel_downloads() {
             echo "No downloads found in queue."
         fi
 
-        # Pause briefly before checking again
         sleep 1
     done
 }
+
+
 
 # Service control logic (start/stop/restart/status)
 case "$1" in
