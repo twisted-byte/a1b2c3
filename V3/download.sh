@@ -77,25 +77,17 @@ resume_downloads() {
             local temp_path="/userdata/system/game-downloader/$game_name"
             if [ -f "$temp_path" ]; then
                 echo "Resuming download for $game_name from $url..."
-                wget -c "$url" -O "$temp_path"
-                if [ $? -eq 0 ]; then
-                    echo "Resumed and completed download for $game_name."
-                    # Remove entry from processing.txt after successful download
-                    update_queue_file "$DOWNLOAD_PROCESSING" "$game_name|$url|$folder"
-                    # Proceed with file handling (unzip or move)
-                    process_download "$game_name" "$url" "$folder"
-                else
-                    echo "Failed to resume download for $game_name."
-                fi
+            else
+                echo "Starting new download for $game_name from $url..."
             fi
+
+            # Call process_download to handle the download and file processing
+            process_download "$game_name" "$url" "$folder"
         done < "$DOWNLOAD_PROCESSING"
     else
         echo "No downloads to resume in $DOWNLOAD_PROCESSING."
     fi
 }
-
-# Start resuming downloads
-resume_downloads
 
 process_download() {
     local game_name="$1"
@@ -233,22 +225,15 @@ parallel_downloads() {
 # Service control logic (start/stop/restart/status)
 case "$1" in
     start)
-        echo "Starting downloader script..."
-        touch "$SERVICE_STATUS_FILE"  # Mark as started
+    echo "Starting downloader script..."
+    touch "$SERVICE_STATUS_FILE"  # Mark as started
 
-        # Ensure we resume any downloads that were interrupted
-        resume_downloads
+    # Resume interrupted downloads
+    resume_downloads
 
-        # Start the parallel download process
-        while true; do
-            if [[ -f "$DOWNLOAD_QUEUE" && -s "$DOWNLOAD_QUEUE" ]]; then
-                parallel_downloads
-            else
-                echo "No downloads found in queue."
-            fi
-            sleep 10
-        done
-        ;;
+    # Start parallel download processing
+    parallel_downloads
+    ;;
     stop)
         echo "Stopping downloader script..."
         pkill -f "$(basename $0)"
