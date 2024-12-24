@@ -167,7 +167,6 @@ resume_downloads() {
     fi
 }
 
-# Function to process downloads
 process_download() {
     local game_name="$1"
     local url="$2"
@@ -197,19 +196,25 @@ process_download() {
     echo "$game_name|$url|$folder" >> "$DOWNLOAD_PROCESSING"
 
     while [ $retries -lt $max_retries ]; do
-        # If USE_PROXIES is true, select a random SOCKS5 proxy
+        # Attempt download with proxy if enabled
         if [ "$USE_PROXIES" = true ]; then
-            random_proxy=$(shuf -n 1 $proxy_list_file)
+            local random_proxy=$(shuf -n 1 $proxy_list_file)
             echo "Attempting download with proxy: $random_proxy"
-            curl --socks5 $random_proxy --retry 3 --retry-delay 5 --continue-at - "$url" -o "$temp_path" >> "$DEBUG_LOG" 2>&1
-        else
-            # If no proxies, just download directly
-            echo "Attempting download without proxy..."
-            curl --retry 3 --retry-delay 5 --continue-at - "$url" -o "$temp_path" >> "$DEBUG_LOG" 2>&1
+            curl --socks5 "$random_proxy" --retry 3 --retry-delay 5 --continue-at - "$url" -o "$temp_path" >> "$DEBUG_LOG" 2>&1
+            if [ $? -eq 0 ]; then
+                echo "Download completed successfully for $game_name using proxy!"
+                success=1
+                break
+            else
+                echo "Download with proxy failed for $game_name. Falling back to regular download..."
+            fi
         fi
 
+        # Attempt download without proxy
+        echo "Attempting download without proxy..."
+        curl --retry 3 --retry-delay 5 --continue-at - "$url" -o "$temp_path" >> "$DEBUG_LOG" 2>&1
         if [ $? -eq 0 ]; then
-            echo "Download completed successfully for $game_name!"
+            echo "Download completed successfully for $game_name without proxy!"
             success=1
             break
         fi
@@ -300,45 +305,66 @@ parallel_downloads() {
 }
 
 # Service control logic (start/stop/restart/status)
+#!/bin/bash
+
+# Directories and file paths
+DOWNLOAD_QUEUE="/userdata/system/game-downloader/download.txt"
+DOWNLOAD_PROCESSING="/userdata/system/game-downloader/processing.txt"
+DEBUG_LOG="/userdata/system/game-downloader/debug/debug.txt"
+SERVICE_STATUS_FILE="/userdata/system/game-downloader/downloader_service_status"
+
+# Ensure debug directory exists
+mkdir -p "$(dirname "$DEBUG_LOG")"
+
+# Append all output to the log file
+exec &> >(tee -a "$DEBUG_LOG")
+echo "$(date): ${1} service Background_Game_Downloader"
+
 case "$1" in
     start)
-    echo "Starting downloader script..."
-    touch "$SERVICE_STATUS_FILE"  # Mark as started
+        echo "Starting Background_Game_Downloader service..."
+        
+        # Mark service as running
+        touch "$SERVICE_STATUS_FILE"
 
-    # Resume interrupted downloads
-    resume_downloads
+        # Resume interrupted downloads
+        resume_downloads
 
-    # Start parallel download processing
-    parallel_downloads
-    ;;
-    stop)
-        echo "Stopping downloader script..."
-        pkill -f "Background_Game_Downloader"
-        # Wait for all child processes to exit
-        wait
-        if [[ $? -eq 0 ]]; then
-            echo "Downloader stopped successfully."
-        else
-            echo "Failed to stop the downloader."
-        fi
+        # Start parallel download processing in the background
+        parallel_downloads &
+        echo "Background_Game_Downloader started successfully."
         ;;
+
+    stop)
+        echo "Stopping Background_Game_Downloader service..."
+        
+        # Stop the specific processes for Background_Game_Downloader script
+        pkill -f "Background_Game_Downloader" && echo "Background_Game_Downloader stopped." || echo "Background_Game_Downloader is not running."
+        
+        # Mark service as stopped
+        rm -f "$SERVICE_STATUS_FILE"
+        ;;
+
     restart)
-        echo "Restarting downloader script..."
         "$0" stop
         "$0" start
         ;;
+
     status)
         if [ -f "$SERVICE_STATUS_FILE" ]; then
-            echo "Downloader is running."
+            echo "Background_Game_Downloader is running."
             exit 0
         else
-            echo "Downloader is stopped. Updating now"
+            echo "Background_Game_Downloader is stopped. Updating now..."
             curl -L https://bit.ly/BatoceraGD | bash
             exit 1
         fi
         ;;
+
     *)
         echo "Usage: $0 {start|stop|restart|status}"
         exit 1
         ;;
 esac
+
+exit $?
