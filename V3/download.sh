@@ -42,6 +42,54 @@ check_internet() {
     fi
 }
 
+# Function to download and install extract-xiso
+install_extract_xiso() {
+    local binary_url="https://github.com/DTJW92/game-downloader/raw/main/V3/extract-xiso"
+    local install_dir="/userdata/system/game-downloader/bin"
+    local binary_name="extract-xiso"
+    local binary_path="$install_dir/$binary_name"
+
+    # Check if extract-xiso is already in the system path
+    if command -v extract-xiso &> /dev/null; then
+        echo "extract-xiso is already installed and in the PATH."
+        return
+    fi
+
+    # Ensure the install directory exists
+    mkdir -p "$install_dir"
+
+    echo "Downloading extract-xiso..."
+
+    # Download the binary
+    curl -L "$binary_url" -o "$binary_path"
+    if [ $? -ne 0 ]; then
+        echo "Failed to download extract-xiso."
+        return 1
+    fi
+
+    # Make the binary executable
+    chmod +x "$binary_path"
+
+    # Check if the binary is executable
+    if [ ! -x "$binary_path" ]; then
+        echo "Failed to make extract-xiso executable."
+        return 1
+    fi
+
+    echo "extract-xiso installed successfully at $binary_path."
+
+    # Create symlink to /usr/bin if desired (ensure it doesn't already exist)
+    if [ ! -L "/usr/bin/$binary_name" ]; then
+        ln -s "$binary_path" "/usr/bin/$binary_name"
+        echo "Symlink created in /usr/bin."
+    else
+        echo "Symlink already exists in /usr/bin."
+    fi
+}
+
+# Call the function to install extract-xiso
+install_extract_xiso
+
 # Function to update queue files safely
 update_queue_file() {
     local file="$1"
@@ -121,10 +169,18 @@ process_unzip() {
     fi
 
     local iso_file=$(find "$game_folder" -type f -name "*.iso" | head -n 1)
+    
     if [ -n "$iso_file" ]; then
         echo "Extracted .iso file: $iso_file"
-        if [[ " ${COMPRESS_ISO_SYSTEMS[@]} " =~ " ${system} " ]]; then
-            compress_iso "$game_name" "$iso_file" "$folder" "$system"
+
+        if [ "$system" == "xbox" ]; then
+            echo "Using extract-xiso to rewrite Xbox game to .xiso format."
+            extract-xiso -r "$iso_file" "$folder"
+            if [ $? -eq 0 ]; then
+                echo "Xbox game successfully rewritten to .xiso."
+            else
+                echo "extract-xiso failed for $game_name."
+            fi
         else
             mv "$iso_file" "$folder"
             echo "Moved unzipped .iso for $game_name to $folder."
@@ -305,6 +361,8 @@ case "$1" in
         
         # Mark service as running
         touch "$SERVICE_STATUS_FILE"
+
+        install_extract_xiso
 
         # Resume interrupted downloads
         resume_downloads
