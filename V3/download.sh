@@ -254,7 +254,6 @@ parallel_downloads() {
     while true; do
         # Dynamically adjust the parallel limit
         local dynamic_parallel_limit=$(get_dynamic_parallel_limit)
-        echo "Dynamic parallel limit: $dynamic_parallel_limit"
 
         if [[ -f "$DOWNLOAD_QUEUE" && -s "$DOWNLOAD_QUEUE" ]]; then
             while IFS='|' read -r game_name url folder; do
