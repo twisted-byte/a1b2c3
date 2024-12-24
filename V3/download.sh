@@ -172,7 +172,7 @@ process_download() {
 
     local system=$(get_system_from_folder "$folder")
     local temp_path="/userdata/system/game-downloader/$game_name"
-    local proxy_list_url="https://github.com/proxifly/free-proxy-list/raw/main/proxies/protocols/socks5/data.txt"
+    local proxy_list_url="https://raw.githubusercontent.com/proxifly/free-proxy-list/main/proxies/protocols/socks5/data.txt"
     local proxy_list_file="/tmp/socks5_proxies.txt"
     local max_retries=10
     local retries=0
