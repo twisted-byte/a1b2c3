@@ -5,6 +5,9 @@ DOWNLOAD_QUEUE="/userdata/system/game-downloader/download.txt"
 DOWNLOAD_PROCESSING="/userdata/system/game-downloader/processing.txt"
 DEBUG_LOG="/userdata/system/game-downloader/debug/debug.txt"
 SERVICE_STATUS_FILE="/userdata/system/game-downloader/downloader_service_status"
+# Flag to enable/disable proxy usage (true or false)
+USE_PROXIES=false
+
 
 # Maximum number of parallel downloads (initial value)
 MAX_PARALLEL=3
@@ -165,6 +168,7 @@ resume_downloads() {
 }
 
 # Function to process downloads
+# Function to process downloads
 process_download() {
     local game_name="$1"
     local url="$2"
@@ -172,38 +176,48 @@ process_download() {
 
     local system=$(get_system_from_folder "$folder")
     local temp_path="/userdata/system/game-downloader/$game_name"
-    local proxy_list_url="https://raw.githubusercontent.com/proxifly/free-proxy-list/main/proxies/protocols/socks5/data.txt"
-    local proxy_list_file="/tmp/socks5_proxies.txt"
     local max_retries=10
     local retries=0
     local success=0
 
-    # Ensure proxy list is downloaded and cleaned
-    curl -s $proxy_list_url -o $proxy_list_file
-    if [ ! -s $proxy_list_file ]; then
-        echo "Failed to download proxy list or the list is empty."
-        return 1
+    # If USE_PROXIES is true, fetch and use proxies, else skip proxy usage
+    if [ "$USE_PROXIES" = true ]; then
+        local proxy_list_url="https://raw.githubusercontent.com/proxifly/free-proxy-list/main/proxies/protocols/socks5/data.txt"
+        local proxy_list_file="/tmp/socks5_proxies.txt"
+
+        # Ensure proxy list is downloaded and cleaned
+        curl -s $proxy_list_url -o $proxy_list_file
+        if [ ! -s $proxy_list_file ]; then
+            echo "Failed to download proxy list or the list is empty. Proceeding without proxies."
+            USE_PROXIES=false
+        else
+            sed -i 's#socks5://##g' $proxy_list_file
+        fi
     fi
-    sed -i 's#socks5://##g' $proxy_list_file
 
     mkdir -p "$(dirname "$temp_path")"
 
     echo "$game_name|$url|$folder" >> "$DOWNLOAD_PROCESSING"
 
     while [ $retries -lt $max_retries ]; do
-        # Select a random SOCKS5 proxy
-        random_proxy=$(shuf -n 1 $proxy_list_file)
-        echo "Attempting download with proxy: $random_proxy"
+        # If USE_PROXIES is true, select a random SOCKS5 proxy
+        if [ "$USE_PROXIES" = true ]; then
+            random_proxy=$(shuf -n 1 $proxy_list_file)
+            echo "Attempting download with proxy: $random_proxy"
+            curl --socks5 $random_proxy --retry 3 --retry-delay 5 --continue-at - "$url" -o "$temp_path" >> "$DEBUG_LOG" 2>&1
+        else
+            # If no proxies, just download directly
+            echo "Attempting download without proxy..."
+            curl --retry 3 --retry-delay 5 --continue-at - "$url" -o "$temp_path" >> "$DEBUG_LOG" 2>&1
+        fi
 
-        # Use curl with the selected proxy
-        curl --socks5 $random_proxy --retry 3 --retry-delay 5 --continue-at - "$url" -o "$temp_path" >> "$DEBUG_LOG" 2>&1
         if [ $? -eq 0 ]; then
             echo "Download completed successfully for $game_name!"
             success=1
             break
         fi
 
-        echo "Download failed for $game_name using proxy $random_proxy. Retrying..."
+        echo "Download failed for $game_name. Retrying..."
         retries=$((retries + 1))
     done
 
@@ -213,6 +227,7 @@ process_download() {
         return 1
     fi
 
+    # Process the downloaded file
     if [[ "$game_name" == *.zip ]]; then
         process_unzip "$game_name" "$temp_path" "$folder" "$system"
     elif [[ "$game_name" == *.iso ]]; then
