@@ -6,7 +6,7 @@ DOWNLOAD_PROCESSING="/userdata/system/game-downloader/processing.txt"
 DEBUG_LOG="/userdata/system/game-downloader/debug/debug.txt"
 SERVICE_STATUS_FILE="/userdata/system/game-downloader/downloader_service_status"
 # Flag to enable/disable proxy usage (true or false)
-USE_PROXIES=true
+USE_PROXIES=false
 
 
 # Maximum number of parallel downloads (initial value)
