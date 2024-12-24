@@ -23,8 +23,8 @@ declare -A MENU_ITEMS=(
     [1]="https://raw.githubusercontent.com/DTJW92/game-downloader/main/V3/SystemMenu.sh"  # Select Game Systems
     [2]="https://raw.githubusercontent.com/DTJW92/game-downloader/main/V3/installsystem.sh"      # Install a Game System
     [3]="https://raw.githubusercontent.com/DTJW92/game-downloader/main/V3/search.sh"          # Search for a Game
-    [4]="https://raw.githubusercontent.com/DTJW92/game-downloader/main/V3/Updater.sh"         # Run Updater
-    [5]="https://raw.githubusercontent.com/DTJW92/game-downloader/main/V3/Downloadcheck.sh"   # Status Checker
+    [4]="https://raw.githubusercontent.com/DTJW92/game-downloader/main/V3/StatusChecker.sh"         # Run Updater
+    [5]="https://raw.githubusercontent.com/DTJW92/game-downloader/main/V3/Updater.sh"   # Status Checker
     [6]="https://raw.githubusercontent.com/DTJW92/game-downloader/main/V3/uninstall.sh"       # Uninstall Game Downloader
 )
 
@@ -33,8 +33,8 @@ declare -A MENU_DESCRIPTIONS=(
     [1]="Select a Game Systems"
     [2]="Install a Game System"
     [3]="Search for a Game"
-    [4]="Run Updater"
-    [5]="Status Checker"
+    [4]="Status Checker"
+    [5]="Run Updater"
     [6]="Uninstall Game Downloader"
 )
 
@@ -55,11 +55,13 @@ while true; do
     MENU_OPTIONS+=("7" "Exit")  # Add Exit option after the loop
 
     # Display menu
-    dialog --clear --backtitle "Game Downloader" \
-           --title "Select a System" \
-           --menu "Choose an option:" 15 50 9 \
-           "${MENU_OPTIONS[@]}" \
-           2>/tmp/game-downloader-choice
+height=$(( ${#MENU_OPTIONS[@]} / 2 + 7 ))
+dialog --clear --backtitle "Game Downloader" \
+       --title "Select a System" \
+       --menu "Choose an option:" "$height" 50 9 \
+       "${MENU_OPTIONS[@]}" \
+       2>/tmp/game-downloader-choice
+
 
     choice=$(< /tmp/game-downloader-choice)
     rm /tmp/game-downloader-choice
@@ -73,6 +75,8 @@ while true; do
         clear
         dialog --infobox "Thank you for using Game Downloader! Any issues, message DTJW92 on Discord!" 10 50
         sleep 3
+        pkill -f "$(basename $0)"
+        kill -9 $(ps -o ppid= -p $$)
         exit 0  # Exit gracefully
     fi
 
@@ -83,6 +87,7 @@ while true; do
         dialog --infobox "Thank you for using Game Downloader! Any issues, please reach out to DTJW92 on Discord!" 10 50
         sleep 3
         # Kill the parent process (foreground terminal)
+        pkill -f "$(basename $0)"
         kill -9 $(ps -o ppid= -p $$)
         exit 0  # Exit gracefully
     fi
