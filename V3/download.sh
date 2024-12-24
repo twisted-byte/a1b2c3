@@ -300,7 +300,7 @@ case "$1" in
     ;;
     stop)
         echo "Stopping downloader script..."
-        pkill -f "$(basename $0)"
+        pkill -f "Background_Game_Downloader"
         # Wait for all child processes to exit
         wait
         if [[ $? -eq 0 ]]; then
