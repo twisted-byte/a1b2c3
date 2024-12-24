@@ -6,7 +6,7 @@ DOWNLOAD_PROCESSING="/userdata/system/game-downloader/processing.txt"
 DEBUG_LOG="/userdata/system/game-downloader/debug/debug.txt"
 SERVICE_STATUS_FILE="/userdata/system/game-downloader/downloader_service_status"
 # Flag to enable/disable proxy usage (true or false)
-USE_PROXIES=false
+USE_PROXIES=true
 
 
 # Maximum number of parallel downloads (initial value)
@@ -168,7 +168,6 @@ resume_downloads() {
 }
 
 # Function to process downloads
-# Function to process downloads
 process_download() {
     local game_name="$1"
     local url="$2"
@@ -182,7 +181,7 @@ process_download() {
 
     # If USE_PROXIES is true, fetch and use proxies, else skip proxy usage
     if [ "$USE_PROXIES" = true ]; then
-        local proxy_list_url="https://raw.githubusercontent.com/proxifly/free-proxy-list/main/proxies/protocols/socks5/data.txt"
+        local proxy_list_url="https://raw.githubusercontent.com/TheSpeedX/SOCKS-List/master/socks5.txt"
         local proxy_list_file="/tmp/socks5_proxies.txt"
 
         # Ensure proxy list is downloaded and cleaned
@@ -190,8 +189,6 @@ process_download() {
         if [ ! -s $proxy_list_file ]; then
             echo "Failed to download proxy list or the list is empty. Proceeding without proxies."
             USE_PROXIES=false
-        else
-            sed -i 's#socks5://##g' $proxy_list_file
         fi
     fi
 
@@ -242,6 +239,7 @@ process_download() {
 
     update_queue_file "$DOWNLOAD_PROCESSING" "$game_name|$url|$folder"
 }
+
 
 # Function to check and move .iso files
 move_iso_files() {
