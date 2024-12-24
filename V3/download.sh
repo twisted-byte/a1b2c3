@@ -10,10 +10,10 @@ SERVICE_STATUS_FILE="/userdata/system/game-downloader/downloader_service_status"
 MAX_PARALLEL=3
 
 # Systems to keep as .zip
-KEEP_AS_ZIP_SYSTEMS=("arcade" "mame")
+KEEP_AS_ZIP_SYSTEMS=("arcade" "mame" "atari2600" "atari5200" "atari7800" "fba" "cps1" "cps2" "cps3" "neogeo" "nes" "snes" "n64" "gb" "gbc" "gba" "mastersystem" "megadrive" "gamegear" "pcengine" "supergrafx" "ngp" "ngpc" "scummvm" "msx" "zxspectrum" "gameandwatch" "sg1000")
 
 # Systems to compress .iso to .iso.squashfs
-COMPRESS_ISO_SYSTEMS=("xbox" "ps3")
+COMPRESS_ISO_SYSTEMS=("xbox" "ps3" "gamecube")
 
 # Ensure debug directory exists
 mkdir -p "$(dirname "$DEBUG_LOG")"
