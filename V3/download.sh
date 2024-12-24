@@ -5,9 +5,6 @@ DOWNLOAD_QUEUE="/userdata/system/game-downloader/download.txt"
 DOWNLOAD_PROCESSING="/userdata/system/game-downloader/processing.txt"
 DEBUG_LOG="/userdata/system/game-downloader/debug/debug.txt"
 SERVICE_STATUS_FILE="/userdata/system/game-downloader/downloader_service_status"
-# Flag to enable/disable proxy usage (true or false)
-USE_PROXIES=false
-
 
 # Maximum number of parallel downloads (initial value)
 MAX_PARALLEL=3
@@ -174,62 +171,25 @@ process_download() {
 
     local system=$(get_system_from_folder "$folder")
     local temp_path="/userdata/system/game-downloader/$game_name"
-    local max_retries=10
-    local retries=0
-    local success=0
-
-    # If USE_PROXIES is true, fetch and use proxies, else skip proxy usage
-    if [ "$USE_PROXIES" = true ]; then
-        local proxy_list_url="https://raw.githubusercontent.com/TheSpeedX/SOCKS-List/master/socks5.txt"
-        local proxy_list_file="/tmp/socks5_proxies.txt"
-
-        # Ensure proxy list is downloaded and cleaned
-        curl -s $proxy_list_url -o $proxy_list_file
-        if [ ! -s $proxy_list_file ]; then
-            echo "Failed to download proxy list or the list is empty. Proceeding without proxies."
-            USE_PROXIES=false
-        fi
-    fi
 
     mkdir -p "$(dirname "$temp_path")"
 
-    echo "$game_name|$url|$folder" >> "$DOWNLOAD_PROCESSING"
-
-    while [ $retries -lt $max_retries ]; do
-        # Attempt download with proxy if enabled
-        if [ "$USE_PROXIES" = true ]; then
-            local random_proxy=$(shuf -n 1 $proxy_list_file)
-            echo "Attempting download with proxy: $random_proxy"
-            curl --socks5 "$random_proxy" --retry 3 --retry-delay 5 --continue-at - "$url" -o "$temp_path" >> "$DEBUG_LOG" 2>&1
-            if [ $? -eq 0 ]; then
-                echo "Download completed successfully for $game_name using proxy!"
-                success=1
-                break
-            else
-                echo "Download with proxy failed for $game_name. Falling back to regular download..."
-            fi
-        fi
-
-        # Attempt download without proxy
-        echo "Attempting download without proxy..."
-        curl --retry 3 --retry-delay 5 --continue-at - "$url" -o "$temp_path" >> "$DEBUG_LOG" 2>&1
-        if [ $? -eq 0 ]; then
-            echo "Download completed successfully for $game_name without proxy!"
-            success=1
-            break
-        fi
-
-        echo "Download failed for $game_name. Retrying..."
-        retries=$((retries + 1))
-    done
-
-    if [ $success -eq 0 ]; then
-        echo "Download failed for $game_name after $max_retries attempts."
-        update_queue_file "$DOWNLOAD_PROCESSING" "$game_name|$url|$folder"
-        return 1
+    if [ -f "$temp_path" ]; then
+        echo "Resuming partial download for $game_name..."
+    else
+        echo "Starting new download for $game_name..."
     fi
 
-    # Process the downloaded file
+    echo "$game_name|$url|$folder" >> "$DOWNLOAD_PROCESSING"
+
+    wget --tries=5 -c "$url" -O "$temp_path" >> "$DEBUG_LOG" 2>&1
+    if [ $? -ne 0 ]; then
+        echo "Download failed for $game_name. Check debug log for details."
+        return
+    fi
+
+    echo "Download completed for $game_name."
+
     if [[ "$game_name" == *.zip ]]; then
         process_unzip "$game_name" "$temp_path" "$folder" "$system"
     elif [[ "$game_name" == *.iso ]]; then
@@ -245,6 +205,25 @@ process_download() {
     update_queue_file "$DOWNLOAD_PROCESSING" "$game_name|$url|$folder"
 }
 
+# Function to check and move .iso files
+move_iso_files() {
+    src_dir="/userdata/saves/flatpak/data"
+    dest_dir="/userdata/roms/windows_installers"
+    find "$src_dir" -type f -name "*.iso" -exec mv {} "$dest_dir" \;
+}
+
+# Call move_iso_files function
+move_iso_files
+
+# Graceful exit handling
+trap 'echo "Cleaning up and exiting."; exit 0' SIGINT SIGTERM
+
+# Check internet connection before starting
+check_internet
+if [ $? -ne 0 ]; then
+    echo "No internet connection found. Exiting script."
+    exit 1
+fi
 
 # Function to check and move .iso files
 move_iso_files() {
