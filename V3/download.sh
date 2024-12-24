@@ -9,6 +9,12 @@ SERVICE_STATUS_FILE="/userdata/system/game-downloader/downloader_service_status"
 # Maximum number of parallel downloads (initial value)
 MAX_PARALLEL=3
 
+# Systems to keep as .zip
+KEEP_AS_ZIP_SYSTEMS=("arcade" "mame")
+
+# Systems to compress .iso to .iso.squashfs
+COMPRESS_ISO_SYSTEMS=("xbox" "ps3")
+
 # Ensure debug directory exists
 mkdir -p "$(dirname "$DEBUG_LOG")"
 
@@ -45,67 +51,110 @@ update_queue_file() {
 
 # Function to dynamically adjust the number of parallel downloads based on system load
 get_dynamic_parallel_limit() {
-    # Get the 1-minute load average
     local load=$(awk '{print $1}' /proc/loadavg)
-    local cpu_count=$(nproc)  # Number of CPU cores
-
-    # Calculate the dynamic parallel limit
+    local cpu_count=$(nproc)
     local limit=$(echo "$cpu_count / $load" | bc -l)
-
-    # Ensure at least one download runs, and cap at a max limit (e.g., 10)
     if (( $(echo "$limit < 1" | bc -l) )); then
         limit=1
     elif (( $(echo "$limit > 10" | bc -l) )); then
         limit=10
     fi
-
-    # Convert to an integer (round down)
     echo "${limit%.*}"
 }
 
-# Function to resume downloads
-resume_downloads() {
-    if [ -f "$DOWNLOAD_PROCESSING" ]; then
-        while IFS='|' read -r game_name url folder; do
-            # Check if the process is already downloading this file
-            if ps aux | grep -F "$url" | grep -v "grep" > /dev/null; then
-                echo "Skipping ongoing download for: $url"
-                continue
-            fi
-
-            # Check if the temporary file exists (indicates a partial download)
-            local temp_path="/userdata/system/game-downloader/$game_name"
-            if [ -f "$temp_path" ]; then
-                echo "Resuming download for $game_name from $url..."
-            else
-                echo "Starting new download for $game_name from $url..."
-            fi
-
-            # Call process_download to handle the download and file processing
-            process_download "$game_name" "$url" "$folder"
-        done < "$DOWNLOAD_PROCESSING"
-    else
-        echo "No downloads to resume in $DOWNLOAD_PROCESSING."
-    fi
+# Extract the system name from the folder path
+get_system_from_folder() {
+    local folder="$1"
+    echo "$(basename "$folder")"
 }
 
+# Function to compress ISO to squashfs
+compress_iso() {
+    local game_name="$1"
+    local iso_path="$2"
+    local folder="$3"
+    local system="$4"
+
+    local squashfs_path="${iso_path%.iso}.iso.squashfs"
+
+    echo "Compressing $game_name to squashfs for system $system..."
+    mksquashfs "$iso_path" "$squashfs_path" -comp xz -b 1M
+    if [ $? -ne 0 ]; then
+        echo "Compression failed for $game_name."
+        return
+    fi
+
+    rm "$iso_path"
+    echo "Compression successful. Removed original .iso: $iso_path."
+
+    mv "$squashfs_path" "$folder"
+    echo "Moved compressed file to $folder."
+}
+
+# Function to unzip files
+process_unzip() {
+    local game_name="$1"
+    local temp_path="$2"
+    local folder="$3"
+    local system="$4"
+
+    if [[ " ${KEEP_AS_ZIP_SYSTEMS[@]} " =~ " ${system} " ]]; then
+        echo "System $system is configured to keep files as .zip. Moving $game_name as is."
+        mv "$temp_path" "$folder"
+        return
+    fi
+
+    local game_name_no_ext="${game_name%.zip}"
+    local game_folder="/userdata/system/game-downloader/$game_name_no_ext"
+
+    if [ -d "$game_folder" ]; then
+        echo "Directory $game_folder exists. Cleaning up."
+        rm -rf "$game_folder"
+    fi
+    mkdir -p "$game_folder"
+
+    echo "Unzipping $game_name for system $system..."
+    unzip -q "$temp_path" -d "$game_folder"
+    if [ $? -ne 0 ]; then
+        echo "Unzip failed for $game_name."
+        return
+    fi
+
+    local iso_file=$(find "$game_folder" -type f -name "*.iso" | head -n 1)
+    if [ -n "$iso_file" ]; then
+        echo "Extracted .iso file: $iso_file"
+        if [[ " ${COMPRESS_ISO_SYSTEMS[@]} " =~ " ${system} " ]]; then
+            compress_iso "$game_name" "$iso_file" "$folder" "$system"
+        else
+            mv "$iso_file" "$folder"
+            echo "Moved unzipped .iso for $game_name to $folder."
+        fi
+    else
+        mv "$game_folder" "$folder"
+        echo "Moved unzipped folder for $game_name to $folder."
+    fi
+
+    rm "$temp_path"
+    echo "Removed .zip file: $temp_path."
+}
+
+# Function to process downloads
 process_download() {
     local game_name="$1"
     local url="$2"
     local folder="$3"
 
+    local system=$(get_system_from_folder "$folder")
     local temp_path="/userdata/system/game-downloader/$game_name"
 
     mkdir -p "$(dirname "$temp_path")"
 
-    # Start or resume download
     if [ -f "$temp_path" ]; then
         echo "Resuming partial download for $game_name..."
     else
         echo "Starting new download for $game_name..."
     fi
 
-    # Log progress in processing.txt
     echo "$game_name|$url|$folder" >> "$DOWNLOAD_PROCESSING"
 
     wget --tries=5 -c "$url" -O "$temp_path" >> "$DEBUG_LOG" 2>&1
@@ -116,10 +165,11 @@ process_download() {
 
     echo "Download completed for $game_name."
 
-    # Handle the downloaded file
     if [[ "$game_name" == *.zip ]]; then
-        process_unzip "$game_name" "$temp_path" "$folder"
-    elif [[ "$game_name" == *.chd || "$game_name" == *.iso ]]; then
+        process_unzip "$game_name" "$temp_path" "$folder" "$system"
+    elif [[ "$game_name" == *.iso ]]; then
+        compress_iso "$game_name" "$temp_path" "$folder" "$system"
+    elif [[ "$game_name" == *.chd ]]; then
         mv "$temp_path" "$folder"
         echo "Moved $game_name to $folder."
     else
@@ -127,40 +177,7 @@ process_download() {
         rm "$temp_path"
     fi
 
-    # Remove entry from processing.txt after successful processing
     update_queue_file "$DOWNLOAD_PROCESSING" "$game_name|$url|$folder"
-}
-
-# Function to unzip files
-process_unzip() {
-    local game_name="$1"
-    local temp_path="$2"
-    local folder="$3"
-
-    local game_name_no_ext="${game_name%.zip}"
-    local game_folder="/userdata/system/game-downloader/$game_name_no_ext"
-
-    # Clean up existing directory if necessary
-    if [ -d "$game_folder" ]; then
-        echo "Directory $game_folder exists. Cleaning up."
-        rm -rf "$game_folder"
-    fi
-    mkdir -p "$game_folder"
-
-    echo "Unzipping $game_name..."
-    unzip -q "$temp_path" -d "$game_folder"
-    if [ $? -ne 0 ]; then
-        echo "Unzip failed for $game_name."
-        return
-    fi
-
-    # Move unzipped files to target folder
-    mv "$game_folder" "$folder"
-    echo "Moved unzipped files for $game_name to $folder."
-
-    # Remove the .zip file after successful extraction
-    rm "$temp_path"
-    echo "Removed .zip file: $temp_path."
 }
 
 # Function to check and move .iso files
