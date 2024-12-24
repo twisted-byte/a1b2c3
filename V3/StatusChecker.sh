@@ -4,7 +4,7 @@
 download_file="/userdata/system/game-downloader/processing.txt"
 
 # Correct directory where the download status files are stored
-STATUS_DIR="/userdata/system/game-downloader/status"
+STATUS_DIR="/userdata/system/game-downloader"
 mkdir -p "$STATUS_DIR"
 
 # Function to display download status with Dialog
