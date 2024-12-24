@@ -138,6 +138,32 @@ process_unzip() {
     echo "Removed .zip file: $temp_path."
 }
 
+# Function to resume downloads
+resume_downloads() {
+    if [ -f "$DOWNLOAD_PROCESSING" ]; then
+        while IFS='|' read -r game_name url folder; do
+            # Check if the process is already downloading this file
+            if ps aux | grep -F "$url" | grep -v "grep" > /dev/null; then
+                echo "Skipping ongoing download for: $url"
+                continue
+            fi
+
+            # Check if the temporary file exists (indicates a partial download)
+            local temp_path="/userdata/system/game-downloader/$game_name"
+            if [ -f "$temp_path" ]; then
+                echo "Resuming download for $game_name from $url..."
+            else
+                echo "Starting new download for $game_name from $url..."
+            fi
+
+            # Call process_download to handle the download and file processing
+            process_download "$game_name" "$url" "$folder"
+        done < "$DOWNLOAD_PROCESSING"
+    else
+        echo "No downloads to resume in $DOWNLOAD_PROCESSING."
+    fi
+}
+
 # Function to process downloads
 process_download() {
     local game_name="$1"
