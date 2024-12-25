@@ -169,14 +169,9 @@ process_unzip() {
     local folder="$3"
     local system="$4"
 
-    # Only redirect output for unzip operations (not general downloads)
-    local original_log_file="$DEBUG_LOG"
-    exec > "$UNZIP_DEBUG_LOG" 2>&1
-
     if [[ " ${KEEP_AS_ZIP_SYSTEMS[@]} " =~ " ${system} " ]]; then
         echo "System $system is configured to keep files as .zip. Moving $game_name as is."
         mv "$temp_path" "$folder"
-        exec > "$original_log_file" 2>&1  # Restore original log file
         return
     fi
 
@@ -192,52 +187,31 @@ process_unzip() {
 
     echo "Processing $game_name for system $system..."
 
-    # Handle .zip files (using unzip)
-    if [[ "$game_name" == *.zip ]]; then
-        echo "Unzipping $game_name..."
-        unzip -q "$temp_path" -d "$game_folder"
-        if [ $? -ne 0 ]; then
-            echo "Unzip failed for $game_name."
-            exec > "$original_log_file" 2>&1  # Restore original log file
-            return
-        fi
-
     # Handle .rar files (using 7zz)
-    elif [[ "$game_name" == *.rar ]]; then
+    if [[ "$game_name" == *.rar ]]; then
         echo "Extracting $game_name using 7zz..."
         7zz x "$temp_path" -o"$game_folder"
         if [ $? -ne 0 ]; then
             echo "Failed to extract $game_name using 7zz."
-            exec > "$original_log_file" 2>&1  # Restore original log file
+            rm -rf "$game_folder"
             return
         fi
 
-        # Move extracted files to .ps3 folder
-        local ps3_folder="$folder/${game_name_no_ext}.ps3"
-        mkdir -p "$ps3_folder"
-
-        # Move the extracted files (not the folder) into the .ps3 folder
-        find "$game_folder" -type f -exec mv {} "$ps3_folder" \;
-        echo "Moved extracted files to $ps3_folder"
+        # Rename the folder to add .ps3 extension
+        local ps3_folder="${game_folder}.ps3"
+        mv "$game_folder" "$ps3_folder"
 
         # Move the .ps3 folder to its destination
         mv "$ps3_folder" "$folder"
-        echo "Moved .ps3 folder to $folder"
-
+        echo "Moved $ps3_folder to $folder"
     else
         echo "Unsupported file type for $game_name. Skipping."
         rm "$temp_path"
-        exec > "$original_log_file" 2>&1  # Restore original log file
         return
     fi
 
-    rm -rf "$game_folder"
-    echo "Removed temporary extraction folder: $game_folder"
-
     rm "$temp_path"
     echo "Removed original archive file: $temp_path."
-
-    exec > "$original_log_file" 2>&1  # Restore original log file
 }
 
 
