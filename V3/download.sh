@@ -208,12 +208,14 @@ process_unzip() {
             return
         fi
 
-        # Move the extracted content to a .ps3 folder
+        # Move extracted files to .ps3 folder
         local ps3_folder="$folder/${game_name_no_ext}.ps3"
         mkdir -p "$ps3_folder"
-        mv "$game_folder"/* "$ps3_folder"
-        echo "Moved extracted content to $ps3_folder"
-        
+
+        # Move the extracted files (not the folder) into the .ps3 folder
+        find "$game_folder" -type f -exec mv {} "$ps3_folder" \;
+        echo "Moved extracted files to $ps3_folder"
+
         # Move the .ps3 folder to its destination
         mv "$ps3_folder" "$folder"
         echo "Moved .ps3 folder to $folder"
