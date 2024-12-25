@@ -113,11 +113,17 @@ get_system_from_folder() {
 }
 
 # Function to unzip files
+# Define a separate log file for unzip process
+UNZIP_DEBUG_LOG="/userdata/system/game-downloader/debug/unzip_debug.txt"
+
 process_unzip() {
     local game_name="$1"
     local temp_path="$2"
     local folder="$3"
     local system="$4"
+
+    # Redirecting output of unzip specific logs to the new log file
+    exec > "$UNZIP_DEBUG_LOG" 2>&1
 
     if [[ " ${KEEP_AS_ZIP_SYSTEMS[@]} " =~ " ${system} " ]]; then
         echo "System $system is configured to keep files as .zip. Moving $game_name as is."
@@ -160,7 +166,7 @@ process_unzip() {
 
             # Create the PS3 folder and extract
             mkdir -p "$ps3_folder"
-            7z x "$iso_file" -o "$ps3_folder"
+            7z x "$iso_file" -o"$ps3_folder"
             if [ $? -ne 0 ]; then
                 echo "Extraction failed for $iso_file."
                 return
@@ -192,6 +198,7 @@ process_unzip() {
     rm "$temp_path"
     echo "Removed .zip file: $temp_path."
 }
+
 
 # Function to resume downloads
 resume_downloads() {
