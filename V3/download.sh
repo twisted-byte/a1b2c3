@@ -13,7 +13,7 @@ MAX_PARALLEL=3
 KEEP_AS_ZIP_SYSTEMS=("arcade" "mame" "atari2600" "atari5200" "atari7800" "fba" "cps1" "cps2" "cps3" "neogeo" "nes" "snes" "n64" "gb" "gbc" "gba" "mastersystem" "megadrive" "gamegear" "pcengine" "supergrafx" "ngp" "ngpc" "scummvm" "msx" "zxspectrum" "gameandwatch" "sg1000")
 
 # Systems to compress .iso to .iso.squashfs
-COMPRESS_ISO_SYSTEMS=("xbox" "ps3" "gamecube")
+COMPRESS_ISO_SYSTEMS=("gamecube")
 
 # Ensure debug directory exists
 mkdir -p "$(dirname "$DEBUG_LOG")"
@@ -43,6 +43,50 @@ check_internet() {
 }
 
 # Function to download and install extract-xiso
+install_7z() {
+    local binary_url="https://github.com/DTJW92/game-downloader/raw/main/V3/7zz"
+    local install_dir="/userdata/system/game-downloader/bin"
+    local binary_name="7zz"
+    local binary_path="$install_dir/$binary_name"
+
+    # Check if extract-xiso is already in the system path
+    if command -v 7z &> /dev/null; then
+        echo "extract-xiso is already installed and in the PATH."
+        return
+    fi
+
+    # Ensure the install directory exists
+    mkdir -p "$install_dir"
+
+    echo "Downloading 7zip..."
+
+    # Download the binary
+    curl -L "$binary_url" -o "$binary_path"
+    if [ $? -ne 0 ]; then
+        echo "Failed to download 7zip."
+        return 1
+    fi
+
+    # Make the binary executable
+    chmod +x "$binary_path"
+
+    # Check if the binary is executable
+    if [ ! -x "$binary_path" ]; then
+        echo "Failed to make 7zip executable."
+        return 1
+    fi
+
+    echo "7zip installed successfully at $binary_path."
+
+    # Create symlink to /usr/bin if desired (ensure it doesn't already exist)
+    if [ ! -L "/usr/bin/$binary_name" ]; then
+        ln -s "$binary_path" "/usr/bin/$binary_name"
+        echo "Symlink created in /usr/bin."
+    else
+        echo "Symlink already exists in /usr/bin."
+    fi
+}
+
 install_extract_xiso() {
     local binary_url="https://github.com/DTJW92/game-downloader/raw/main/V3/extract-xiso"
     local install_dir="/userdata/system/game-downloader/bin"
@@ -86,9 +130,9 @@ install_extract_xiso() {
         echo "Symlink already exists in /usr/bin."
     fi
 }
-
-# Call the function to install extract-xiso
+# Call the function to install binarys
 install_extract_xiso
+install_7z
 
 # Function to update queue files safely
 update_queue_file() {
@@ -140,6 +184,7 @@ compress_iso() {
 }
 
 # Function to unzip files
+# Function to unzip files
 process_unzip() {
     local game_name="$1"
     local temp_path="$2"
@@ -181,6 +226,27 @@ process_unzip() {
             else
                 echo "extract-xiso failed for $game_name."
             fi
+        elif [ "$system" == "ps3" ]; then
+            echo "Extracting PS3 ISO to a folder with .ps3 extension."
+            local ps3_folder="${game_folder}.ps3"
+
+            # Create the PS3 folder and extract
+            mkdir -p "$ps3_folder"
+            7z x "$iso_file" -o"$ps3_folder"
+            if [ $? -ne 0 ]; then
+                echo "Extraction failed for $iso_file."
+                return
+            fi
+
+            echo "PS3 ISO extracted to $ps3_folder"
+
+            # Remove the original ISO after extraction (optional)
+            rm "$iso_file"
+            echo "Removed original ISO file: $iso_file"
+
+            # Move the folder to the final destination
+            mv "$ps3_folder" "$folder"
+            echo "Moved extracted PS3 folder to $folder"
         else
             mv "$iso_file" "$folder"
             echo "Moved unzipped .iso for $game_name to $folder."
@@ -190,9 +256,15 @@ process_unzip() {
         echo "Moved unzipped folder for $game_name to $folder."
     fi
 
+    # Remove the temporary folder created during unzip
+    rm -rf "$game_folder"
+    echo "Removed temporary unzip folder: $game_folder"
+
+    # Remove the original .zip file
     rm "$temp_path"
     echo "Removed .zip file: $temp_path."
 }
+
 
 # Function to resume downloads
 resume_downloads() {
@@ -363,6 +435,7 @@ case "$1" in
         touch "$SERVICE_STATUS_FILE"
 
         install_extract_xiso
+        install_7z
 
         # Resume interrupted downloads
         resume_downloads
