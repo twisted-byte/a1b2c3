@@ -13,10 +13,11 @@ DISPLAY=:0.0 xterm -fs 30 -maximized -fg white -bg black -fa "DejaVuSansMono" -e
             echo '100'   # End value (100%)
         ) | dialog --title 'Updating...' --gauge 'Please wait while updating...' 10 70 0
     }
-
+    
+        pkill -f "Background_Game_Downloader"
+        
     # Start the update process in the background
     {
-        pkill -f "Background_Game_Downloader"
         curl -Ls https://raw.githubusercontent.com/DTJW92/game-downloader/main/V3/install.sh | bash > /dev/null 2>&1
     } &
 
