@@ -13,7 +13,7 @@ curl -L "https://raw.githubusercontent.com/DTJW92/game-downloader/main/V3/MainMe
 chmod +x "$LOCAL_SCRIPT_PATH"
 
 # Open an xterm window and run the downloaded GameDownloader.sh script
-xterm -fs 10 -maximized -fg white -bg black -fa "DejaVuSansMono" -en UTF-8 -e bash -c "
+DISPLAY=:0.0 xterm -fs 30 -maximized -fg white -bg black -fa "DejaVuSansMono" -en UTF-8 -e bash -c "DISPLAY=:0.0
     # Execute the GameDownloader.sh script
     bash '$LOCAL_SCRIPT_PATH'
     
