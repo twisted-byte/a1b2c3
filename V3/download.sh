@@ -188,38 +188,51 @@ process_unzip() {
     mkdir -p "$game_folder"
 
     echo "Unzipping $game_name for system $system..."
-    unzip -q "$temp_path" -d "$game_folder"
-    if [ $? -ne 0 ]; then
-        echo "Unzip failed for $game_name."
+
+    if [[ "$game_name" == *.zip ]]; then
+        unzip -q "$temp_path" -d "$game_folder"
+        if [ $? -ne 0 ]; then
+            echo "Unzip failed for $game_name."
+            return
+        fi
+    elif [[ "$game_name" == *.rar ]]; then
+        echo "Extracting $game_name using 7zz..."
+        7zz x "$temp_path" -o"$game_folder"
+        if [ $? -ne 0 ]; then
+            echo "Failed to extract $game_name using 7zz."
+            return
+        fi
+    else
+        echo "Unsupported file type for $game_name. Skipping."
+        rm "$temp_path"
         return
     fi
 
     local iso_file=$(find "$game_folder" -type f -name "*.iso" | head -n 1)
     local rar_file=$(find "$game_folder" -type f -name "*.rar" | head -n 1)
-    
+
     if [ -n "$iso_file" ]; then
         echo "Extracted .iso file: $iso_file"
 
         if [ "$system" == "xbox" ]; then
             echo "Converting for use with Xemu: $iso_file"
-            
+
             # Use fallocate to create the desired file size for the Xbox game
             fallocate -c -o 0 -l 387MiB "$iso_file"
             if [ $? -ne 0 ]; then
                 echo "Error converting: $iso_file"
                 return
             fi
-            
+
             echo "Converted file successfully: $iso_file"
 
             # Move the converted Xbox ISO file
             mv "$iso_file" "$folder"
             echo "Moved Xbox ISO to $folder."
         else
-        # For non-Xbox systems, move the original .iso file
-    mv "$iso_file" "$folder"
-    echo "Moved unzipped .iso for $game_name to $folder."
-fi
+            mv "$iso_file" "$folder"
+            echo "Moved unzipped .iso for $game_name to $folder."
+        fi
     elif [ -n "$rar_file" ]; then
         if [ "$system" == "ps3" ]; then
             echo "Extracting PS3 RAR to a folder with .ps3 extension."
