@@ -138,7 +138,6 @@ compress_iso() {
 }
 
 # Function to unzip files
-# Function to unzip files
 process_unzip() {
     local game_name="$1"
     local temp_path="$2"
@@ -255,6 +254,11 @@ process_download() {
     local temp_path="/userdata/system/game-downloader/$game_name"
 
     mkdir -p "$(dirname "$temp_path")"
+
+    if [ -f "$final_game_path" ]; then
+        echo "$game_name already exists in the ROM folder. Skipping download."
+        return
+    fi
 
     if [ -f "$temp_path" ]; then
         echo "Resuming partial download for $game_name..."
