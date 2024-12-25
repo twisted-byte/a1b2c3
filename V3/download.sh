@@ -190,7 +190,7 @@ process_unzip() {
 
     echo "Processing $game_name for system $system..."
 
-    # Handle .zip files
+    # Handle .zip files (using unzip)
     if [[ "$game_name" == *.zip ]]; then
         echo "Unzipping $game_name..."
         unzip -q "$temp_path" -d "$game_folder"
@@ -199,7 +199,7 @@ process_unzip() {
             return
         fi
 
-    # Handle .rar files - use 7zz for .rar
+    # Handle .rar files (using 7zz)
     elif [[ "$game_name" == *.rar ]]; then
         echo "Extracting $game_name using 7zz..."
         7zz x "$temp_path" -o"$game_folder"
@@ -208,71 +208,29 @@ process_unzip() {
             return
         fi
 
+        # Move the extracted content to a .ps3 folder
+        local ps3_folder="$folder/${game_name_no_ext}.ps3"
+        mkdir -p "$ps3_folder"
+        mv "$game_folder"/* "$ps3_folder"
+        echo "Moved extracted content to $ps3_folder"
+        
+        # Move the .ps3 folder to its destination
+        mv "$ps3_folder" "$folder"
+        echo "Moved .ps3 folder to $folder"
+
     else
         echo "Unsupported file type for $game_name. Skipping."
         rm "$temp_path"
         return
     fi
 
-    # Look for .iso or .rar files inside the extracted folder
-    local iso_file=$(find "$game_folder" -type f -name "*.iso" | head -n 1)
-
-    if [ -n "$iso_file" ]; then
-        echo "Extracted .iso file: $iso_file"
-
-        if [ "$system" == "xbox" ]; then
-            echo "Converting for use with Xemu: $iso_file"
-
-            # Use fallocate to create the desired file size for the Xbox game
-            fallocate -c -o 0 -l 387MiB "$iso_file"
-            if [ $? -ne 0 ]; then
-                echo "Error converting: $iso_file"
-                return
-            fi
-
-            echo "Converted file successfully: $iso_file"
-
-            # Move the converted Xbox ISO file
-            mv "$iso_file" "$folder"
-            echo "Moved Xbox ISO to $folder."
-        else
-            mv "$iso_file" "$folder"
-            echo "Moved unzipped .iso for $game_name to $folder."
-        fi
-    elif [ -n "$rar_file" ]; then
-        if [ "$system" == "ps3" ]; then
-            echo "Extracting PS3 RAR to a folder with .ps3 extension."
-            local ps3_folder="${game_folder}.ps3"
-
-            mkdir -p "$ps3_folder"
-            7zz x "$rar_file" "$ps3_folder"
-            if [ $? -ne 0 ]; then
-                echo "Extraction failed for $rar_file."
-                return
-            fi
-
-            echo "PS3 game extracted to $ps3_folder"
-
-            rm "$rar_file"
-            echo "Removed original RAR file: $rar_file"
-
-            mv "$ps3_folder" "$folder"
-            echo "Moved extracted PS3 folder to $folder"
-        else
-            mv "$rar_file" "$folder"
-            echo "Moved .rar file for $game_name to $folder."
-        fi
-    else
-        mv "$game_folder" "$folder"
-        echo "Moved unzipped folder for $game_name to $folder."
-    fi
-
     rm -rf "$game_folder"
-    echo "Removed temporary unzip folder: $game_folder"
+    echo "Removed temporary extraction folder: $game_folder"
 
     rm "$temp_path"
-    echo "Removed .zip file: $temp_path."
+    echo "Removed original archive file: $temp_path."
 }
+
 
 # Function to resume downloads
 resume_downloads() {
