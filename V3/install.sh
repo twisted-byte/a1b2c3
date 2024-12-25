@@ -59,14 +59,16 @@ download_file "https://raw.githubusercontent.com/DTJW92/game-downloader/main/vid
 download_file "https://raw.githubusercontent.com/DTJW92/game-downloader/main/images/Game%20Downloader%20Icon.png" "/userdata/roms/ports/images/Game_Downloader_Icon.png"
 download_file "https://raw.githubusercontent.com/DTJW92/game-downloader/main/images/Game%20Download%20Box%20Art.png" "/userdata/roms/ports/images/Game_Downloader_Box_Art.png"
 # Download and save download.sh locally (always replace)
-download_file "https://raw.githubusercontent.com/DTJW92/game-downloader/main/V3/download.sh" "/userdata/system/services/download.sh"
-# Convert download.sh to Unix format and set proper permissions
-dos2unix /userdata/system/services/download.sh >/dev/null 2>&1
-chmod +x /userdata/system/services/download.sh >/dev/null 2>&1
-chmod 777 /userdata/system/services/download.sh >/dev/null 2>&1 
+download_file "https://raw.githubusercontent.com/DTJW92/game-downloader/main/V3/download.sh" "/userdata/system/game-downloader/download.sh"
+download_file "https://raw.githubusercontent.com/DTJW92/game-downloader/main/V3/Background_Game_Downloader" "/userdata/system/services/Background_Game_Downloader"
 
-# Rename the file to remove the .sh extension
-mv /userdata/system/services/download.sh /userdata/system/services/Background_Game_Downloader >/dev/null 2>&1
+# Convert download.sh to Unix format and set proper permissions
+dos2unix /userdata/system/game-downloader/download.sh >/dev/null 2>&1
+chmod +x /userdata/system/game-downloader/download.sh >/dev/null 2>&1
+chmod 777 /userdata/system/game-downloader/download.sh >/dev/null 2>&1 
+dos2unix /userdata/system/services/Background_Game_Downloader >/dev/null 2>&1
+chmod +x /userdata/system/services/Background_Game_Downloader >/dev/null 2>&1
+chmod 777 /userdata/system/services/Background_Game_Downloader >/dev/null 2>&1 
 
 # Ensure the script is executable
 chmod +x /userdata/system/services/Background_Game_Downloader >/dev/null 2>&1
@@ -85,7 +87,6 @@ chmod +x /userdata/roms/ports/GameDownloader.sh >/dev/null 2>&1
 download_file "https://raw.githubusercontent.com/DTJW92/game-downloader/main/bkeys.txt" "/userdata/roms/ports/GameDownloader.sh.keys"
 
 # Refresh Batocera games list via localhost
-echo "Refreshing Batocera games list using localhost..."
 curl -X POST http://localhost:1234/reloadgames >/dev/null 2>&1
 
 # Ensure the gamelist.xml file exists with basic XML structure if it doesn't
