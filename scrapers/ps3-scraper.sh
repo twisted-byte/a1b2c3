@@ -26,7 +26,10 @@ scrape_url() {
     fi
 
     # Extract game file URLs matching the extension
-    echo "$response" | grep -oP "(?<=href=\")[^\"]*${EXT}" | while read -r game_url; do
+   echo "$response" | grep -o 'href="[^"]*\.rar"' | while read -r game_url; do
+        # Strip the "href=" and the surrounding quotes
+        game_url=$(echo "$game_url" | sed 's/href="//;s/"//')
+
         # Decode the URL
         local decoded_name=$(decode_url "$game_url")
         local quoted_name="\`$decoded_name\`"
