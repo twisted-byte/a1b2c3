@@ -39,11 +39,11 @@ check_internet() {
     fi
 }
 
-install_7zz(){
+install_extractps3iso(){
     # Paths and URLs
     INSTALL_DIR="/userdata/system/game-downloader/bin"
-    BINARY_URL="https://github.com/DTJW92/game-downloader/raw/refs/heads/main/V3/7zz"
-    BINARY_NAME="7zz"
+    BINARY_URL="https://github.com/DTJW92/game-downloader/raw/refs/heads/main/V3/extractps3iso"
+    BINARY_NAME="extractps3iso"
     BINARY_PATH="$INSTALL_DIR/$BINARY_NAME"
 
     # Ensure the install directory exists
@@ -131,7 +131,7 @@ install_extract_xiso() {
 
 # Call the function to install binarys
 install_extract_xiso
-install_7zz
+install_extractps3iso
 
 # Function to update queue files safely
 update_queue_file() {
