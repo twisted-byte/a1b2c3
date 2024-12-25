@@ -382,4 +382,4 @@ if [ $? -ne 0 ]; then
 fi
 
 resume_downloads
-parallel_downloads
+parallel_downloads &
