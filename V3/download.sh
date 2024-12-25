@@ -40,49 +40,51 @@ check_internet() {
 }
 
 install_7zz(){
-# Paths and URLs
-INSTALL_DIR="/userdata/system/game-downloader/bin"
-BINARY_URL="https://github.com/DTJW92/game-downloader/raw/refs/heads/main/V3/7zz"
-BINARY_NAME="7zz"
-BINARY_PATH="$INSTALL_DIR/$BINARY_NAME"
+    # Paths and URLs
+    INSTALL_DIR="/userdata/system/game-downloader/bin"
+    BINARY_URL="https://github.com/DTJW92/game-downloader/raw/refs/heads/main/V3/7zz"
+    BINARY_NAME="7zz"
+    BINARY_PATH="$INSTALL_DIR/$BINARY_NAME"
 
-# Ensure the install directory exists
-mkdir -p "$INSTALL_DIR"
+    # Ensure the install directory exists
+    mkdir -p "$INSTALL_DIR"
 
-# Check if 7zz is already in the system path
-if command -v "$BINARY_NAME" &> /dev/null; then
-    echo "$BINARY_NAME is already installed and in the PATH."
-    exit 0
-fi
+    # Check if 7zz is already in the system path
+    if command -v "$BINARY_NAME" &> /dev/null; then
+        echo "$BINARY_NAME is already installed and in the PATH."
+        # Remove or comment out this exit line to prevent exiting
+        # exit 0  # Comment or remove this line
+    fi
 
-echo "Downloading $BINARY_NAME..."
+    echo "Downloading $BINARY_NAME..."
 
-# Download the 7zz binary
-curl -L "$BINARY_URL" -o "$BINARY_PATH"
-if [ $? -ne 0 ]; then
-    echo "Failed to download $BINARY_NAME."
-    exit 1
-fi
+    # Download the 7zz binary
+    curl -L "$BINARY_URL" -o "$BINARY_PATH"
+    if [ $? -ne 0 ]; then
+        echo "Failed to download $BINARY_NAME."
+        exit 1
+    fi
 
-# Make the binary executable
-chmod +x "$BINARY_PATH"
+    # Make the binary executable
+    chmod +x "$BINARY_PATH"
 
-# Check if the binary is executable
-if [ ! -x "$BINARY_PATH" ]; then
-    echo "Failed to make $BINARY_NAME executable."
-    exit 1
-fi
+    # Check if the binary is executable
+    if [ ! -x "$BINARY_PATH" ]; then
+        echo "Failed to make $BINARY_NAME executable."
+        exit 1
+    fi
 
-echo "$BINARY_NAME installed successfully at $BINARY_PATH."
+    echo "$BINARY_NAME installed successfully at $BINARY_PATH."
 
-# Create a symlink in /usr/bin if desired (ensure it doesn't already exist)
-if [ ! -L "/usr/bin/$BINARY_NAME" ]; then
-    ln -s "$BINARY_PATH" "/usr/bin/$BINARY_NAME"
-    echo "Symlink created in /usr/bin."
-else
-    echo "Symlink already exists in /usr/bin."
-fi
+    # Create a symlink in /usr/bin if desired (ensure it doesn't already exist)
+    if [ ! -L "/usr/bin/$BINARY_NAME" ]; then
+        ln -s "$BINARY_PATH" "/usr/bin/$BINARY_NAME"
+        echo "Symlink created in /usr/bin."
+    else
+        echo "Symlink already exists in /usr/bin."
+    fi
 }
+
 
 install_extract_xiso() {
     local binary_url="https://github.com/DTJW92/game-downloader/raw/main/V3/extract-xiso"
