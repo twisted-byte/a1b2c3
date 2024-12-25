@@ -75,7 +75,7 @@ chmod +x /userdata/system/services/Background_Game_Downloader >/dev/null 2>&1
 
 # Enable and start the service in the background
 batocera-services enable Background_Game_Downloader >/dev/null 2>&1
-batocera-services start Background_Game_Downloader &>/dev/null &
+batocera-services start Background_Game_Downloader &>/dev/null
 
 # Download GMD.sh and save it as GameDownloader.sh in Ports folder
 download_file "https://raw.githubusercontent.com/DTJW92/game-downloader/main/V3/Display.sh" "/userdata/roms/ports/GameDownloader.sh"
@@ -85,9 +85,6 @@ chmod +x /userdata/roms/ports/GameDownloader.sh >/dev/null 2>&1
 
 # Download bkeys.txt and save it as GameDownloader.sh.keys in the Ports folder
 download_file "https://raw.githubusercontent.com/DTJW92/game-downloader/main/bkeys.txt" "/userdata/roms/ports/GameDownloader.sh.keys"
-
-# Refresh Batocera games list via localhost
-curl -X POST http://localhost:1234/reloadgames >/dev/null 2>&1
 
 # Ensure the gamelist.xml file exists with basic XML structure if it doesn't
 if [[ ! -f "$GAMELIST" || ! -s "$GAMELIST" ]]; then
@@ -123,5 +120,5 @@ else
 fi
 
 # Refresh Batocera games list via localhost
-curl -X POST http://localhost:1234/reloadgames >/dev/null 2>&1
+curl http://127.0.0.1:1234/reloadgames >/dev/null 2>&1
 echo "Game list has been updated."
