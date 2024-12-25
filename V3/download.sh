@@ -200,13 +200,43 @@ process_unzip() {
         echo "Extracted .iso file: $iso_file"
 
         if [ "$system" == "xbox" ]; then
-            echo "Using extract-xiso to rewrite Xbox game to .xiso format."
-            extract-xiso -r "$iso_file" "$folder"
-            if [ $? -eq 0 ]; then
-                echo "Xbox game successfully rewritten to .xiso."
-            else
-                echo "extract-xiso failed for $game_name."
-            fi
+    echo "Using extract-xiso to rewrite Xbox game to .squashfs format."
+
+    # Extract the contents of the ISO using extract-xiso
+    extract-xiso "$iso_file"
+    if [ $? -ne 0 ]; then
+        echo "Error extracting ISO file: $iso_file"
+        return
+    fi
+
+    # Assuming extract-xiso extracts the contents to a folder with the same name as the ISO file
+    # Strip the extension to get the folder name
+    extracted_folder="${iso_file%.iso}"
+
+    if [ ! -d "$extracted_folder" ]; then
+        echo "Extraction failed: Folder $extracted_folder does not exist."
+        return
+    fi
+
+    # Create the SquashFS image from the extracted folder
+    squashfs_file="${extracted_folder}.squashfs"
+    mksquashfs "$extracted_folder" "$squashfs_file"
+    
+    if [ $? -eq 0 ]; then
+        echo "SquashFS created successfully: $squashfs_file"
+    else
+        echo "Failed to create SquashFS from extracted files."
+    fi
+
+    # Clean up: Remove the extracted folder (optional, can be retained if needed)
+    rm -rf "$extracted_folder"
+    echo "Removed extracted folder: $extracted_folder"
+
+    # Move the SquashFS file to the destination
+    mv "$squashfs_file" "$folder"
+    echo "Moved $squashfs_file to $folder"
+fi
+
         elif [ "$system" == "ps3" ]; then
             echo "Extracting PS3 ISO to a folder with .ps3 extension."
             local ps3_folder="${game_folder}.ps3"
