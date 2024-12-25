@@ -52,8 +52,7 @@ install_7zz(){
     # Check if 7zz is already in the system path
     if command -v "$BINARY_NAME" &> /dev/null; then
         echo "$BINARY_NAME is already installed and in the PATH."
-        # Remove or comment out this exit line to prevent exiting
-        # exit 0  # Comment or remove this line
+        return
     fi
 
     echo "Downloading $BINARY_NAME..."
