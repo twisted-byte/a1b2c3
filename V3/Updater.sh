@@ -7,18 +7,21 @@ DISPLAY=:0.0 xterm -fs 30 -maximized -fg white -bg black -fa "DejaVuSansMono" -e
         (
             echo '0'   # Initial value (0%)
             for i in {1..100}; do
-                echo \$i
                 sleep 0.1
+                echo \$i   # Update the progress (0-100)
             done
             echo '100'   # End value (100%)
         ) | dialog --title 'Updating...' --gauge 'Please wait while updating...' 10 70 0
     }
-    
-        batocera-services stop Background_Game_Downloader
-        
-    # Start the update process in the background
+
+    # Stop the Background_Game_Downloader service before updating
+    batocera-services stop Background_Game_Downloader
+
+    # Start the update process in the background and capture output
     {
-        curl -Ls https://raw.githubusercontent.com/DTJW92/game-downloader/main/V3/install.sh | bash > /dev/null 2>&1
+        echo 'Starting update process...'
+        curl -Ls https://raw.githubusercontent.com/DTJW92/game-downloader/main/V3/install.sh | bash
+        echo 'Update process finished.'
     } &
 
     # Show the spinner while the update process is running
@@ -27,7 +30,7 @@ DISPLAY=:0.0 xterm -fs 30 -maximized -fg white -bg black -fa "DejaVuSansMono" -e
     # Wait for the background update process to finish
     wait
 
-    # Notify user when update is complete
+    # Notify the user when the update is complete
     dialog --infobox 'Update Complete!' 10 50
     sleep 5
 "
