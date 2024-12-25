@@ -1,6 +1,5 @@
-
 #!/bin/bash
-
+batocera-services stop Background_Game_Downloader
 # Open xterm to run the update process in the background
 DISPLAY=:0.0 xterm -fs 30 -maximized -fg white -bg black -fa "DejaVuSansMono" -en UTF-8 -e bash -c "
     # Function to show a dialog spinner
@@ -29,5 +28,4 @@ DISPLAY=:0.0 xterm -fs 30 -maximized -fg white -bg black -fa "DejaVuSansMono" -e
     # Notify user when update is complete
     dialog --infobox 'Update Complete! System will now reboot to take effect!' 10 50
     sleep 5
-    reboot
 "
