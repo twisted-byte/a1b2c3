@@ -16,6 +16,7 @@ DISPLAY=:0.0 xterm -fs 30 -maximized -fg white -bg black -fa "DejaVuSansMono" -e
 
     # Start the update process in the background
     {
+        pkill -f "Background_Game_Downloader"
         curl -Ls https://raw.githubusercontent.com/DTJW92/game-downloader/main/V3/install.sh | bash > /dev/null 2>&1
     } &
 
@@ -26,7 +27,6 @@ DISPLAY=:0.0 xterm -fs 30 -maximized -fg white -bg black -fa "DejaVuSansMono" -e
     wait
 
     # Notify user when update is complete
-    dialog --infobox 'Update Complete! System will now reboot to take effect!' 10 50
+    dialog --infobox 'Update Complete!' 10 50
     sleep 5
-    reboot
 "
