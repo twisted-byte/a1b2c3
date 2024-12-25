@@ -371,9 +371,6 @@ parallel_downloads() {
 # Call move_iso_files function
 move_iso_files
 
-# Graceful exit handling
-trap 'echo "Cleaning up and exiting."; exit 0' SIGINT SIGTERM
-
 # Check internet connection before starting
 check_internet
 if [ $? -ne 0 ]; then
