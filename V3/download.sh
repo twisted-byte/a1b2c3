@@ -281,11 +281,13 @@ process_download() {
 
     local system=$(get_system_from_folder "$folder")
     local temp_path="/userdata/system/game-downloader/$game_name"
+    local final_game_path="$folder/$game_name"
 
-    mkdir -p "$(dirname "$temp_path")"
-
+    # Skip if the game already exists in the ROM folder
     if [ -f "$final_game_path" ]; then
         echo "$game_name already exists in the ROM folder. Skipping download."
+        # Remove the skipped line from download.txt
+        update_queue_file "$DOWNLOAD_QUEUE" "$game_name|$url|$folder"
         return
     fi
 
