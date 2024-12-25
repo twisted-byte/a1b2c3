@@ -12,9 +12,6 @@ MAX_PARALLEL=3
 # Systems to keep as .zip
 KEEP_AS_ZIP_SYSTEMS=("arcade" "mame" "atari2600" "atari5200" "atari7800" "fba" "cps1" "cps2" "cps3" "neogeo" "nes" "snes" "n64" "gb" "gbc" "gba" "mastersystem" "megadrive" "gamegear" "pcengine" "supergrafx" "ngp" "ngpc" "scummvm" "msx" "zxspectrum" "gameandwatch" "sg1000")
 
-# Systems to compress .iso to .iso.squashfs
-COMPRESS_ISO_SYSTEMS=()
-
 # Ensure debug directory exists
 mkdir -p "$(dirname "$DEBUG_LOG")"
 
@@ -85,6 +82,7 @@ install_extract_xiso() {
         echo "Symlink already exists in /usr/bin."
     fi
 }
+
 # Call the function to install binarys
 install_extract_xiso
 
@@ -112,29 +110,6 @@ get_dynamic_parallel_limit() {
 get_system_from_folder() {
     local folder="$1"
     echo "$(basename "$folder")"
-}
-
-# Function to compress ISO to squashfs
-compress_iso() {
-    local game_name="$1"
-    local iso_path="$2"
-    local folder="$3"
-    local system="$4"
-
-    local squashfs_path="${iso_path%.iso}.iso.squashfs"
-
-    echo "Compressing $game_name to squashfs for system $system..."
-    mksquashfs "$iso_path" "$squashfs_path" -comp xz -b 1M
-    if [ $? -ne 0 ]; then
-        echo "Compression failed for $game_name."
-        return
-    fi
-
-    rm "$iso_path"
-    echo "Compression successful. Removed original .iso: $iso_path."
-
-    mv "$squashfs_path" "$folder"
-    echo "Moved compressed file to $folder."
 }
 
 # Function to unzip files
@@ -218,7 +193,6 @@ process_unzip() {
     echo "Removed .zip file: $temp_path."
 }
 
-
 # Function to resume downloads
 resume_downloads() {
     if [ -f "$DOWNLOAD_PROCESSING" ]; then
@@ -279,7 +253,8 @@ process_download() {
     if [[ "$game_name" == *.zip ]]; then
         process_unzip "$game_name" "$temp_path" "$folder" "$system"
     elif [[ "$game_name" == *.iso ]]; then
-        compress_iso "$game_name" "$temp_path" "$folder" "$system"
+        mv "$temp_path" "$folder"
+        echo "Moved .iso for $game_name to $folder."
     elif [[ "$game_name" == *.chd ]]; then
         mv "$temp_path" "$folder"
         echo "Moved $game_name to $folder."
@@ -290,26 +265,6 @@ process_download() {
 
     update_queue_file "$DOWNLOAD_PROCESSING" "$game_name|$url|$folder"
 }
-
-# Function to check and move .iso files
-move_iso_files() {
-    src_dir="/userdata/saves/flatpak/data"
-    dest_dir="/userdata/roms/windows_installers"
-    find "$src_dir" -type f -name "*.iso" -exec mv {} "$dest_dir" \;
-}
-
-# Call move_iso_files function
-move_iso_files
-
-# Graceful exit handling
-trap 'echo "Cleaning up and exiting."; exit 0' SIGINT SIGTERM
-
-# Check internet connection before starting
-check_internet
-if [ $? -ne 0 ]; then
-    echo "No internet connection found. Exiting script."
-    exit 1
-fi
 
 # Function to check and move .iso files
 move_iso_files() {
@@ -399,6 +354,7 @@ case "$1" in
 
         # Start parallel download processing in the background
         parallel_downloads &
+
         echo "Background_Game_Downloader started successfully."
         ;;
 
@@ -422,8 +378,7 @@ case "$1" in
             echo "Background_Game_Downloader is running."
             exit 0
         else
-            echo "Background_Game_Downloader is stopped. Updating now..."
-            curl -L https://bit.ly/BatoceraGD | bash
+            echo "Background_Game_Downloader is stopped."
             exit 1
         fi
         ;;
@@ -433,5 +388,3 @@ case "$1" in
         exit 1
         ;;
 esac
-
-exit $?
