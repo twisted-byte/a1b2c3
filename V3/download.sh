@@ -169,12 +169,14 @@ process_unzip() {
     local folder="$3"
     local system="$4"
 
-    # Redirecting output of unzip specific logs to the new log file
+    # Only redirect output for unzip operations (not general downloads)
+    local original_log_file="$DEBUG_LOG"
     exec > "$UNZIP_DEBUG_LOG" 2>&1
 
     if [[ " ${KEEP_AS_ZIP_SYSTEMS[@]} " =~ " ${system} " ]]; then
         echo "System $system is configured to keep files as .zip. Moving $game_name as is."
         mv "$temp_path" "$folder"
+        exec > "$original_log_file" 2>&1  # Restore original log file
         return
     fi
 
@@ -196,6 +198,7 @@ process_unzip() {
         unzip -q "$temp_path" -d "$game_folder"
         if [ $? -ne 0 ]; then
             echo "Unzip failed for $game_name."
+            exec > "$original_log_file" 2>&1  # Restore original log file
             return
         fi
 
@@ -205,6 +208,7 @@ process_unzip() {
         7zz x "$temp_path" -o"$game_folder"
         if [ $? -ne 0 ]; then
             echo "Failed to extract $game_name using 7zz."
+            exec > "$original_log_file" 2>&1  # Restore original log file
             return
         fi
 
@@ -223,6 +227,7 @@ process_unzip() {
     else
         echo "Unsupported file type for $game_name. Skipping."
         rm "$temp_path"
+        exec > "$original_log_file" 2>&1  # Restore original log file
         return
     fi
 
@@ -231,6 +236,8 @@ process_unzip() {
 
     rm "$temp_path"
     echo "Removed original archive file: $temp_path."
+
+    exec > "$original_log_file" 2>&1  # Restore original log file
 }
 
 
