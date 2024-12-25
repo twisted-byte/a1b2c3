@@ -201,36 +201,25 @@ process_unzip() {
         echo "Extracted .iso file: $iso_file"
 
         if [ "$system" == "xbox" ]; then
-            echo "Using extract-xiso to rewrite Xbox game to .squashfs format."
-            extract-xiso "$iso_file"
+            echo "Converting for use with Xemu: $iso_file"
+            
+            # Use fallocate to create the desired file size for the Xbox game
+            fallocate -c -o 0 -l 387MiB "$iso_file"
             if [ $? -ne 0 ]; then
-                echo "Error extracting ISO file: $iso_file"
+                echo "Error converting: $iso_file"
                 return
             fi
+            
+            echo "Converted file successfully: $iso_file"
 
-            extracted_folder="${iso_file%.iso}"
-            if [ ! -d "$extracted_folder" ]; then
-                echo "Extraction failed: Folder $extracted_folder does not exist."
-                return
-            fi
-
-            squashfs_file="${extracted_folder}.squashfs"
-            mksquashfs "$extracted_folder" "$squashfs_file"
-            if [ $? -eq 0 ]; then
-                echo "SquashFS created successfully: $squashfs_file"
-            else
-                echo "Failed to create SquashFS from extracted files."
-            fi
-
-            rm -rf "$extracted_folder"
-            echo "Removed extracted folder: $extracted_folder"
-
-            mv "$squashfs_file" "$folder"
-            echo "Moved $squashfs_file to $folder"
-        else
+            # Move the converted Xbox ISO file
             mv "$iso_file" "$folder"
-            echo "Moved unzipped .iso for $game_name to $folder."
-        fi
+            echo "Moved Xbox ISO to $folder."
+        else
+        # For non-Xbox systems, move the original .iso file
+    mv "$iso_file" "$folder"
+    echo "Moved unzipped .iso for $game_name to $folder."
+fi
     elif [ -n "$rar_file" ]; then
         if [ "$system" == "ps3" ]; then
             echo "Extracting PS3 RAR to a folder with .ps3 extension."
