@@ -178,7 +178,7 @@ process_unzip() {
         return
     fi
 
-    local game_name_no_ext="${game_name%.zip}"
+    local game_name_no_ext="${game_name%.*}"
     local game_folder="/userdata/system/game-downloader/$game_name_no_ext"
 
     if [ -d "$game_folder" ]; then
