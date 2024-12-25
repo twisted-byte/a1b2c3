@@ -13,7 +13,7 @@ MAX_PARALLEL=3
 KEEP_AS_ZIP_SYSTEMS=("arcade" "mame" "atari2600" "atari5200" "atari7800" "fba" "cps1" "cps2" "cps3" "neogeo" "nes" "snes" "n64" "gb" "gbc" "gba" "mastersystem" "megadrive" "gamegear" "pcengine" "supergrafx" "ngp" "ngpc" "scummvm" "msx" "zxspectrum" "gameandwatch" "sg1000")
 
 # Systems to compress .iso to .iso.squashfs
-COMPRESS_ISO_SYSTEMS=("gamecube")
+COMPRESS_ISO_SYSTEMS=()
 
 # Ensure debug directory exists
 mkdir -p "$(dirname "$DEBUG_LOG")"
