@@ -178,6 +178,7 @@ process_unzip() {
         return
     fi
 
+    # Remove any file extension (e.g., .zip, .rar, etc.)
     local game_name_no_ext="${game_name%.*}"
     local game_folder="/userdata/system/game-downloader/$game_name_no_ext"
 
@@ -187,9 +188,10 @@ process_unzip() {
     fi
     mkdir -p "$game_folder"
 
-    echo "Unzipping $game_name for system $system..."
+    echo "Processing $game_name for system $system..."
 
     if [[ "$game_name" == *.zip ]]; then
+        echo "Unzipping $game_name..."
         unzip -q "$temp_path" -d "$game_folder"
         if [ $? -ne 0 ]; then
             echo "Unzip failed for $game_name."
@@ -208,6 +210,7 @@ process_unzip() {
         return
     fi
 
+    # Look for .iso or .rar files inside the extracted folder
     local iso_file=$(find "$game_folder" -type f -name "*.iso" | head -n 1)
     local rar_file=$(find "$game_folder" -type f -name "*.rar" | head -n 1)
 
