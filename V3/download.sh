@@ -213,7 +213,7 @@ process_unzip() {
 
             # Create the PS3 folder and extract
             mkdir -p "$ps3_folder"
-            7zz x "$iso_file" -o"$ps3_folder"
+            extractps3iso "$iso_file" "$ps3_folder"
             if [ $? -ne 0 ]; then
                 echo "Extraction failed for $iso_file."
                 return
