@@ -20,7 +20,7 @@ case "$1" in
         # Mark service as running
         touch "$SERVICE_STATUS_FILE"
 
-        /userdata/system/game-downloader/download.sh
+        /userdata/system/game-downloader/download.sh &
 
         echo "Background_Game_Downloader started successfully."
         ;;
