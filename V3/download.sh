@@ -42,51 +42,6 @@ check_internet() {
     fi
 }
 
-# Function to download and install extract-xiso
-install_7z() {
-    local binary_url="https://github.com/DTJW92/game-downloader/raw/main/V3/7zz"
-    local install_dir="/userdata/system/game-downloader/bin"
-    local binary_name="7zz"
-    local binary_path="$install_dir/$binary_name"
-
-    # Check if extract-xiso is already in the system path
-    if command -v 7z &> /dev/null; then
-        echo "extract-xiso is already installed and in the PATH."
-        return
-    fi
-
-    # Ensure the install directory exists
-    mkdir -p "$install_dir"
-
-    echo "Downloading 7zip..."
-
-    # Download the binary
-    curl -L "$binary_url" -o "$binary_path"
-    if [ $? -ne 0 ]; then
-        echo "Failed to download 7zip."
-        return 1
-    fi
-
-    # Make the binary executable
-    chmod +x "$binary_path"
-
-    # Check if the binary is executable
-    if [ ! -x "$binary_path" ]; then
-        echo "Failed to make 7zip executable."
-        return 1
-    fi
-
-    echo "7zip installed successfully at $binary_path."
-
-    # Create symlink to /usr/bin if desired (ensure it doesn't already exist)
-    if [ ! -L "/usr/bin/$binary_name" ]; then
-        ln -s "$binary_path" "/usr/bin/$binary_name"
-        echo "Symlink created in /usr/bin."
-    else
-        echo "Symlink already exists in /usr/bin."
-    fi
-}
-
 install_extract_xiso() {
     local binary_url="https://github.com/DTJW92/game-downloader/raw/main/V3/extract-xiso"
     local install_dir="/userdata/system/game-downloader/bin"
@@ -132,7 +87,6 @@ install_extract_xiso() {
 }
 # Call the function to install binarys
 install_extract_xiso
-install_7z
 
 # Function to update queue files safely
 update_queue_file() {
@@ -435,7 +389,6 @@ case "$1" in
         touch "$SERVICE_STATUS_FILE"
 
         install_extract_xiso
-        install_7z
 
         # Resume interrupted downloads
         resume_downloads
