@@ -1,8 +1,8 @@
 #!/bin/bash
 
 # Base URL and destination directory
-BASE_URLS=("https://myrient.erista.me/files/Redump/Sony%20-%20PlayStation%203/")
-DEST_DIR="/userdata/system/game-downloader/links/PS3"
+BASE_URLS=("https://myrient.erista.me/files/Internet%20Archive/aitus95/PS3_ALVRO_PART_1/" "https://myrient.erista.me/files/Internet%20Archive/aitus95/PS3_ALVRO_PART_2/" "https://myrient.erista.me/files/Internet%20Archive/aitus95/PS3_ALVRO_PART_3/" "https://myrient.erista.me/files/Internet%20Archive/aitus95/PS3_ALVRO_PART_3_OTHER/" "https://myrient.erista.me/files/Internet%20Archive/aitus95/PS3_ALVRO_PART_4/" "https://myrient.erista.me/files/Internet%20Archive/aitus95/PS3_ALVRO_PART__5/" "https://myrient.erista.me/files/Internet%20Archive/aitus95/PS3_ALVRO_PART__6/" "https://myrient.erista.me/files/Internet%20Archive/aitus95/PS3_ALVRO_PART__7/" "https://myrient.erista.me/files/Internet%20Archive/aitus95/PS3_ALVRO_PART__8/" "https://myrient.erista.me/files/Internet%20Archive/aitus95/PS3_ALVRO_PART__9/" "https://myrient.erista.me/files/Internet%20Archive/aitus95/PS3_ALVRO_PART__10/" "https://myrient.erista.me/files/Internet%20Archive/aitus95/PS3_ALVRO_PART__11/")
+DEST_DIR="/userdata/system/game-downloader/links/PS3
 ROM_DIR="/userdata/roms/ps3"
 EXT=".zip"
 
