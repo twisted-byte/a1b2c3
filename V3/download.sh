@@ -380,4 +380,5 @@ if [ $? -ne 0 ]; then
     exit 1
 fi
 
+resume_downloads
 parallel_downloads
