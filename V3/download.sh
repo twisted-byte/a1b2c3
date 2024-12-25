@@ -383,3 +383,5 @@ fi
 
 resume_downloads
 parallel_downloads &
+
+wait
