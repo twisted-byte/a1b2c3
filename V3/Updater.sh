@@ -14,7 +14,7 @@ DISPLAY=:0.0 xterm -fs 30 -maximized -fg white -bg black -fa "DejaVuSansMono" -e
         ) | dialog --title 'Updating...' --gauge 'Please wait while updating...' 10 70 0
     }
     
-        pkill -f "Background_Game_Downloader"
+        batocera-services stop Background_Game_Downloader
         
     # Start the update process in the background
     {
