@@ -175,41 +175,49 @@ process_unzip() {
         return
     fi
 
-    # Remove file extension (e.g., .zip, .rar, etc.)
+    # Remove file extension to get the base name
     local game_name_no_ext="${game_name%.*}"
-    local game_folder="/userdata/system/game-downloader/$game_name_no_ext"
+    local extract_path="/userdata/system/game-downloader/$game_name_no_ext"
 
-    if [ -d "$game_folder" ]; then
-        echo "Directory $game_folder exists. Cleaning up."
-        rm -rf "$game_folder"
+    if [ -d "$extract_path" ]; then
+        echo "Directory $extract_path exists. Cleaning up."
+        rm -rf "$extract_path"
     fi
-    mkdir -p "$game_folder"
+    mkdir -p "$extract_path"
 
-    echo "Processing $game_name for system $system..."
+    echo "Extracting $game_name using 7zz..."
 
-    # Handle .rar files (using 7zz)
-    if [[ "$game_name" == *.rar ]]; then
-        echo "Extracting $game_name using 7zz..."
-        7zz x "$temp_path" -o"$game_folder"
-        if [ $? -ne 0 ]; then
-            echo "Failed to extract $game_name using 7zz."
-            rm -rf "$game_folder"
-            return
-        fi
-
-        # Rename the folder to add .ps3 extension
-        local ps3_folder="${game_folder}.ps3"
-        mv "$game_folder" "$ps3_folder"
-
-        # Move the .ps3 folder to its destination
-        mv "$ps3_folder" "$folder"
-        echo "Moved $ps3_folder to $folder"
-    else
-        echo "Unsupported file type for $game_name. Skipping."
-        rm "$temp_path"
+    # Extract the contents of the .rar into the temporary path
+    7zz x "$temp_path" -o"$extract_path/"
+    if [ $? -ne 0 ]; then
+        echo "Failed to extract $game_name."
+        rm -rf "$extract_path"
         return
     fi
 
+    # Locate the top-level folder in the extracted path
+    local extracted_folder
+    extracted_folder=$(find "$extract_path" -mindepth 1 -maxdepth 1 -type d | head -n 1)
+
+    if [ -z "$extracted_folder" ]; then
+        echo "No folder found in extracted contents. Skipping."
+        rm -rf "$extract_path"
+        return
+    fi
+
+    # Rename the folder by appending .ps3
+    local ps3_folder="${extracted_folder}.ps3"
+    mv "$extracted_folder" "$ps3_folder"
+
+    # Move the renamed folder to its final destination
+    mv "$ps3_folder" "$folder"
+    echo "Moved $ps3_folder to $folder."
+
+    # Clean up the temporary extraction path
+    rm -rf "$extract_path"
+    echo "Removed temporary extraction folder: $extract_path."
+
+    # Remove the original .rar file
     rm "$temp_path"
     echo "Removed original archive file: $temp_path."
 }
