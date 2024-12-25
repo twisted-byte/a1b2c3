@@ -39,11 +39,11 @@ check_internet() {
     fi
 }
 
-install_extractps3iso(){
+install_7zz(){
     # Paths and URLs
     INSTALL_DIR="/userdata/system/game-downloader/bin"
-    BINARY_URL="https://github.com/DTJW92/game-downloader/raw/refs/heads/main/V3/extractps3iso"
-    BINARY_NAME="extractps3iso"
+    BINARY_URL="https://github.com/DTJW92/game-downloader/raw/refs/heads/main/V3/7zz"
+    BINARY_NAME="7zz"
     BINARY_PATH="$INSTALL_DIR/$BINARY_NAME"
 
     # Ensure the install directory exists
@@ -131,7 +131,7 @@ install_extract_xiso() {
 
 # Call the function to install binarys
 install_extract_xiso
-install_extractps3iso
+install_7zz
 
 # Function to update queue files safely
 update_queue_file() {
@@ -195,87 +195,76 @@ process_unzip() {
     fi
 
     local iso_file=$(find "$game_folder" -type f -name "*.iso" | head -n 1)
+    local rar_file=$(find "$game_folder" -type f -name "*.rar" | head -n 1)
     
     if [ -n "$iso_file" ]; then
         echo "Extracted .iso file: $iso_file"
 
         if [ "$system" == "xbox" ]; then
-    echo "Using extract-xiso to rewrite Xbox game to .squashfs format."
-
-    # Extract the contents of the ISO using extract-xiso
-    extract-xiso "$iso_file"
-    if [ $? -ne 0 ]; then
-        echo "Error extracting ISO file: $iso_file"
-        return
-    fi
-
-    # Assuming extract-xiso extracts the contents to a folder with the same name as the ISO file
-    # Strip the extension to get the folder name
-    extracted_folder="${iso_file%.iso}"
-
-    if [ ! -d "$extracted_folder" ]; then
-        echo "Extraction failed: Folder $extracted_folder does not exist."
-        return
-    fi
-
-    # Create the SquashFS image from the extracted folder
-    squashfs_file="${extracted_folder}.squashfs"
-    mksquashfs "$extracted_folder" "$squashfs_file"
-    
-    if [ $? -eq 0 ]; then
-        echo "SquashFS created successfully: $squashfs_file"
-    else
-        echo "Failed to create SquashFS from extracted files."
-    fi
-
-    # Clean up: Remove the extracted folder (optional, can be retained if needed)
-    rm -rf "$extracted_folder"
-    echo "Removed extracted folder: $extracted_folder"
-
-    # Move the SquashFS file to the destination
-    mv "$squashfs_file" "$folder"
-    echo "Moved $squashfs_file to $folder"
-fi
-
-        elif [ "$system" == "ps3" ]; then
-            echo "Extracting PS3 ISO to a folder with .ps3 extension."
-            local ps3_folder="${game_folder}.ps3"
-
-            # Create the PS3 folder and extract
-            mkdir -p "$ps3_folder"
-            extractps3iso "$iso_file" "$ps3_folder"
+            echo "Using extract-xiso to rewrite Xbox game to .squashfs format."
+            extract-xiso "$iso_file"
             if [ $? -ne 0 ]; then
-                echo "Extraction failed for $iso_file."
+                echo "Error extracting ISO file: $iso_file"
                 return
             fi
 
-            echo "PS3 ISO extracted to $ps3_folder"
+            extracted_folder="${iso_file%.iso}"
+            if [ ! -d "$extracted_folder" ]; then
+                echo "Extraction failed: Folder $extracted_folder does not exist."
+                return
+            fi
 
-            # Remove the original ISO after extraction (optional)
-            rm "$iso_file"
-            echo "Removed original ISO file: $iso_file"
+            squashfs_file="${extracted_folder}.squashfs"
+            mksquashfs "$extracted_folder" "$squashfs_file"
+            if [ $? -eq 0 ]; then
+                echo "SquashFS created successfully: $squashfs_file"
+            else
+                echo "Failed to create SquashFS from extracted files."
+            fi
 
-            # Move the folder to the final destination
-            mv "$ps3_folder" "$folder"
-            echo "Moved extracted PS3 folder to $folder"
+            rm -rf "$extracted_folder"
+            echo "Removed extracted folder: $extracted_folder"
+
+            mv "$squashfs_file" "$folder"
+            echo "Moved $squashfs_file to $folder"
         else
             mv "$iso_file" "$folder"
             echo "Moved unzipped .iso for $game_name to $folder."
+        fi
+    elif [ -n "$rar_file" ]; then
+        if [ "$system" == "ps3" ]; then
+            echo "Extracting PS3 RAR to a folder with .ps3 extension."
+            local ps3_folder="${game_folder}.ps3"
+
+            mkdir -p "$ps3_folder"
+            7zz x "$rar_file" "$ps3_folder"
+            if [ $? -ne 0 ]; then
+                echo "Extraction failed for $rar_file."
+                return
+            fi
+
+            echo "PS3 game extracted to $ps3_folder"
+
+            rm "$rar_file"
+            echo "Removed original RAR file: $rar_file"
+
+            mv "$ps3_folder" "$folder"
+            echo "Moved extracted PS3 folder to $folder"
+        else
+            mv "$rar_file" "$folder"
+            echo "Moved .rar file for $game_name to $folder."
         fi
     else
         mv "$game_folder" "$folder"
         echo "Moved unzipped folder for $game_name to $folder."
     fi
 
-    # Remove the temporary folder created during unzip
     rm -rf "$game_folder"
     echo "Removed temporary unzip folder: $game_folder"
 
-    # Remove the original .zip file
     rm "$temp_path"
     echo "Removed .zip file: $temp_path."
 }
-
 
 # Function to resume downloads
 resume_downloads() {
@@ -312,10 +301,8 @@ process_download() {
     local temp_path="/userdata/system/game-downloader/$game_name"
     local final_game_path="$folder/$game_name"
 
-    # Skip if the game already exists in the ROM folder
     if [ -f "$final_game_path" ]; then
         echo "$game_name already exists in the ROM folder. Skipping download."
-        # Remove the skipped line from download.txt
         update_queue_file "$DOWNLOAD_QUEUE" "$game_name|$url|$folder"
         return
     fi
@@ -336,8 +323,9 @@ process_download() {
 
     echo "Download completed for $game_name."
 
-    # Handling .zip files by calling the unzip function
     if [[ "$game_name" == *.zip ]]; then
+        process_unzip "$game_name" "$temp_path" "$folder" "$system"
+    elif [[ "$game_name" == *.rar ]]; then
         process_unzip "$game_name" "$temp_path" "$folder" "$system"
     elif [[ "$game_name" == *.iso ]]; then
         mv "$temp_path" "$folder"
@@ -352,7 +340,6 @@ process_download() {
 
     update_queue_file "$DOWNLOAD_PROCESSING" "$game_name|$url|$folder"
 }
-
 
 # Function to check and move .iso files
 move_iso_files() {
