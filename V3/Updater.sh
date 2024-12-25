@@ -1,9 +1,4 @@
 #!/bin/bash
-
-# Set locale environment variables explicitly
-export LANG=en_US.UTF-8
-export LC_ALL=en_US.UTF-8
-
 batocera-services stop Background_Game_Downloader
 # Open xterm to run the update process in the background
 DISPLAY=:0.0 xterm -fs 30 -maximized -fg white -bg black -fa "DejaVuSansMono" -en UTF-8 -e bash -c "
