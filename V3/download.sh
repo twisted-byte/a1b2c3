@@ -369,7 +369,7 @@ case "$1" in
         echo "Stopping Background_Game_Downloader service..."
         
         # Stop the specific processes for Background_Game_Downloader script
-        pkill -f "Background_Game_Downloader" && echo "Background_Game_Downloader stopped." || echo "Background_Game_Downloader is not running."
+        pkill -f "Background_Game_Downloader" > /dev/null && echo "Background_Game_Downloader stopped." || echo "Background_Game_Downloader is not running."
         
         # Mark service as stopped
         rm -f "$SERVICE_STATUS_FILE"
