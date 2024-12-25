@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Set locale environment variables
+# Set locale environment variables explicitly
 export LANG=en_US.UTF-8
 export LC_ALL=en_US.UTF-8
 
