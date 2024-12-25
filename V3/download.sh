@@ -327,20 +327,6 @@ move_iso_files() {
     dest_dir="/userdata/roms/windows_installers"
     find "$src_dir" -type f -name "*.iso" -exec mv {} "$dest_dir" \;
 }
-
-# Call move_iso_files function
-move_iso_files
-
-# Graceful exit handling
-trap 'echo "Cleaning up and exiting."; exit 0' SIGINT SIGTERM
-
-# Check internet connection before starting
-check_internet
-if [ $? -ne 0 ]; then
-    echo "No internet connection found. Exiting script."
-    exit 1
-fi
-
 parallel_downloads() {
     local pids=()
 
@@ -379,62 +365,17 @@ parallel_downloads() {
     done
 }
 
-# Directories and file paths
-DOWNLOAD_QUEUE="/userdata/system/game-downloader/download.txt"
-DOWNLOAD_PROCESSING="/userdata/system/game-downloader/processing.txt"
-DEBUG_LOG="/userdata/system/game-downloader/debug/debug.txt"
-SERVICE_STATUS_FILE="/userdata/system/game-downloader/downloader_service_status"
+# Call move_iso_files function
+move_iso_files
 
-# Ensure debug directory exists
-mkdir -p "$(dirname "$DEBUG_LOG")"
+# Graceful exit handling
+trap 'echo "Cleaning up and exiting."; exit 0' SIGINT SIGTERM
 
-# Append all output to the log file
-exec &> >(tee -a "$DEBUG_LOG")
-echo "$(date): ${1} service Background_Game_Downloader"
+# Check internet connection before starting
+check_internet
+if [ $? -ne 0 ]; then
+    echo "No internet connection found. Exiting script."
+    exit 1
+fi
 
-case "$1" in
-    start)
-        echo "Starting Background_Game_Downloader service..."
-        
-        # Mark service as running
-        touch "$SERVICE_STATUS_FILE"
-
-        # Resume interrupted downloads
-        resume_downloads
-
-        # Start parallel download processing in the background
-        parallel_downloads &
-
-        echo "Background_Game_Downloader started successfully."
-        ;;
-
-    stop)
-        echo "Stopping Background_Game_Downloader service..."
-        
-        # Stop the specific processes for Background_Game_Downloader script
-        pkill -f "Background_Game_Downloader" > /dev/null && echo "Background_Game_Downloader stopped." || echo "Background_Game_Downloader is not running."
-        
-        # Mark service as stopped
-        rm -f "$SERVICE_STATUS_FILE"
-        ;;
-
-    restart)
-        "$0" stop
-        "$0" start
-        ;;
-
-    status)
-        if [ -f "$SERVICE_STATUS_FILE" ]; then
-            echo "Background_Game_Downloader is running."
-            exit 0
-        else
-            echo "Background_Game_Downloader is stopped."
-            exit 1
-        fi
-        ;;
-
-    *)
-        echo "Usage: $0 {start|stop|restart|status}"
-        exit 1
-        ;;
-esac
+parallel_downloads
