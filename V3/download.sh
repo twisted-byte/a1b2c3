@@ -250,6 +250,7 @@ process_download() {
 
     echo "Download completed for $game_name."
 
+    # Handling .zip files by calling the unzip function
     if [[ "$game_name" == *.zip ]]; then
         process_unzip "$game_name" "$temp_path" "$folder" "$system"
     elif [[ "$game_name" == *.iso ]]; then
@@ -265,6 +266,7 @@ process_download() {
 
     update_queue_file "$DOWNLOAD_PROCESSING" "$game_name|$url|$folder"
 }
+
 
 # Function to check and move .iso files
 move_iso_files() {
@@ -346,8 +348,6 @@ case "$1" in
         
         # Mark service as running
         touch "$SERVICE_STATUS_FILE"
-
-        install_extract_xiso
 
         # Resume interrupted downloads
         resume_downloads
