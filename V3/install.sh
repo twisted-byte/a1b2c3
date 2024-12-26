@@ -29,18 +29,18 @@ download_file() {
     mkdir -p "$(dirname "$dest")" >/dev/null 2>&1
 
     # Attempt to download the file
-    if ! curl -L "$url" -o "$dest" >/dev/null 2>&1; then
+    if ! curl -L "$url" -o "$dest" >/dev/null 2>&1 || [ ! -f "$dest" ]; then
         dialog --msgbox "Error downloading $url. Please check your network connection or the URL." 7 50
         exit 1
     fi
 }
 
 # Create all necessary directories
-mkdir -p /userdata/system/game-downloader/debug >/dev/null 2>&1
-mkdir -p /userdata/roms/ports/images >/dev/null 2>&1
-mkdir -p /userdata/roms/ports/videos >/dev/null 2>&1
-mkdir -p /userdata/system/services >/dev/null 2>&1
-mkdir -p /userdata/roms/ports >/dev/null 2>&1
+mkdir -p /userdata/system/game-downloader/debug \
+         /userdata/roms/ports/images \
+         /userdata/roms/ports/videos \
+         /userdata/system/services \
+         /userdata/roms/ports
 
 # Define the path to the gamelist.xml
 GAMELIST="/userdata/roms/ports/gamelist.xml"
@@ -49,15 +49,18 @@ GAMELIST="/userdata/roms/ports/gamelist.xml"
 if [[ ! -f "$GAMELIST" ]]; then
     echo "<?xml version=\"1.0\" encoding=\"UTF-8\"?><gameList></gameList>" > "$GAMELIST"
 fi
+
 # Main execution
 clear
 animate_title
 display_controls
+
 # Download the four files and save them in the Images folder
 download_file "https://raw.githubusercontent.com/DTJW92/game-downloader/main/images/Game%20Downloader%20Wheel.png" "/userdata/roms/ports/images/Game_Downloader_Wheel.png"
 download_file "https://raw.githubusercontent.com/DTJW92/game-downloader/main/videos/Game%20Downloader%20Video.mp4" "/userdata/roms/ports/videos/GameDownloader-video.mp4"
 download_file "https://raw.githubusercontent.com/DTJW92/game-downloader/main/images/Game%20Downloader%20Icon.png" "/userdata/roms/ports/images/Game_Downloader_Icon.png"
 download_file "https://raw.githubusercontent.com/DTJW92/game-downloader/main/images/Game%20Download%20Box%20Art.png" "/userdata/roms/ports/images/Game_Downloader_Box_Art.png"
+
 # Download and save download.sh locally (always replace)
 download_file "https://raw.githubusercontent.com/DTJW92/game-downloader/main/V3/download.sh" "/userdata/system/game-downloader/download.sh"
 download_file "https://raw.githubusercontent.com/DTJW92/game-downloader/main/V3/Background_Game_Downloader" "/userdata/system/services/Background_Game_Downloader"
@@ -101,10 +104,11 @@ NEW_ENTRY="<game>
     <thumbnail>./images/Game_Downloader_Box_Art.png</thumbnail>
     <lang>en</lang>
 </game>"
+
 # Check if the game entry already exists in gamelist.xml
 if grep -q "<path>./GameDownloader.sh</path>" "$GAMELIST"; then
     # Replace the existing entry based on path
-    sed -i "/<path>\\.\\/GameDownloader\\.sh<\\/path>/,/<\\/game>/c\\
+    sed -i "/<path>\.\/GameDownloader\.sh<\/path>/,/<\/game>/c\\
 $NEW_ENTRY" "$GAMELIST"
     echo "Replaced existing entry for Game Downloader based on path."
 else
