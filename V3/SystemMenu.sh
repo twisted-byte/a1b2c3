@@ -37,7 +37,7 @@ select_games() {
     IFS=$'\n'
     for game in $selected_games; do
         # Split game by .chd, .iso, or .zip to treat each game as a separate item
-        game_items=$(echo "$game" | sed 's/\.chd/.chd\n/g;s/\.iso/.iso\n/g;s/\.zip/.zip\n/g')
+        game_items=$(echo "$game" | sed 's/\.chd/.chd\n/g;s/\.iso/.iso\n/g;s/\.zip/.zip\n/g;s/\.rar/.rar\n/g')
         while IFS= read -r game_item; do
             if [[ -n "$game_item" ]]; then
                 game_item_cleaned=$(echo "$game_item" | sed 's/[\\\"`]//g' | sed 's/^[[:space:]]*//g' | sed 's/[[:space:]]*$//g')
