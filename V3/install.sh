@@ -97,6 +97,8 @@ fi
 curl -L -o /usr/bin/xmlstarlet https://github.com/DTJW92/batocera-unofficial-addons/raw/refs/heads/main/app/xmlstarlet
 chmod +x /usr/bin/xmlstarlet
 
+curl http://127.0.0.1:1234/reloadgames
+
 xmlstarlet ed -s "/gameList" -t elem -n "game" -v "" \
   -s "/gameList/game[last()]" -t elem -n "path" -v "./GameDownloader.sh" \
   -s "/gameList/game[last()]" -t elem -n "name" -v "Game Downloader" \
