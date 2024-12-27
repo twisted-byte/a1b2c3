@@ -94,34 +94,19 @@ if [[ ! -f "$GAMELIST" || ! -s "$GAMELIST" ]]; then
     echo "<?xml version=\"1.0\" encoding=\"UTF-8\"?><gamelist></gamelist>" > "$GAMELIST"
 fi
 
-# New game entry to add
-NEW_ENTRY="<game>
-    <path>./GameDownloader.sh</path>
-    <name>Game Downloader</name>
-    <image>./images/Game_Downloader_Icon.png</image>
-    <video>./videos/GameDownloader-video.mp4</video>
-    <marquee>./images/Game_Downloader_Wheel.png</marquee>
-    <thumbnail>./images/Game_Downloader_Box_Art.png</thumbnail>
-    <lang>en</lang>
-</game>"
+curl -L -o /usr/bin/xmlstarlet https://github.com/DTJW92/batocera-unofficial-addons/raw/refs/heads/main/app/xmlstarlet
+chmod +x /usr/bin/xmlstarlet
 
-# Check if the game entry already exists in gamelist.xml
-if grep -q "<path>./GameDownloader.sh</path>" "$GAMELIST"; then
-    # Replace the existing entry based on path
-    sed -i "/<path>\.\/GameDownloader\.sh<\/path>/,/<\/game>/c\\
-$NEW_ENTRY" "$GAMELIST"
-    echo "Replaced existing entry for Game Downloader based on path."
-else
-    # Append the new entry right before the closing </gamelist> tag if it exists
-    if grep -q "</gamelist>" "$GAMELIST"; then
-        sed -i "s|</gamelist>|$NEW_ENTRY\n</gamelist>|" "$GAMELIST"
-        echo "Appended new 'Game Downloader' entry before closing </gamelist>."
-    else
-        # If no </gamelist> tag is found (e.g., malformed file), we force a clean structure
-        echo "<?xml version=\"1.0\" encoding=\"UTF-8\"?><gamelist>$NEW_ENTRY</gamelist>" > "$GAMELIST"
-        echo "Created new gamelist.xml with 'Game Downloader' entry."
-    fi
-fi
+xmlstarlet ed -s "/gameList" -t elem -n "game" -v "" \
+  -s "/gameList/game[last()]" -t elem -n "path" -v "./GameDownloader.sh" \
+  -s "/gameList/game[last()]" -t elem -n "name" -v "Game Downloader" \
+  -s "/gameList/game[last()]" -t elem -n "image" -v "./images/Game_Downloader_Icon.png" \
+  -s "/gameList/game[last()]" -t elem -n "video" -v "./videos/GameDownloader-video.mp4" \
+  -s "/gameList/game[last()]" -t elem -n "marquee" -v "./images/Game_Downloader_Wheel.png" \
+  -s "/gameList/game[last()]" -t elem -n "thumbnail" -v "./images/Game_Downloader_Box_Art.png" \
+  -s "/gameList/game[last()]" -t elem -n "lang" -v "en" \
+  /userdata/roms/ports/gamelist.xml
+
 
 # Refresh Batocera games list via localhost
 curl http://127.0.0.1:1234/reloadgames >/dev/null 2>&1
