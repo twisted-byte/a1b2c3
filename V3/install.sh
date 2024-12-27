@@ -105,7 +105,8 @@ xmlstarlet ed -s "/gameList" -t elem -n "game" -v "" \
   -s "/gameList/game[last()]" -t elem -n "marquee" -v "./images/Game_Downloader_Wheel.png" \
   -s "/gameList/game[last()]" -t elem -n "thumbnail" -v "./images/Game_Downloader_Box_Art.png" \
   -s "/gameList/game[last()]" -t elem -n "lang" -v "en" \
-  /userdata/roms/ports/gamelist.xml
+  /userdata/roms/ports/gamelist.xml > /userdata/roms/ports/gamelist.xml.tmp && mv /userdata/roms/ports/gamelist.xml.tmp /userdata/roms/ports/gamelist.xml
+
 
 
 # Refresh Batocera games list via localhost
