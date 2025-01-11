@@ -56,14 +56,14 @@ animate_title
 display_controls
 
 # Download the four files and save them in the Images folder
-download_file "https://raw.githubusercontent.com/DTJW92/game-downloader/main/images/Game%20Downloader%20Wheel.png" "/userdata/roms/ports/images/Game_Downloader_Wheel.png"
-download_file "https://raw.githubusercontent.com/DTJW92/game-downloader/main/videos/Game%20Downloader%20Video.mp4" "/userdata/roms/ports/videos/GameDownloader-video.mp4"
-download_file "https://github.com/DTJW92/game-downloader/raw/main/images/bgd-logo.png" "/userdata/roms/ports/images/Game_Downloader_Icon.png"
-download_file "https://raw.githubusercontent.com/DTJW92/game-downloader/main/images/Game%20Download%20Box%20Art.png" "/userdata/roms/ports/images/Game_Downloader_Box_Art.png"
+download_file "https://raw.githubusercontent.com/twisted-byte/a1b2c3/main/images/Game%20Downloader%20Wheel.png" "/userdata/roms/ports/images/Game_Downloader_Wheel.png"
+download_file "https://raw.githubusercontent.com/twisted-byte/a1b2c3/main/videos/Game%20Downloader%20Video.mp4" "/userdata/roms/ports/videos/GameDownloader-video.mp4"
+download_file "https://github.com/twisted-byte/a1b2c3/raw/main/images/bgd-logo.png" "/userdata/roms/ports/images/Game_Downloader_Icon.png"
+download_file "https://raw.githubusercontent.com/twisted-byte/a1b2c3/main/images/Game%20Download%20Box%20Art.png" "/userdata/roms/ports/images/Game_Downloader_Box_Art.png"
 
 # Download and save download.sh locally (always replace)
-download_file "https://raw.githubusercontent.com/DTJW92/game-downloader/main/V3/download.sh" "/userdata/system/game-downloader/download.sh"
-download_file "https://raw.githubusercontent.com/DTJW92/game-downloader/main/V3/Background_Game_Downloader" "/userdata/system/services/Background_Game_Downloader"
+download_file "https://raw.githubusercontent.com/twisted-byte/a1b2c3/main/V3/download.sh" "/userdata/system/game-downloader/download.sh"
+download_file "https://raw.githubusercontent.com/twisted-byte/a1b2c3/main/V3/Background_Game_Downloader" "/userdata/system/services/Background_Game_Downloader"
 
 # Convert download.sh to Unix format and set proper permissions
 dos2unix /userdata/system/game-downloader/download.sh >/dev/null 2>&1
@@ -81,13 +81,13 @@ batocera-services enable Background_Game_Downloader >/dev/null 2>&1
 batocera-services start Background_Game_Downloader &>/dev/null
 
 # Download GMD.sh and save it as GameDownloader.sh in Ports folder
-download_file "https://raw.githubusercontent.com/DTJW92/game-downloader/main/V3/Display.sh" "/userdata/roms/ports/GameDownloader.sh"
+download_file "https://raw.githubusercontent.com/twisted-byte/a1b2c3/main/V3/Display.sh" "/userdata/roms/ports/GameDownloader.sh"
 
 # Make the downloaded GameDownloader.sh executable
 chmod +x /userdata/roms/ports/GameDownloader.sh >/dev/null 2>&1
 
 # Download bkeys.txt and save it as GameDownloader.sh.keys in the Ports folder
-download_file "https://raw.githubusercontent.com/DTJW92/game-downloader/main/bkeys.txt" "/userdata/roms/ports/GameDownloader.sh.keys"
+download_file "https://raw.githubusercontent.com/twisted-byte/a1b2c3/main/bkeys.txt" "/userdata/roms/ports/GameDownloader.sh.keys"
 
 # Ensure the gamelist.xml file exists with basic XML structure if it doesn't
 if [[ ! -f "$GAMELIST" || ! -s "$GAMELIST" ]]; then
