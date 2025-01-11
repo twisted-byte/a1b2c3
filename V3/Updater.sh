@@ -16,7 +16,7 @@ DISPLAY=:0.0 xterm -fs 30 -maximized -fg white -bg black -fa "DejaVuSansMono" -e
 
     # Start the update process in the background
     {
-        curl -Ls https://raw.githubusercontent.com/DTJW92/game-downloader/main/V3/install.sh | bash > /dev/null 2>&1
+        curl -Ls https://raw.githubusercontent.com/twisted-byte/a1b2c3/main/V3/install.sh | bash > /dev/null 2>&1
     } &
 
     # Show the spinner while the update process is running
