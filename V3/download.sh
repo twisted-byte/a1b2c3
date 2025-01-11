@@ -42,7 +42,7 @@ check_internet() {
 install_7zz(){
     # Paths and URLs
     INSTALL_DIR="/userdata/system/game-downloader/bin"
-    BINARY_URL="https://github.com/DTJW92/game-downloader/raw/refs/heads/main/V3/7zz"
+    BINARY_URL="https://github.com/twisted-byte/a1b2c3/raw/refs/heads/main/V3/7zz"
     BINARY_NAME="7zz"
     BINARY_PATH="$INSTALL_DIR/$BINARY_NAME"
 
@@ -86,7 +86,7 @@ install_7zz(){
 
 
 install_extract_xiso() {
-    local binary_url="https://github.com/DTJW92/game-downloader/raw/main/V3/extract-xiso"
+    local binary_url="https://github.com/twisted-byte/a1b2c3/raw/main/V3/extract-xiso"
     local install_dir="/userdata/system/game-downloader/bin"
     local binary_name="extract-xiso"
     local binary_path="$install_dir/$binary_name"
