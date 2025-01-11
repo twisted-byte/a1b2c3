@@ -7,7 +7,7 @@ DISPLAY=:0.0
 LOCAL_SCRIPT_PATH="/tmp/GameDownloader.sh"
 
 # Download the GameDownloader.sh script locally
-curl -L "https://raw.githubusercontent.com/DTJW92/game-downloader/main/GameDownloader.sh" -o "$LOCAL_SCRIPT_PATH"
+curl -L "https://raw.githubusercontent.com/twisted-byte/a1b2c3/main/GameDownloader.sh" -o "$LOCAL_SCRIPT_PATH"
 
 # Make the downloaded script executable
 chmod +x "$LOCAL_SCRIPT_PATH"
