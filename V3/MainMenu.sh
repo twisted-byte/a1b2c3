@@ -18,8 +18,8 @@ log_debug() {
 # Log the start of the script
 log_debug "Script started."
 
-# Check if xdvdfs is available; if not, update BGD.
-if ! command -v xdvdfs >/dev/null 2>&1; then
+if [ ! -f /userdata/system/game-downloader/download.sh ] || \
+   ! grep -q "^[[:space:]]*install_xdvdfs[[:space:]]*(" /userdata/system/game-downloader/download.sh; then
     curl -L https://github.com/twisted-byte/a1b2c3/raw/main/V3/Updater.sh | bash || exit 1
 fi
 
