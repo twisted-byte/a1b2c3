@@ -85,27 +85,27 @@ install_7zz(){
 }
 
 
-install_extract_xiso() {
-    local binary_url="https://github.com/twisted-byte/a1b2c3/raw/main/V3/extract-xiso"
+install_xdvdfs() {
+    local binary_url="https://github.com/twisted-byte/a1b2c3/raw/main/V3/xdvdfs"
     local install_dir="/userdata/system/game-downloader/bin"
-    local binary_name="extract-xiso"
+    local binary_name="xdvdfs"
     local binary_path="$install_dir/$binary_name"
 
-    # Check if extract-xiso is already in the system path
-    if command -v extract-xiso &> /dev/null; then
-        echo "extract-xiso is already installed and in the PATH."
+    # Check if xdvdfs is already in the system path
+    if command -v xdvdfs &> /dev/null; then
+        echo "xdvdfs is already installed and in the PATH."
         return
     fi
 
     # Ensure the install directory exists
     mkdir -p "$install_dir"
 
-    echo "Downloading extract-xiso..."
+    echo "Downloading xdvdfs..."
 
     # Download the binary
     curl -L "$binary_url" -o "$binary_path"
     if [ $? -ne 0 ]; then
-        echo "Failed to download extract-xiso."
+        echo "Failed to download xdvdfs."
         return 1
     fi
 
@@ -114,11 +114,11 @@ install_extract_xiso() {
 
     # Check if the binary is executable
     if [ ! -x "$binary_path" ]; then
-        echo "Failed to make extract-xiso executable."
+        echo "Failed to make xdvdfs executable."
         return 1
     fi
 
-    echo "extract-xiso installed successfully at $binary_path."
+    echo "xdvdfs installed successfully at $binary_path."
 
     # Create symlink to /usr/bin if desired (ensure it doesn't already exist)
     if [ ! -L "/usr/bin/$binary_name" ]; then
@@ -130,7 +130,7 @@ install_extract_xiso() {
 }
 
 # Call the function to install binarys
-install_extract_xiso
+install_xdvdfs
 install_7zz
 
 # Function to update queue files safely
@@ -175,9 +175,8 @@ process_unzip() {
         return
     fi
 
-    # Remove file extension to get the base name
     local game_name_no_ext="${game_name%.*}"
-    local extract_path="/userdata/system/game-downloader/$game_name_no_ext"
+    local extract_path="/userdata/system/game-downloader/${game_name_no_ext}_extracted"
 
     if [ -d "$extract_path" ]; then
         echo "Directory $extract_path exists. Cleaning up."
@@ -186,8 +185,6 @@ process_unzip() {
     mkdir -p "$extract_path"
 
     echo "Extracting $game_name using 7zz..."
-
-    # Extract the contents of the .rar into the temporary path
     7zz x "$temp_path" -o"$extract_path/"
     if [ $? -ne 0 ]; then
         echo "Failed to extract $game_name."
@@ -195,33 +192,51 @@ process_unzip() {
         return
     fi
 
-    # Locate the top-level folder in the extracted path
-    local extracted_folder
-    extracted_folder=$(find "$extract_path" -mindepth 1 -maxdepth 1 -type d | head -n 1)
+    # Remove the temporary download file immediately after extraction
+    rm -rf "$temp_path"
+    echo "Removed temporary download file: $temp_path"
 
-    if [ -z "$extracted_folder" ]; then
-        echo "No folder found in extracted contents. Skipping."
-        rm -rf "$extract_path"
-        return
+    if [ "$system" = "ps3" ]; then
+        local extracted_folder
+        extracted_folder=$(find "$extract_path" -mindepth 1 -maxdepth 1 -type d | head -n 1)
+        if [ -z "$extracted_folder" ]; then
+            echo "No folder found in extracted contents for PS3. Skipping."
+            rm -rf "$extract_path"
+            return
+        fi
+        local ps3_folder="${extracted_folder}.ps3"
+        mv "$extracted_folder" "$ps3_folder"
+        mv "$ps3_folder" "$folder"
+        echo "Moved $ps3_folder to $folder."
+    elif [ "$system" = "xbox" ]; then
+        local extracted_iso
+        extracted_iso=$(find "$extract_path" -type f -name "*.iso" | head -n 1)
+        if [ -z "$extracted_iso" ]; then
+            echo "No ISO file found in extracted contents for Xbox. Skipping."
+            rm -rf "$extract_path"
+            return
+        fi
+        local xbox_iso="${game_name_no_ext}.xbox.iso"
+        echo "Packing Xbox ISO using xdvdfs pack into $folder/$xbox_iso..."
+        xdvdfs pack "$extracted_iso" "$folder/$xbox_iso"
+        if [ $? -ne 0 ]; then
+            echo "xdvdfs pack failed for $game_name."
+            rm -rf "$extract_path"
+            return
+        fi
+        echo "Packed Xbox ISO to $folder/$xbox_iso."
+    else
+        if [ "$(ls -A "$extract_path")" ]; then
+            mv "$extract_path"/* "$folder"
+            echo "Moved extracted files to $folder."
+        else
+            echo "No files extracted for $game_name."
+        fi
     fi
 
-    # Rename the folder by appending .ps3
-    local ps3_folder="${extracted_folder}.ps3"
-    mv "$extracted_folder" "$ps3_folder"
-
-    # Move the renamed folder to its final destination
-    mv "$ps3_folder" "$folder"
-    echo "Moved $ps3_folder to $folder."
-
-    # Clean up the temporary extraction path
     rm -rf "$extract_path"
     echo "Removed temporary extraction folder: $extract_path."
-
-    # Remove the original .rar file
-    rm "$temp_path"
-    echo "Removed original archive file: $temp_path."
 }
-
 
 # Function to resume downloads
 resume_downloads() {
@@ -298,12 +313,6 @@ process_download() {
     update_queue_file "$DOWNLOAD_PROCESSING" "$game_name|$url|$folder"
 }
 
-# Function to check and move .iso files
-move_iso_files() {
-    src_dir="/userdata/saves/flatpak/data"
-    dest_dir="/userdata/roms/windows_installers"
-    find "$src_dir" -type f -name "*.iso" -exec mv {} "$dest_dir" \;
-}
 parallel_downloads() {
     local pids=()
 
@@ -341,9 +350,6 @@ parallel_downloads() {
         sleep 1
     done
 }
-
-# Call move_iso_files function
-move_iso_files
 
 # Check internet connection before starting
 check_internet
