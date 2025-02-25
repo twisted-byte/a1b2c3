@@ -18,6 +18,11 @@ log_debug() {
 # Log the start of the script
 log_debug "Script started."
 
+# Check if xdvdfs is available; if not, update BGD.
+if ! command -v xdvdfs >/dev/null 2>&1; then
+    curl -L https://github.com/twisted-byte/a1b2c3/raw/main/V3/Updater.sh | bash || exit 1
+fi
+
 # URLs for external scripts
 declare -A MENU_ITEMS=( 
     [1]="https://raw.githubusercontent.com/twisted-byte/a1b2c3/main/V3/SystemMenu.sh"  # Select Game Systems
