@@ -216,15 +216,18 @@ process_unzip() {
             rm -rf "$extract_path"
             return
         fi
-        local xbox_iso="${game_name_no_ext}.xbox.iso"
-        echo "Packing Xbox ISO using xdvdfs pack into $folder/$xbox_iso..."
-        xdvdfs pack "$extracted_iso" "$folder/$xbox_iso"
+        local xbox_iso="${folder}/${game_name_no_ext}.iso"
+        echo "Trimming Xbox ISO using dd (Skipping first 387MB)..."
+
+        # Use dd to skip the first 387MB and create a new ISO
+        dd if="$extracted_iso" of="$xbox_iso" skip=387 bs=1M status=progress
         if [ $? -ne 0 ]; then
-            echo "xdvdfs pack failed for $game_name."
+            echo "dd command failed for $game_name."
             rm -rf "$extract_path"
             return
         fi
-        echo "Packed Xbox ISO to $folder/$xbox_iso."
+
+        echo "Trimmed Xbox ISO saved as $xbox_iso."
     else
         if [ "$(ls -A "$extract_path")" ]; then
             mv "$extract_path"/* "$folder"
@@ -237,6 +240,7 @@ process_unzip() {
     rm -rf "$extract_path"
     echo "Removed temporary extraction folder: $extract_path."
 }
+
 
 # Function to resume downloads
 resume_downloads() {
