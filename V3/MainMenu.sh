@@ -80,9 +80,7 @@ dialog --clear --backtitle "Game Downloader" \
         clear
         dialog --infobox "Thank you for using Game Downloader! Any issues, message DTJW92 on Discord!" 10 50
         sleep 3
-        pkill -f "$(basename $0)"
-        kill -9 $(ps -o ppid= -p $$)
-        exit 0  # Exit gracefully
+        exit   # Exit gracefully
     fi
 
 # Exit logic for option 7
@@ -91,18 +89,8 @@ if [ "$choice" -eq 7 ]; then
     
     # Display exit message using dialog
     dialog --infobox "Thank you for using Game Downloader! Any issues, please reach out to DTJW92 on Discord!" 10 50
-    sleep 3  # Allow user to see message
-
-    # Ensure all child processes exit
-    trap "exit 0" SIGTERM SIGKILL
-
-    # Kill the script itself and its parent shell
-    kill -TERM $$
-    
-    # If still running, force kill
-    kill -9 $$
-    
-    exit 0
+    sleep 3  # Allow user to see message    
+    exit
 fi
 
     # Execute the corresponding script for the selected option
