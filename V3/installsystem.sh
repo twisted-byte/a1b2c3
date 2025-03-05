@@ -87,4 +87,4 @@ for system in $choices; do
 done
 
 # Optionally, return to the main menu or run another script after the process
-exec /tmp/GameDownloader.sh
+exit
