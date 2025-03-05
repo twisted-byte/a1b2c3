@@ -1,5 +1,5 @@
 #!/bin/bash
-batocera-services stop Background_Game_Downloader
+batocera-services stop Background_Game_Downloader > /dev/null 2>&1
 # Open xterm to run the update process in the background
 DISPLAY=:0.0 xterm -fs 30 -maximized -fg white -bg black -fa "DejaVuSansMono" -en UTF-8 -e bash -c "
     # Function to show a dialog spinner
@@ -29,5 +29,5 @@ DISPLAY=:0.0 xterm -fs 30 -maximized -fg white -bg black -fa "DejaVuSansMono" -e
     dialog --infobox 'Update Complete!' 10 50
     sleep 5
 "
-batocera-services start Background_Game_Downloader &
+batocera-services start Background_Game_Downloader & > /dev/null 2>&1
 exit
