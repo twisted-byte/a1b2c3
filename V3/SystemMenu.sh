@@ -182,5 +182,4 @@ done
 
 # Goodbye message
 echo "Goodbye!"
-
-exec /tmp/GameDownloader.sh
+exit
