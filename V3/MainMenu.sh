@@ -23,6 +23,8 @@ if [ -f /userdata/system/game-downloader/download.sh ] && \
     curl -L https://github.com/twisted-byte/a1b2c3/raw/main/V3/Updater.sh | bash || exit 1
 fi
 
+grep -q "Apple Macintosh" /userdata/system/game-downloader/links && sed -i 's/Apple Macintosh/Macintosh/g' /userdata/system/game-downloader/links
+
 # URLs for external scripts
 declare -A MENU_ITEMS=( 
     [1]="https://raw.githubusercontent.com/twisted-byte/a1b2c3/main/V3/SystemMenu.sh"  # Select Game Systems
