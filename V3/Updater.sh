@@ -29,5 +29,5 @@ DISPLAY=:0.0 xterm -fs 30 -maximized -fg white -bg black -fa "DejaVuSansMono" -e
     dialog --infobox 'Update Complete!' 10 50
     sleep 5
 "
-batocera-services start Background_Game_Downloader & > /dev/null 2>&1
+batocera-services start Background_Game_Downloader &>/dev/null &
 exit
