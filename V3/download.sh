@@ -84,53 +84,6 @@ install_7zz(){
     fi
 }
 
-
-install_xdvdfs() {
-    local binary_url="https://github.com/twisted-byte/a1b2c3/raw/main/V3/xdvdfs"
-    local install_dir="/userdata/system/game-downloader/bin"
-    local binary_name="xdvdfs"
-    local binary_path="$install_dir/$binary_name"
-
-    # Check if xdvdfs is already in the system path
-    if command -v xdvdfs &> /dev/null; then
-        echo "xdvdfs is already installed and in the PATH."
-        return
-    fi
-
-    # Ensure the install directory exists
-    mkdir -p "$install_dir"
-
-    echo "Downloading xdvdfs..."
-
-    # Download the binary
-    curl -L "$binary_url" -o "$binary_path"
-    if [ $? -ne 0 ]; then
-        echo "Failed to download xdvdfs."
-        return 1
-    fi
-
-    # Make the binary executable
-    chmod +x "$binary_path"
-
-    # Check if the binary is executable
-    if [ ! -x "$binary_path" ]; then
-        echo "Failed to make xdvdfs executable."
-        return 1
-    fi
-
-    echo "xdvdfs installed successfully at $binary_path."
-
-    # Create symlink to /usr/bin if desired (ensure it doesn't already exist)
-    if [ ! -L "/usr/bin/$binary_name" ]; then
-        ln -s "$binary_path" "/usr/bin/$binary_name"
-        echo "Symlink created in /usr/bin."
-    else
-        echo "Symlink already exists in /usr/bin."
-    fi
-}
-
-# Call the function to install binarys
-install_xdvdfs
 install_7zz
 
 # Function to update queue files safely
